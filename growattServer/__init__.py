@@ -1,5 +1,11 @@
 name = "growattServer"
 
+from enum import IntEnum
+import datetime
+import hashlib
+import json
+import requests
+
 def hash_password(password):
     """
     Normal MD5, except add c if a byte of the digest is less than 10.
@@ -9,7 +15,6 @@ def hash_password(password):
         if password_md5[i] == '0':
             password_md5 = password_md5[0:i] + 'c' + password_md5[i + 1:]
     return password_md5
-
 
 class Timespan(IntEnum):
     day = 1
