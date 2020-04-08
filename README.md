@@ -31,6 +31,8 @@ Any methods that may be useful.
 `api.inverter_detail(inverter_id)` Get detailed data on inverter.
 
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
+
+`api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).
 ### Variables
 Some variables you may want to set.
 

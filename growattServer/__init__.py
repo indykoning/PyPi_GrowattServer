@@ -116,6 +116,18 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
+    def storage_params(self, storage_id):
+        """
+        Get much more detail from battery storage.
+        """
+        response = self.session.get(self.get_url('newStorageAPI.do'), params={
+            'op': 'getStorageParams_sacolar',
+            'storageId': storage_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
     def inverter_list(self, plant_id):
         """
         Use device_list, it's more descriptive since the list contains more than inverters.
