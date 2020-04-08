@@ -1,14 +1,15 @@
 import setuptools
-import sys
+import os
 
+tag = os.environ['LATEST_TAG']
 with open("README.md", "r") as fh:
     long_description = fh.read()
-tag = sys.argv[3]
 
 setuptools.setup(
     name="growattServer",
     version=tag,
     author="IndyKoning",
+    author_email="indykoningnl@gmail.com",
     description="A package to talk to growatt server",
     long_description=long_description,
     long_description_content_type="text/markdown",
