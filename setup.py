@@ -1,11 +1,13 @@
 import setuptools
+import sys
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+tag = sys.argv[3]
 
 setuptools.setup(
     name="growattServer",
-    version="0.0.1",
+    version=tag,
     author="IndyKoning",
     description="A package to talk to growatt server",
     long_description=long_description,

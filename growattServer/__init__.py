@@ -1,10 +1,11 @@
 name = "growattServer"
 
-from enum import IntEnum
 import datetime
+from enum import IntEnum
 import hashlib
 import json
 import requests
+import warnings
 
 def hash_password(password):
     """
@@ -28,9 +29,15 @@ class GrowattApi:
         self.session = requests.Session()
 
     def get_url(self, page):
+        """
+        Simple helper function to get the page url/
+        """
         return self.server_url + page
 
     def login(self, username, password):
+        """
+        Log the user in.
+        """
         password_md5 = hash_password(password)
         response = self.session.post(self.get_url('LoginAPI.do'), data={
             'userName': username,
@@ -40,6 +47,9 @@ class GrowattApi:
         return data['back']
 
     def plant_list(self, user_id):
+        """
+        Get a list of plants connected to this account.
+        """
         response = self.session.get(self.get_url('PlantListAPI.do'),
                                     params={'userId': user_id},
                                     allow_redirects=False)
@@ -49,6 +59,9 @@ class GrowattApi:
         return data['back']
 
     def plant_detail(self, plant_id, timespan, date):
+        """
+        Get plant details for specified timespan.
+        """
         assert timespan in Timespan
         if timespan == Timespan.day:
             date_str = date.strftime('%Y-%m-%d')
@@ -64,6 +77,9 @@ class GrowattApi:
         return data['back']
 
     def inverter_data(self, inverter_id, date):
+        """
+        Get inverter data for specified date or today.
+        """
         if date is None:
             date = datetime.date.today()
         date_str = date.strftime('%Y-%m-%d')
@@ -77,6 +93,9 @@ class GrowattApi:
         return data
 
     def inverter_detail(self, inverter_id):
+        """
+        Get "All parameters" from PV inverter.
+        """
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData_two',
             'inverterId': inverter_id
@@ -85,15 +104,41 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
+    def storage_detail(self, storage_id):
+        """
+        Get "All parameters" from battery storage.
+        """
+        response = self.session.get(self.get_url('newStorageAPI.do'), params={
+            'op': 'getStorageInfo_sacolar',
+            'storageId': storage_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
     def inverter_list(self, plant_id):
+        """
+        Use device_list, it's more descriptive since the list contains more than inverters.
+        """
+        warnings.warn("This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning)
+        return self.device_list(plant_id)
+
+    def device_list(self, plant_id):
+        """
+        Get a list of all devices connected to plant.
+        """
         return self.plant_info(plant_id)['deviceList']
 
     def plant_info(self, plant_id):
+        """
+        Get basic plant information with device list.
+        """
         response = self.session.get(self.get_url('newPlantAPI.do'), params={
             'op': 'getAllDeviceListThree',
             'plantId': plant_id,
             'pageNum': 1,
             'pageSize': 1
         })
+
         data = json.loads(response.content.decode('utf-8'))
         return data
