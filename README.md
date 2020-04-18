@@ -33,6 +33,9 @@ Any methods that may be useful.
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
 
 `api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).
+
+`api.storage_energy_overview(plant_id, storage_id)` Get the information you see in the "Generation overview".
+
 ### Variables
 Some variables you may want to set.
 
