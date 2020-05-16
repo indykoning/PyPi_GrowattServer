@@ -1,6 +1,8 @@
 # Growatt Server
 Package to retrieve PV information form the growatt server.
 
+Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
+These projects may merge in the future since they are simmilar in code and function.
 ## Usage
 ```
 import growattServer
