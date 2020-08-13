@@ -97,6 +97,18 @@ class GrowattApi:
         Get "All parameters" from PV inverter.
         """
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
+            'op': 'getInverterDetailData',
+            'inverterId': inverter_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+        
+    def inverter_detail_two(self, inverter_id):
+        """
+        Get "All parameters" from PV inverter.
+        """
+        response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData_two',
             'inverterId': inverter_id
         })
@@ -185,8 +197,8 @@ class GrowattApi:
         """
         Get basic plant information with device list.
         """
-        response = self.session.get(self.get_url('newPlantAPI.do'), params={
-            'op': 'getAllDeviceListThree',
+        response = self.session.get(self.get_url('newTwoPlantAPI.do'), params={
+            'op': 'getAllDeviceList',
             'plantId': plant_id,
             'pageNum': 1,
             'pageSize': 1
