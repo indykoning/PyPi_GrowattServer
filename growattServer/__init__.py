@@ -103,7 +103,7 @@ class GrowattApi:
 
         data = json.loads(response.content.decode('utf-8'))
         return data
-        
+
     def inverter_detail_two(self, inverter_id):
         """
         Get "All parameters" from PV inverter.
@@ -131,7 +131,7 @@ class GrowattApi:
         })
         data = json.loads(response.content.decode('utf-8'))
         return data
-		
+
     def tlx_detail(self, tlx_id):
         """
         Get "All parameters" from PV inverter.
@@ -143,7 +143,19 @@ class GrowattApi:
 
         data = json.loads(response.content.decode('utf-8'))
         return data
-    
+
+    def mix_info(self, mix_id):
+        """
+        Get "All parameters" from Mix device.
+        """
+        response = self.session.get(self.get_url('newMixApi.do'), params={
+            'op': 'getMixInfo',
+            'mixId': mix_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
     def storage_detail(self, storage_id):
         """
         Get "All parameters" from battery storage.
