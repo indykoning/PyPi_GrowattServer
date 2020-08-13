@@ -104,6 +104,34 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
+    def tlx_data(self, tlx_id, date):
+        """
+        Get inverter data for specified date or today.
+        """
+        if date is None:
+            date = datetime.date.today()
+        date_str = date.strftime('%Y-%m-%d')
+        response = self.session.get(self.get_url('newTlxApi.do'), params={
+            'op': 'getTlxData',
+            'id': tlx_id,
+            'type': 1,
+            'date': date_str
+        })
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+		
+    def tlx_detail(self, tlx_id):
+        """
+        Get "All parameters" from PV inverter.
+        """
+        response = self.session.get(self.get_url('newTlxApi.do'), params={
+            'op': 'getTlxDetailData',
+            'id': tlx_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+    
     def storage_detail(self, storage_id):
         """
         Get "All parameters" from battery storage.
