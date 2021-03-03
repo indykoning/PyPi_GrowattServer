@@ -36,6 +36,12 @@ Any methods that may be useful.
 
 `api.tlx_detail(tlx_id)` Get detailed data on a tlx type inverter.
 
+`api.mix_info(plant_id, mix_id)` Get high level information about the Mix system including daily and overall totals
+
+`api.mix_totals(plant_id, mix_id)` Get daily and overall total information for the Mix system (duplicates some of the information from `mix_info`
+
+`api.mix_system_status(plant_id, mix_id)` Get instantaneous values for Mix system e.g. current import/export, generation, charging rates etc.
+
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
 
 `api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).

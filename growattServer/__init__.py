@@ -144,17 +144,44 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def mix_info(self, mix_id):
+    def mix_info(self, plant_id, mix_id):
         """
-        Get "All parameters" from Mix device.
+        Get high level values from Mix device.
         """
         response = self.session.get(self.get_url('newMixApi.do'), params={
             'op': 'getMixInfo',
+            'plantId': plant_id,
             'mixId': mix_id
         })
 
         data = json.loads(response.content.decode('utf-8'))
-        return data
+        return data['obj']
+
+    def mix_totals(self, plant_id, mix_id):
+        """
+        Get "Totals" from Mix device.
+        """
+        response = self.session.post(self.get_url('newMixApi.do'), params={
+            'op': 'getEnergyOverview',
+            'plantId': plant_id,
+            'mixId': mix_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data['obj']
+
+    def mix_system_status(self, plant_id, mix_id):
+        """
+        Get "Status" from Mix device.
+        """
+        response = self.session.post(self.get_url('newMixApi.do'), params={
+            'op': 'getSystemStatus_KW',
+            'plantId': plant_id,
+            'mixId': mix_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data['obj']
 
     def storage_detail(self, storage_id):
         """
