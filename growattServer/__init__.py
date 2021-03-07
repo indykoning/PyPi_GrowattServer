@@ -23,7 +23,7 @@ class Timespan(IntEnum):
 
 
 class GrowattApi:
-    server_url = 'http://server.growatt.com/'
+    server_url = 'https://server.growatt.com/'
 
     def __init__(self):
         self.session = requests.Session()
