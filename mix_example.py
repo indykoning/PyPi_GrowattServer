@@ -74,9 +74,9 @@ for plant in plant_list['data']:
     #NOTE - This is the bit where we specifically only handle information on Mix devices - this won't work for non-mix devices
 
     #These two API calls return lots of duplicated information, but each also holds unique information as well
-    mix_info = api.mix_info(plant_id, device_sn)
+    mix_info = api.mix_info(device_sn, plant_id)
     #pp.pprint(mix_info)
-    mix_totals = api.mix_totals(plant_id, device_sn)
+    mix_totals = api.mix_totals(device_sn, plant_id)
     #pp.pprint(mix_totals)
     indent_print("*TOTAL VALUES*", 4)
     indent_print("==Today Totals==", 4)
@@ -94,7 +94,7 @@ for plant in plant_list['data']:
     print("")
 
     #This call gets all of the instantaneous values from the system e.g. current load, generation etc.
-    mix_status = api.mix_system_status(plant_id, device_sn)
+    mix_status = api.mix_system_status(device_sn, plant_id)
     #pp.pprint(mix_status)
     #NOTE - There are some other values available in mix_status, however these are the most useful ones
     indent_print("*CURRENT VALUES*",4)

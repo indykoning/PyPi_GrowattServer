@@ -144,40 +144,50 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def mix_info(self, plant_id, mix_id):
+    def mix_info(self, mix_id, plant_id = None):
         """
         Get high level values from Mix device.
+        mix_id: The serial number (device_sn) of the inverter
+        plant_id: Optional - The ID of the plant (the mobile app uses this but it does not appear to be necessary)
         """
-        response = self.session.get(self.get_url('newMixApi.do'), params={
+        request_params={
             'op': 'getMixInfo',
-            'plantId': plant_id,
             'mixId': mix_id
-        })
+        }
+
+        if (plant_id):
+          request_params['plantId'] = plant_id
+
+        response = self.session.get(self.get_url('newMixApi.do'), params=request_params)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_totals(self, plant_id, mix_id):
+    def mix_totals(self, mix_id, plant_id):
         """
         Get "Totals" from Mix device.
+        mix_id: The serial number (device_sn) of the inverter
+        plant_id: The ID of the plant
         """
         response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getEnergyOverview',
-            'plantId': plant_id,
-            'mixId': mix_id
+            'mixId': mix_id,
+            'plantId': plant_id
         })
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_system_status(self, plant_id, mix_id):
+    def mix_system_status(self, mix_id, plant_id):
         """
         Get "Status" from Mix device.
+        mix_id: The serial number (device_sn) of the inverter
+        plant_id: The ID of the plant
         """
         response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getSystemStatus_KW',
-            'plantId': plant_id,
-            'mixId': mix_id
+            'mixId': mix_id,
+            'plantId': plant_id
         })
 
         data = json.loads(response.content.decode('utf-8'))
