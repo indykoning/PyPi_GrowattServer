@@ -84,13 +84,31 @@ for plant in plant_list['data']:
     indent_print("Battery Discharge (kwh): %s"%(mix_info['eBatDisChargeToday']),6)
     indent_print("Solar Generation (kwh): %s"%(mix_info['epvToday']),6)
     indent_print("Local Load (kwh): %s"%(mix_totals['elocalLoadToday']),6)
-    indent_print("Export to Grid (kwh) (DOESN'T SEEM TO POPULATE ON MY SYSTEM): %s"%(mix_totals['etoGridToday']),6)
+    indent_print("Export to Grid (kwh): %s"%(mix_totals['etoGridToday']),6)
     indent_print("==Overall Totals==",4)
     indent_print("Battery Charge: %s"%(mix_info['eBatChargeTotal']),6)
     indent_print("Battery Discharge (kwh): %s"%(mix_info['eBatDisChargeTotal']),6)
     indent_print("Solar Generation (kwh): %s"%(mix_info['epvTotal']),6)
     indent_print("Local Load (kwh): %s"%(mix_totals['elocalLoadTotal']),6)
-    indent_print("Export to Grid (kwh) (DOESN'T SEEM TO POPULATE ON MY SYSTEM): %s"%(mix_totals['etogridTotal']),6)
+    indent_print("Export to Grid (kwh): %s"%(mix_totals['etogridTotal']),6)
+    print("")
+
+    mix_detail = api.mix_detail(device_sn, plant_id)
+    #pp.pprint(mix_detail)
+    indent_print("*TODAY TOTALS BREAKDOWN*", 4)
+    indent_print("Load consumed from solar (kwh): %s"%(mix_detail['eChargeToday']),6)
+    indent_print("Load consumed from batteries (kwh): %s"%(mix_detail['echarge1']),6)
+    indent_print("Load consumed from grid (kwh): %s"%(mix_detail['etouser']),6)
+    calculated_consumption = float(mix_detail['eChargeToday']) + float(mix_detail['echarge1']) + float(mix_detail['etouser'])
+    indent_print("Load consumption (calculated) (kwh): %s"%(round(calculated_consumption,2)),6)
+    indent_print("Load consumption (API) (kwh): %s"%(mix_detail['elocalLoad']),6)
+
+    indent_print("Exported (kwh): %s"%(mix_detail['eAcCharge']), 6)
+
+    solar_to_battery = round(float(mix_info['epvToday']) - float(mix_detail['eAcCharge']) - float(mix_detail['eChargeToday']),2)
+    indent_print("Solar battery charge (calculated) (kwh): %s"%(solar_to_battery), 6)
+    ac_to_battery = round(float(mix_info['eBatChargeToday']) - solar_to_battery,2)
+    indent_print("AC battery charge (calculated) (kwh): %s"%(ac_to_battery), 6)
     print("")
 
     #This call gets all of the instantaneous values from the system e.g. current load, generation etc.

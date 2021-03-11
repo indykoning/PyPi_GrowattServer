@@ -18,9 +18,9 @@ def hash_password(password):
     return password_md5
 
 class Timespan(IntEnum):
+    hour = 0
     day = 1
     month = 2
-
 
 class GrowattApi:
     server_url = 'https://server.growatt.com/'
@@ -146,9 +146,34 @@ class GrowattApi:
 
     def mix_info(self, mix_id, plant_id = None):
         """
-        Get high level values from Mix device.
-        mix_id: The serial number (device_sn) of the inverter
-        plant_id: Optional - The ID of the plant (the mobile app uses this but it does not appear to be necessary)
+        Returns high level values from Mix device
+
+        Keyword arguments:
+        mix_id -- The serial number (device_sn) of the inverter
+        plant_id -- The ID of the plant (the mobile app uses this but it does not appear to be necessary) (default None)
+
+        Returns:
+        'acChargeEnergyToday' -- ??? 2.7
+        'acChargeEnergyTotal' -- ??? 25.3
+        'acChargePower' -- ??? 0
+        'capacity': '45' -- The current remaining capacity of the batteries (same as soc but without the % sign)
+        'eBatChargeToday' -- Battery charged today in kWh
+        'eBatChargeTotal' -- Battery charged total (all time) in kWh
+        'eBatDisChargeToday' -- Battery discharged today in kWh
+        'eBatDisChargeTotal' -- Battery discharged total (all time) in kWh
+        'epvToday' -- Energy generated from PVs today in kWh
+        'epvTotal' -- Energy generated from PVs total (all time) in kWh
+        'isCharge'-- ??? 0 - Possible a 0/1 based on whether or not the battery is charging
+        'pCharge1' -- ??? 0
+        'pDischarge1' -- Battery discharging rate in W
+        'soc' -- Statement of charge including % symbol
+        'upsPac1' -- ??? 0
+        'upsPac2' -- ??? 0
+        'upsPac3' -- ??? 0
+        'vbat' -- Battery Voltage
+        'vbatdsp' -- ??? 51.8
+        'vpv1' -- Voltage PV1
+        'vpv2' -- Voltage PV2
         """
         request_params={
             'op': 'getMixInfo',
@@ -165,9 +190,26 @@ class GrowattApi:
 
     def mix_totals(self, mix_id, plant_id):
         """
-        Get "Totals" from Mix device.
-        mix_id: The serial number (device_sn) of the inverter
-        plant_id: The ID of the plant
+        Returns "Totals" values from Mix device
+
+        Keyword arguments:
+        mix_id -- The serial number (device_sn) of the inverter
+        plant_id -- The ID of the plant
+
+        Returns:
+        'echargetoday' -- Battery charged today in kWh (same as eBatChargeToday from mix_info)
+        'echargetotal' -- Battery charged total (all time) in kWh (same as eBatChargeTotal from mix_info)
+        'edischarge1Today' -- Battery discharged today in kWh (same as eBatDisChargeToday from mix_info)
+        'edischarge1Total' -- Battery discharged total (all time) in kWh (same as eBatDisChargeTotal from mix_info)
+        'elocalLoadToday' -- Load consumption today in kWh
+        'elocalLoadTotal' -- Load consumption total (all time) in kWh
+        'epvToday' -- Energy generated from PVs today in kWh (same as epvToday from mix_info)
+        'epvTotal' -- Energy generated from PVs total (all time) in kWh (same as epvTotal from mix_info)
+        'etoGridToday' -- Energy exported to the grid today in kWh
+        'etogridTotal' -- Energy exported to the grid total (all time) in kWh
+        'photovoltaicRevenueToday' -- Revenue earned from PV today in 'unit' currency
+        'photovoltaicRevenueTotal' -- Revenue earned from PV total (all time) in 'unit' currency
+        'unit' -- Unit of currency for 'Revenue'
         """
         response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getEnergyOverview',
@@ -180,9 +222,37 @@ class GrowattApi:
 
     def mix_system_status(self, mix_id, plant_id):
         """
-        Get "Status" from Mix device.
-        mix_id: The serial number (device_sn) of the inverter
-        plant_id: The ID of the plant
+        Returns current "Status" from Mix device
+
+        Keyword arguments:
+        mix_id -- The serial number (device_sn) of the inverter
+        plant_id -- The ID of the plant
+
+        Returns:
+        'SOC' -- Statement of charge (remaining battery %)
+        'chargePower' -- Battery charging rate in kw
+        'fAc' -- ??? 50
+        'lost' -- System status e.g. 'mix.status.normal'
+        'pLocalLoad' -- Load conumption in kW
+        'pPv1' -- PV1 Wattage in W
+        'pPv2' -- PV2 Wattage in W
+        'pactogrid' -- Export to grid rate in kW
+        'pactouser' -- Import from grid rate in kW
+        'pdisCharge1' -- Discharging batteries rate in kW
+        'pmax' -- ??? 6 ??? PV Maximum kW ??
+        'ppv' -- PV combined Wattage in kW
+        'priorityChoose' -- Priority setting - 0=Local load
+        'status' -- System statue - ENUM - Unknown values
+        'unit' -- Unit of measurement e.g. 'kW'
+        'upsFac' -- ??? 0
+        'upsVac1' -- ??? 0
+        'uwSysWorkMode' -- ??? 6
+        'vAc1' -- Grid voltage in V
+        'vBat' -- Battery voltage in V
+        'vPv1' -- PV1 voltage in V
+        'vPv2' -- PV2 voltage in V
+        'vac1' -- Grid voltage in V (same as vAc1)
+        'wBatteryType' -- ??? 1
         """
         response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getSystemStatus_KW',
@@ -190,6 +260,71 @@ class GrowattApi:
             'plantId': plant_id
         })
 
+        data = json.loads(response.content.decode('utf-8'))
+        return data['obj']
+
+    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+        """
+        Get Mix details for specified timespan
+
+        Keyword arguments:
+        mix_id -- The serial number (device_sn) of the inverter
+        plant_id -- The ID of the plant
+        timespan -- The ENUM value conforming to the time window you want e.g. hours from today, days, or months (Default Timespan.hour)
+        date -- The date you are interested in (Default datetime.datetime.now())
+
+        Returns:
+        A chartData object where each entry is for a specific 5 minute window e.g. 00:05 and 00:10 respectively (below)
+        'chartData': {   '00:05': {   'pacToGrid' -- Export rate to grid in kW
+                                      'pacToUser' -- Import rate from grid in kW
+                                      'pdischarge' -- Battery discharge in kW
+                                      'ppv' -- Solar generation in kW
+                                      'sysOut' -- Load consumption in kW
+                                  },
+                         '00:10': {   'pacToGrid': '0',
+                                      'pacToUser': '0.93',
+                                      'pdischarge': '0',
+                                      'ppv': '0',
+                                      'sysOut': '0.93'},
+                          ......
+                     }
+        'eAcCharge' -- Exported to grid in kWh
+        'eCharge' -- System production in kWh = Self-consumption + Exported to Grid
+        'eChargeToday' -- Load consumption from solar in kWh
+        'eChargeToday1' -- Self-consumption in kWh
+        'eChargeToday2' -- Self-consumption in kWh (eChargeToday + echarge1)
+        'echarge1' -- Load consumption from battery in kWh
+        'echargeToat' -- Total battery discharged (all time) in kWh
+        'elocalLoad' -- Load consumption in kW (battery + solar + imported)
+        'etouser' -- Load consumption imported from grid in kWh
+        'photovoltaic' -- Load consumption from solar in kWh (same as eChargeToday)
+        'ratio1' -- % of system production that is self-consumed
+        'ratio2' -- % of system production that is exported
+        'ratio3' -- % of Load consumption that is "self consumption"
+        'ratio4' -- % of Load consumption that is "imported from grid"
+        'ratio5' -- % of Self consumption that is directly from Solar
+        'ratio6' -- % of Self consumption that is from batteries
+        'unit' -- Unit of measurement e.g kWh
+        'unit2' -- Unit of measurement e.g kW
+
+
+        NOTE - It is possible to calculate the PV generation that went into charging the batteries by performing the following calculation:
+        Solar to Battery = Solar Generation - Export to Grid - Load consumption from solar
+                           epvToday (from mix_info) - eAcCharge - eChargeToday
+        """
+        assert timespan in Timespan
+        if timespan == Timespan.day or timespan == Timespan.hour:
+            date_str = date.strftime('%Y-%m-%d')
+        elif timespan == Timespan.month:
+            date_str = date.strftime('%Y-%m')
+
+        response = self.session.post(self.get_url('newMixApi.do'), params={
+            'op': 'getEnergyProdAndCons_KW',
+            'plantId': plant_id,
+            'mixId': mix_id,
+            'type': timespan.value,
+            'date': date_str
+        })
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
