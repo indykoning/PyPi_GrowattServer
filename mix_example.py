@@ -111,6 +111,39 @@ for plant in plant_list['data']:
     indent_print("AC battery charge (calculated) (kwh): %s"%(ac_to_battery), 6)
     print("")
 
+    indent_print("*TODAY TOTALS COMPARISONS*", 4)
+
+    indent_print("Export to Grid (kwh) - TRUSTED:", 6)
+    indent_print("mix_totals['etoGridToday']: %s"%(mix_totals['etoGridToday']), 8)
+    indent_print("mix_detail['eAcCharge']: %s"%(mix_detail['eAcCharge']), 8)
+    indent_print("mix_detail['calculatedPacToGridTodayKwh']: %s"%(mix_detail['calculatedPacToGridTodayKwh']), 8)
+    print("")
+
+    indent_print("Imported from Grid (kwh) - NOT TRUSTED:", 6)
+    indent_print("mix_detail['etouser']: %s"%(mix_detail['etouser']), 8)
+    indent_print("mix_detail['calculatedPacToUserTodayKwh']: %s"%(mix_detail['calculatedPacToUserTodayKwh']), 8)
+    print("")
+
+    indent_print("Battery discharge (kwh) - TRUSTED:", 6)
+    indent_print("mix_info['eBatDisChargeToday']: %s"%(mix_info['eBatDisChargeToday']), 8)
+    indent_print("mix_totals['edischarge1Today']: %s"%(mix_totals['edischarge1Today']), 8)
+    indent_print("mix_detail['echarge1']: %s"%(mix_detail['echarge1']), 8)
+    indent_print("mix_detail['calculatedPdischargeTodayKwh']: %s"%(mix_detail['calculatedPdischargeTodayKwh']), 8)
+    print("")
+
+    indent_print("Solar generation (kwh) - TRUSTED:", 6)
+    indent_print("mix_info['epvToday']: %s"%(mix_info['epvToday']), 8)
+    indent_print("mix_totals['epvToday']: %s"%(mix_totals['epvToday']), 8)
+    indent_print("mix_detail['calculatedPpvTodayKwh']: %s"%(mix_detail['calculatedPpvTodayKwh']), 8)
+    print("")
+
+    indent_print("Load Consumption (kwh) - NOT TRUSTED:", 6)
+    indent_print("mix_totals['elocalLoadToday']: %s"%(mix_totals['elocalLoadToday'],), 8)
+    indent_print("mix_detail['elocalLoad']: %s"%(mix_detail['elocalLoad']), 8)
+    indent_print("mix_detail['calculatedSysOutTodayKwh']: %s"%(mix_detail['calculatedSysOutTodayKwh']), 8)
+    print("")
+
+
     #This call gets all of the instantaneous values from the system e.g. current load, generation etc.
     mix_status = api.mix_system_status(device_sn, plant_id)
     #pp.pprint(mix_status)
