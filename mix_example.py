@@ -95,6 +95,38 @@ for plant in plant_list['data']:
 
     mix_detail = api.mix_detail(device_sn, plant_id)
     #pp.pprint(mix_detail)
+
+    #Some of the 'totals' values that are returned by this function do not align to what we would expect, however the graph data always seems to be accurate.
+    #Therefore, here we take a moment to calculate the same values provided elsewhere but based on the graph data instead
+    #The particular stats that we question are 'load consumption' (elocalLoad)  and 'import from grid' (etouser) which seem to be calculated from one-another
+    #It would appear that 'etouser' is calculated on the backend incorrectly for systems that use AC battery charged (e.g. during cheap nighttime rates)
+    pacToGridToday = 0.0
+    pacToUserToday = 0.0
+    pdischargeToday = 0.0
+    ppvToday = 0.0
+    sysOutToday = 0.0
+
+    chartData = mix_detail['chartData']
+    for time_entry, data_points in chartData.items():
+      #For each time entry convert it's wattage into kWh, this assumes that the wattage value is
+      #the same for the whole 5 minute window (it's the only assumption we can make)
+      #We Multiply the wattage by 5/60 (the number of minutes of the time window divided by the number of minutes in an hour)
+      #to give us the equivalent kWh reading for that 5 minute window
+      pacToGridToday += float(data_points['pacToGrid']) * (5/60)
+      pacToUserToday += float(data_points['pacToUser']) * (5/60)
+      pdischargeToday += float(data_points['pdischarge']) * (5/60)
+      ppvToday += float(data_points['ppv']) * (5/60)
+      sysOutToday += float(data_points['sysOut']) * (5/60)
+
+    mix_detail['calculatedPacToGridTodayKwh'] = round(pacToGridToday,2)
+    mix_detail['calculatedPacToUserTodayKwh'] = round(pacToUserToday,2)
+    mix_detail['calculatedPdischargeTodayKwh'] = round(pdischargeToday,2)
+    mix_detail['calculatedPpvTodayKwh'] = round(ppvToday,2)
+    mix_detail['calculatedSysOutTodayKwh'] = round(sysOutToday,2)
+
+    #Option to print mix_detail again now we've made the additions
+    #pp.pprint(mix_detail)
+
     indent_print("*TODAY TOTALS BREAKDOWN*", 4)
     indent_print("Load consumed from solar (kwh): %s"%(mix_detail['eChargeToday']),6)
     indent_print("Load consumed from batteries (kwh): %s"%(mix_detail['echarge1']),6)

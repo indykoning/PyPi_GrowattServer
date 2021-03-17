@@ -42,7 +42,7 @@ Any methods that may be useful.
 
 `api.mix_system_status(mix_id, plant_id)` Get instantaneous values for Mix system e.g. current import/export, generation, charging rates etc.
 
-`api.mix_detail(mix_id, plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get detailed values for a timespan, also includes some additional values calculated from the graphs as the backend metrics seem inconsistent
+`api.mix_detail(mix_id, plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get detailed values for a timespan, the API call also returns totals data for the same values in this time window
 
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
 

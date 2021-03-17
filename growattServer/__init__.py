@@ -327,35 +327,6 @@ class GrowattApi:
         })
         data = json.loads(response.content.decode('utf-8'))
 
-        #Some of the 'totals' values that are returned by this function do not align to what we would expect, however the graph data always seems to be accurate.
-        #Therefore, here we take a moment to calculate the same values provided elsewhere but based on the graph data instead
-        #The particular stats that we question are 'load consumption' (elocalLoad)  and 'import from grid' (etouser) which seem to be calculated from one-another
-        #It would appear that 'etouser' is calculated on the backend incorrectly for systems that use AC battery charged (e.g. during cheap nighttime rates)
-        if timespan == Timespan.hour or timespan == Timespan.day:
-          pacToGridToday = 0.0
-          pacToUserToday = 0.0
-          pdischargeToday = 0.0
-          ppvToday = 0.0
-          sysOutToday = 0.0
-
-          chartData = data['obj']['chartData']
-          for time_entry in chartData:
-            #For each time entry convert it's wattage into kWh, this assumes that the wattage value is
-            #the same for the whole 5 minute window (it's the only assumption we can make)
-            #We Multiply the wattage by 5/60 (the number of minutes of the time window divided by the number of minutes in an hour)
-            #to give us the equivalent kWh reading for that 5 minute window
-            pacToGridToday += float(chartData[time_entry]['pacToGrid']) * (5/60)
-            pacToUserToday += float(chartData[time_entry]['pacToUser']) * (5/60)
-            pdischargeToday += float(chartData[time_entry]['pdischarge']) * (5/60)
-            ppvToday += float(chartData[time_entry]['ppv']) * (5/60)
-            sysOutToday += float(chartData[time_entry]['sysOut']) * (5/60)
-
-          data['obj']['calculatedPacToGridTodayKwh'] = round(pacToGridToday,2)
-          data['obj']['calculatedPacToUserTodayKwh'] = round(pacToUserToday,2)
-          data['obj']['calculatedPdischargeTodayKwh'] = round(pdischargeToday,2)
-          data['obj']['calculatedPpvTodayKwh'] = round(ppvToday,2)
-          data['obj']['calculatedSysOutTodayKwh'] = round(sysOutToday,2)
-
         return data['obj']
 
     def storage_detail(self, storage_id):
