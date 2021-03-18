@@ -75,7 +75,7 @@ for plant in plant_list['data']:
 
     #These two API calls return lots of duplicated information, but each also holds unique information as well
     mix_info = api.mix_info(device_sn, plant_id)
-    #pp.pprint(mix_info)
+    pp.pprint(mix_info)
     mix_totals = api.mix_totals(device_sn, plant_id)
     #pp.pprint(mix_totals)
     indent_print("*TOTAL VALUES*", 4)
@@ -128,8 +128,10 @@ for plant in plant_list['data']:
     #pp.pprint(mix_detail)
 
     indent_print("*TODAY TOTALS BREAKDOWN*", 4)
+    indent_print("Self generation total (batteries & solar - from API) (kwh): %s:"%(mix_detail['eCharge']),6)
     indent_print("Load consumed from solar (kwh): %s"%(mix_detail['eChargeToday']),6)
     indent_print("Load consumed from batteries (kwh): %s"%(mix_detail['echarge1']),6)
+    indent_print("Self consumption total (batteries & solar - from API) (kwh): %s"%(mix_detail['eChargeToday1']),6)
     indent_print("Load consumed from grid (kwh): %s"%(mix_detail['etouser']),6)
     calculated_consumption = float(mix_detail['eChargeToday']) + float(mix_detail['echarge1']) + float(mix_detail['etouser'])
     indent_print("Load consumption (calculated) (kwh): %s"%(round(calculated_consumption,2)),6)
