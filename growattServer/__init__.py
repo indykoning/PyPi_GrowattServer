@@ -329,6 +329,68 @@ class GrowattApi:
 
         return data['obj']
 
+    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+        """
+        Get 'dashboard' data for specified timespan
+        NOTE - All numerical values returned by this api call include units e.g. kWh or %
+             - Many of the 'total' values that are returned for a Mix system are inaccurate on the system this was tested against.
+               However, the statistics that are correct are not available on any other interface, plus these values may be accurate for
+               non-mix types of system. Where the values have been proven to be inaccurate they are commented below.
+
+        Keyword arguments:
+        plant_id -- The ID of the plant
+        timespan -- The ENUM value conforming to the time window you want e.g. hours from today, days, or months (Default Timespan.hour)
+        date -- The date you are interested in (Default datetime.datetime.now())
+
+        Returns:
+        A chartData object where each entry is for a specific 5 minute window e.g. 00:05 and 00:10 respectively (below)
+        NOTE: The keys are interpreted differently, the examples below describe what they are used for in a 'Mix' system
+        'chartData': {   '00:05': {   'pacToUser' -- Power from battery in kW
+                                      'ppv' -- Solar generation in kW
+                                      'sysOut' -- Load consumption in kW
+                                      'userLoad' -- Export in kW
+                                  },
+                         '00:10': {   'pacToUser': '0',
+                                      'ppv': '0',
+                                      'sysOut': '0.7',
+                                      'userLoad': '0'},
+                          ......
+                     }
+        'chartDataUnit' -- Unit of measurement e.g. 'kW',
+        'eAcCharge' -- Energy exported to the grid in kWh e.g. '20.5kWh' (not accurate for Mix systems)
+        'eCharge' -- System production in kWh = Self-consumption + Exported to Grid e.g '23.1kWh' (not accurate for Mix systems - actually showing the total 'load consumption'
+        'eChargeToday1' -- Self-consumption of PPV (possibly including excess diverted to batteries) in kWh e.g. '2.6kWh' (not accurate for Mix systems)
+        'eChargeToday2' -- Total self-consumption (PPV consumption(eChargeToday2Echarge1) + Battery Consumption(echarge1)) e.g. '10.1kWh' (not accurate for Mix systems)
+        'eChargeToday2Echarge1' -- Self-consumption of PPV only e.g. '0.8kWh' (not accurate for Mix systems)
+        'echarge1' -- Self-consumption from Battery only e.g. '9.3kWh'
+        'echargeToat' -- Not used on Dashboard view, likely to be total battery discharged e.g. '152.1kWh'
+        'elocalLoad' -- Total load consumption (etouser + eChargeToday2) e.g. '20.3kWh', (not accurate for Mix systems)
+        'etouser'-- Energy imported from grid today (includes both directly used by load and AC battery charging e.g. '10.2kWh'
+        'keyNames' -- Keys to be used for the graph data e.g. ['Solar', 'Load Consumption', 'Export To Grid', 'From Battery']
+        'photovoltaic' -- Same as eChargeToday2Echarge1 e.g. '0.8kWh'
+        'ratio1' -- % of 'Solar production' that is self-consumed e.g. '11.3%' (not accurate for Mix systems)
+        'ratio2' -- % of 'Solar production' that is exported e.g. '88.7%' (not accurate for Mix systems)
+        'ratio3' -- % of 'Load consumption' that is self consumption e.g. '49.8%' (not accurate for Mix systems)
+        'ratio4' -- % of 'Load consumption' that is imported from the grid e.g '50.2%' (not accurate for Mix systems)
+        'ratio5' -- % of Self consumption that is from batteries e.g. '92.1%' (not accurate for Mix systems)
+        'ratio6' -- % of Self consumption that is directly from Solar e.g. '7.9%' (not accurate for Mix systems)
+        """
+        assert timespan in Timespan
+        if timespan == Timespan.day or timespan == Timespan.hour:
+            date_str = date.strftime('%Y-%m-%d')
+        elif timespan == Timespan.month:
+            date_str = date.strftime('%Y-%m')
+
+        response = self.session.post(self.get_url('newPlantAPI.do'), params={
+            'action': "getEnergyStorageData",
+            'date': date_str,
+            'type': timespan.value,
+            'plantId': plant_id
+        })
+
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
     def storage_detail(self, storage_id):
         """
         Get "All parameters" from battery storage.

@@ -127,12 +127,16 @@ for plant in plant_list['data']:
     #Option to print mix_detail again now we've made the additions
     #pp.pprint(mix_detail)
 
+    dashboard_data = api.dashboard_data(plant_id)
+    #pp.pprint(dashboard_data)
+
     indent_print("*TODAY TOTALS BREAKDOWN*", 4)
-    indent_print("Self generation total (batteries & solar - from API) (kwh): %s:"%(mix_detail['eCharge']),6)
+    indent_print("Self generation total (batteries & solar - from API) (kwh): %s"%(mix_detail['eCharge']),6)
     indent_print("Load consumed from solar (kwh): %s"%(mix_detail['eChargeToday']),6)
     indent_print("Load consumed from batteries (kwh): %s"%(mix_detail['echarge1']),6)
     indent_print("Self consumption total (batteries & solar - from API) (kwh): %s"%(mix_detail['eChargeToday1']),6)
     indent_print("Load consumed from grid (kwh): %s"%(mix_detail['etouser']),6)
+    indent_print("Total imported from grid (Load + AC charging) (kwh): %s"%(dashboard_data['etouser'].replace('kWh','')),6)
     calculated_consumption = float(mix_detail['eChargeToday']) + float(mix_detail['echarge1']) + float(mix_detail['etouser'])
     indent_print("Load consumption (calculated) (kwh): %s"%(round(calculated_consumption,2)),6)
     indent_print("Load consumption (API) (kwh): %s"%(mix_detail['elocalLoad']),6)
@@ -153,8 +157,8 @@ for plant in plant_list['data']:
     indent_print("mix_detail['calculatedPacToGridTodayKwh']: %s"%(mix_detail['calculatedPacToGridTodayKwh']), 8)
     print("")
 
-    indent_print("Imported from Grid (kwh) - NOT TRUSTED:", 6)
-    indent_print("mix_detail['etouser']: %s"%(mix_detail['etouser']), 8)
+    indent_print("Imported from Grid (kwh) - TRUSTED:", 6)
+    indent_print("dashboard_data['etouser']: %s"%(dashboard_data['etouser'].replace('kWh','')), 8)
     indent_print("mix_detail['calculatedPacToUserTodayKwh']: %s"%(mix_detail['calculatedPacToUserTodayKwh']), 8)
     print("")
 
@@ -171,7 +175,7 @@ for plant in plant_list['data']:
     indent_print("mix_detail['calculatedPpvTodayKwh']: %s"%(mix_detail['calculatedPpvTodayKwh']), 8)
     print("")
 
-    indent_print("Load Consumption (kwh) - NOT TRUSTED:", 6)
+    indent_print("Load Consumption (kwh) - TRUSTED:", 6)
     indent_print("mix_totals['elocalLoadToday']: %s"%(mix_totals['elocalLoadToday'],), 8)
     indent_print("mix_detail['elocalLoad']: %s"%(mix_detail['elocalLoad']), 8)
     indent_print("mix_detail['calculatedSysOutTodayKwh']: %s"%(mix_detail['calculatedSysOutTodayKwh']), 8)

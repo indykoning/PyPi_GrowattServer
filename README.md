@@ -44,6 +44,8 @@ Any methods that may be useful.
 
 `api.mix_detail(mix_id, plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get detailed values for a timespan, the API call also returns totals data for the same values in this time window
 
+`api.dashboard_data(plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get dashboard values for a timespan, the API call also returns totals data for the same values in this time window. NOTE: Many of the values on this API call are incorrect for 'Mix' systems, however it still provides some accurate values that are unavailable on other API calls.
+
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
 
 `api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).
