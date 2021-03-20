@@ -36,6 +36,16 @@ Any methods that may be useful.
 
 `api.tlx_detail(tlx_id)` Get detailed data on a tlx type inverter.
 
+`api.mix_info(mix_id, plant_id=None)` Get high level information about the Mix system including daily and overall totals. NOTE: plant_id is an optional parameter, it does not appear to be used by the remote API, but is used by the mobile app these calls were reverse-engineered from.
+
+`api.mix_totals(mix_id, plant_id)` Get daily and overall total information for the Mix system (duplicates some of the information from `mix_info`
+
+`api.mix_system_status(mix_id, plant_id)` Get instantaneous values for Mix system e.g. current import/export, generation, charging rates etc.
+
+`api.mix_detail(mix_id, plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get detailed values for a timespan, the API call also returns totals data for the same values in this time window
+
+`api.dashboard_data(plant_id, timespan=<0=hour, 1=day, 2=month>, date)` Get dashboard values for a timespan, the API call also returns totals data for the same values in this time window. NOTE: Many of the values on this API call are incorrect for 'Mix' systems, however it still provides some accurate values that are unavailable on other API calls.
+
 `api.storage_detail(storage_id)` Get detailed data on storage (battery).
 
 `api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).
