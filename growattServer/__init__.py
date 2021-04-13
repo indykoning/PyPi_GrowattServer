@@ -263,7 +263,7 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=None):
         """
         Get Mix details for specified timespan
 
@@ -312,6 +312,9 @@ class GrowattApi:
         Solar to Battery = Solar Generation - Export to Grid - Load consumption from solar
                            epvToday (from mix_info) - eAcCharge - eChargeToday
         """
+        if date is None:
+          date = datetime.datetime.now()
+
         assert timespan in Timespan
         if timespan == Timespan.day or timespan == Timespan.hour:
             date_str = date.strftime('%Y-%m-%d')
@@ -329,7 +332,7 @@ class GrowattApi:
 
         return data['obj']
 
-    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None):
         """
         Get 'dashboard' data for specified timespan
         NOTE - All numerical values returned by this api call include units e.g. kWh or %
@@ -375,6 +378,9 @@ class GrowattApi:
         'ratio5' -- % of Self consumption that is from batteries e.g. '92.1%' (not accurate for Mix systems)
         'ratio6' -- % of Self consumption that is directly from Solar e.g. '7.9%' (not accurate for Mix systems)
         """
+        if date is None:
+          date = datetime.datetime.now()
+
         assert timespan in Timespan
         if timespan == Timespan.day or timespan == Timespan.hour:
             date_str = date.strftime('%Y-%m-%d')
