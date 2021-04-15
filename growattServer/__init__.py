@@ -28,6 +28,21 @@ class GrowattApi:
     def __init__(self):
         self.session = requests.Session()
 
+    def __get_date_string(self, timespan=None, date=None):
+        if timespan is not None:
+         assert timespan in Timespan
+
+        if date is None:
+          date = datetime.datetime.now()
+
+        date_str=""
+        if timespan == Timespan.month:
+            date_str = date.strftime('%Y-%m')
+        else:
+            date_str = date.strftime('%Y-%m-%d')
+
+        return date_str
+
     def get_url(self, page):
         """
         Simple helper function to get the page url/
@@ -58,15 +73,11 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
 
-    def plant_detail(self, plant_id, timespan, date):
+    def plant_detail(self, plant_id, timespan, date=None):
         """
         Get plant details for specified timespan.
         """
-        assert timespan in Timespan
-        if timespan == Timespan.day:
-            date_str = date.strftime('%Y-%m-%d')
-        elif timespan == Timespan.month:
-            date_str = date.strftime('%Y-%m')
+        date_str = self.__get_date_string(timespan, date)
 
         response = self.session.get(self.get_url('PlantDetailAPI.do'), params={
             'plantId': plant_id,
@@ -76,13 +87,11 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
 
-    def inverter_data(self, inverter_id, date):
+    def inverter_data(self, inverter_id, date=None):
         """
         Get inverter data for specified date or today.
         """
-        if date is None:
-            date = datetime.date.today()
-        date_str = date.strftime('%Y-%m-%d')
+        date_str = self.__get_date_string(date=date)
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterData',
             'id': inverter_id,
@@ -116,13 +125,11 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def tlx_data(self, tlx_id, date):
+    def tlx_data(self, tlx_id, date=None):
         """
         Get inverter data for specified date or today.
         """
-        if date is None:
-            date = datetime.date.today()
-        date_str = date.strftime('%Y-%m-%d')
+        date_str = self.__get_date_string(timespan, date)
         response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxData',
             'id': tlx_id,
@@ -263,7 +270,7 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=None):
         """
         Get Mix details for specified timespan
 
@@ -312,11 +319,7 @@ class GrowattApi:
         Solar to Battery = Solar Generation - Export to Grid - Load consumption from solar
                            epvToday (from mix_info) - eAcCharge - eChargeToday
         """
-        assert timespan in Timespan
-        if timespan == Timespan.day or timespan == Timespan.hour:
-            date_str = date.strftime('%Y-%m-%d')
-        elif timespan == Timespan.month:
-            date_str = date.strftime('%Y-%m')
+        date_str = self.__get_date_string(timespan, date)
 
         response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getEnergyProdAndCons_KW',
@@ -329,7 +332,7 @@ class GrowattApi:
 
         return data['obj']
 
-    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=datetime.datetime.now()):
+    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None):
         """
         Get 'dashboard' data for specified timespan
         NOTE - All numerical values returned by this api call include units e.g. kWh or %
@@ -375,11 +378,7 @@ class GrowattApi:
         'ratio5' -- % of Self consumption that is from batteries e.g. '92.1%' (not accurate for Mix systems)
         'ratio6' -- % of Self consumption that is directly from Solar e.g. '7.9%' (not accurate for Mix systems)
         """
-        assert timespan in Timespan
-        if timespan == Timespan.day or timespan == Timespan.hour:
-            date_str = date.strftime('%Y-%m-%d')
-        elif timespan == Timespan.month:
-            date_str = date.strftime('%Y-%m')
+        date_str = self.__get_date_string(timespan, date)
 
         response = self.session.post(self.get_url('newPlantAPI.do'), params={
             'action': "getEnergyStorageData",
