@@ -36,11 +36,9 @@ class GrowattApi:
           date = datetime.datetime.now()
 
         date_str=""
-        if timespan == Timespan.day or timespan == Timespan.hour:
-            date_str = date.strftime('%Y-%m-%d')
-        elif timespan == Timespan.month:
+        if timespan == Timespan.month:
             date_str = date.strftime('%Y-%m')
-        else: #Handles if timespan is None
+        else:
             date_str = date.strftime('%Y-%m-%d')
 
         return date_str
