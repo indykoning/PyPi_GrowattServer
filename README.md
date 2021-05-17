@@ -55,6 +55,6 @@ Any methods that may be useful.
 ### Variables
 Some variables you may want to set.
 
-`api.server_url` The growatt server url, default: 'http://server.growatt.com/'
+`api.server_url` The growatt server url, default: 'https://server.growatt.com/'
 ## Note
 This is based on the endpoints used on the mobile app and could be changed without notice.
