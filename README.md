@@ -62,7 +62,7 @@ Any methods that may be useful.
 
 Some variables you may want to set.
 
-`api.server_url` The growatt server URL, default: 'http://server.growatt.com/'
+`api.server_url` The growatt server URL, default: 'https://server.growatt.com/'
 
 ## Note
 
