@@ -129,7 +129,7 @@ class GrowattApi:
         """
         Get inverter data for specified date or today.
         """
-        date_str = self.__get_date_string(timespan, date)
+        date_str = self.__get_date_string(date=date)
         response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxData',
             'id': tlx_id,
