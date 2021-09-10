@@ -23,7 +23,7 @@ class Timespan(IntEnum):
     month = 2
 
 class GrowattApi:
-    server_url = 'https://server.growatt.com/'
+    server_url = 'https://server-api.growatt.com/'
 
     def __init__(self):
         self.session = requests.Session()
