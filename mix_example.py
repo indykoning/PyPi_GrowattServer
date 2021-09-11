@@ -36,7 +36,7 @@ user_pass=getpass.getpass("Enter password:")
 api = growattServer.GrowattApi()
 login_response = api.login(username, user_pass)
 
-plant_list = api.plant_list(login_response['userId'])
+plant_list = api.plant_list(login_response['user']['id'])
 #pp.pprint(plant_list)
 
 print("***Totals for all plants***")
