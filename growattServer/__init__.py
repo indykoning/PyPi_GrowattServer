@@ -49,17 +49,80 @@ class GrowattApi:
         """
         return self.server_url + page
 
-    def login(self, username, password):
+    def login(self, username, password, is_password_hashed=False):
         """
         Log the user in.
+
+        Returns
+        'data' -- A List containing Objects containing the folowing
+            'plantName' -- Friendly name of the plant
+            'plantId'   -- The ID of the plant
+        'service'
+        'quality'
+        'isOpenSmartFamily'
+        'totalData' -- An Object
+        'success'   -- True or False
+        'msg'
+        'app_code'
+        'user' -- An Object containing a lot of user information
+            'uid'
+            'userLanguage'
+            'inverterGroup' -- A List
+            'timeZone' -- A Number
+            'lat'
+            'lng'
+            'dataAcqList' -- A List
+            'type'
+            'accountName' -- The username
+            'password' -- The password hash of the user
+            'isValiPhone'
+            'kind'
+            'mailNotice' -- True or False
+            'id'
+            'lasLoginIp'
+            'lastLoginTime'
+            'userDeviceType'
+            'phoneNum'
+            'approved' -- True or False
+            'area' -- Continent of the user
+            'smsNotice' -- True or False
+            'isAgent'
+            'token'
+            'nickName'
+            'parentUserId'
+            'customerCode'
+            'country'
+            'isPhoneNumReg'
+            'createDate'
+            'rightlevel'
+            'appType'
+            'serverUrl'
+            'roleId'
+            'enabled' -- True or False
+            'agentCode'
+            'inverterList' -- A list
+            'email'
+            'company'
+            'activeName'
+            'codeIndex'
+            'appAlias'
+            'isBigCustomer'
+            'noticeType'
         """
-        password_md5 = hash_password(password)
+        if not is_password_hashed:
+            password = hash_password(password)
+
         response = self.session.post(self.get_url('newLoginAPI.do'), data={
             'userName': username,
-            'password': password_md5
+            'password': password
         })
-        data = json.loads(response.content.decode('utf-8'))
-        return data['back']
+        data = json.loads(response.content.decode('utf-8'))['back']
+        if data['success']:
+            data.update({
+                'userId': data['user']['id'],
+                'userLevel': data['user']['rightlevel']
+            })
+        return data
 
     def plant_list(self, user_id):
         """
