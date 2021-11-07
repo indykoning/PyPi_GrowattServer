@@ -515,3 +515,124 @@ class GrowattApi:
 
         data = json.loads(response.content.decode('utf-8'))
         return data
+
+    def get_plant_settings(self, plant_id):
+        """
+        Returns a dictionary containing the settings for the specified plant
+
+        Keyword arguments:
+        plant_id -- The id of the plant you want the settings of
+
+        Returns:
+        A python dictionary containing the settings for the specified plant
+        """
+        response = self.session.get(self.get_url('newPlantAPI.do'), params={
+            'op': 'getPlant',
+            'plantId': plant_id
+        })
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
+    def modify_plant_settings(self, plant_id, changed_settings):
+        """
+        Convenience function to apply updated settings to the plant (looks up the current settings for you)
+        See README for all possible settings options
+
+        Keyword arguments:
+        plant_id -- The id of the plant you want to change the settings for
+        changed_settings -- A python dictionary containing the settings to be changed and their value
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+        """
+        current_settings = self.get_plant_settings(plant_id)
+        return self.apply_plant_settings(current_settings, changed_settings)
+
+
+    def apply_plant_settings(self, current_settings, changed_settings):
+        """
+        Applies settings to the plant e.g. ID, Location, Timezone
+        See README for all possible settings options
+
+        Keyword arguments:
+        current_settings -- A python dictionary containing the current settings of the plant (use the response from get_plant_settings)
+        changed_settings -- A python dictionary containing the settings to be changed and their value
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+        """
+        #These are the parameters that the form requires, without these an error is thrown. Pre-populate their values with the current values
+        form_settings = {
+            'plantCoal': (None, str(current_settings['formulaCoal'])),
+            'plantSo2': (None, str(current_settings['formulaSo2'])),
+            'accountName': (None, str(current_settings['userAccount'])),
+            'plantID': (None, str(current_settings['id'])),
+            'plantFirm': (None, '0'), #Hardcoded to 0 as I can't work out what value it should have
+            'plantCountry': (None, str(current_settings['country'])),
+            'plantType': (None, str(current_settings['plantType'])),
+            'plantIncome': (None, str(current_settings['formulaMoneyStr'])),
+            'plantAddress': (None, str(current_settings['plantAddress'])),
+            'plantTimezone': (None, str(current_settings['timezone'])),
+            'plantLng': (None, str(current_settings['plant_lng'])),
+            'plantCity': (None, str(current_settings['city'])),
+            'plantCo2': (None, str(current_settings['formulaCo2'])),
+            'plantMoney': (None, str(current_settings['formulaMoneyUnitId'])),
+            'plantPower': (None, str(current_settings['nominalPower'])),
+            'plantLat': (None, str(current_settings['plant_lat'])),
+            'plantDate': (None, str(current_settings['createDateText'])),
+            'plantName': (None, str(current_settings['plantName'])),
+        }
+
+        #Overwrite the current value of the setting with the new value
+        for setting, value in changed_settings.items():
+            form_settings[setting] = (None, str(value))
+
+        response = self.session.post(self.get_url('newTwoPlantAPI.do?op=updatePlant'), files = form_settings)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
+    def apply_inverter_setting_array(self, serial_number, setting_type, params_array):
+        """
+        Applies the setting using the apply_inverter_setting function, but assumes all params are numbered incrementally from param1 ..... paramN
+
+        Keyword arguments:
+        serial_number -- The serial number (device_sn) of the inverter
+        setting_type -- The setting to be configured (list of known working settings below)
+        params_array -- An array of parameters for the setting_type
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+        """
+        params_dict = {}
+        for index, param in enumerate(params_array, start=1):
+            params_dict['param' + str(index)] = param
+
+        return self.apply_inverter_setting(serial_number, setting_type, params_dict)
+
+    def apply_inverter_setting(self, serial_number, setting_type, parameters):
+        """
+        Applies settings for specified system based on serial number
+
+        Keyword arguments:
+        serial_number -- The serial number (device_sn) of the inverter
+        setting_type -- The setting to be configured (list of known working settings below)
+        parameters -- A python dictionary of the parameters to be sent to the system based on the chosen setting_type
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+
+
+        Known supported settings (TODO - Move this to the README)
+        type=pf_sys_year
+        param1=datetime in format: YYYY-MM-DD HH:MM:SS
+
+        """
+        default_params = {
+            'op': 'mixSetApiNew',
+            'serialNum': serial_number,
+            'type': setting_type
+        }
+        settings_params = {**default_params, **parameters}
+        response = self.session.post(self.get_url('newTcpsetAPI.do'), params=settings_params)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
