@@ -78,6 +78,10 @@ Some variables you may want to set.
 
 This is based on the endpoints used on the mobile app and could be changed without notice.
 
+## Examples
+
+The `examples` directory contains example usage for the library. You are required to have the library installed to use them `pip install growattServer`. However, if you are contributing to the library and want to use the latest version from the git repository, simply create a symlink to the growattServer directory inside the `examples` directory.
+
 ## Plant Settings
 
 The plant settings function(s) allow you to re-configure the settings for a specified plant. The following settings are required (and are therefore pre-populated based on the existing values for these settings)
