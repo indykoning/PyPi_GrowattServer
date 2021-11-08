@@ -58,6 +58,16 @@ Any methods that may be useful.
 
 `api.storage_energy_overview(plant_id, storage_id)` Get the information you see in the "Generation overview".
 
+`api.get_plant_settings(plant_id)` Get the current settings for the specified plant
+
+`api.modify_plant_settings(plant_id, changed_settings)` Change the specified settings (dictionary) for the specified plant - See 'Plant settings' below for more information
+
+`api.apply_plant_settings(current_settings, changed_settings)` Update the settings for a plant to the values specified in the dictionary (requires the current values to also be provided) - See 'Plant settings' below for more information
+
+`api.apply_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary) for the specified setting on the specified inverter - See 'Inverter settings' below for more information
+
+`api.apply_inverter_setting_array(serial_number, setting_type, params_array)` Convienience wrapper around `apply_inverter_setting` which takes an array of parameters and indexes them automatically for you. - See 'Inverter settings' below for more information
+
 ### Variables
 
 Some variables you may want to set.
@@ -67,3 +77,77 @@ Some variables you may want to set.
 ## Note
 
 This is based on the endpoints used on the mobile app and could be changed without notice.
+
+## Plant Settings
+
+The plant settings function(s) allow you to re-configure the settings for a specified plant. The following settings are required (and are therefore pre-populated based on the existing values for these settings)
+* `plantCoal` - The formula used to calculate equivalent coal usage
+* `plantSo2` - The formula used to calculate So2 generation/saving
+* `accountName` - The username that the system is assigned to
+* `plantID` - The ID of the plant
+* `plantFirm` - The 'firm' of the plant (unknown what this relates to - hardcoded to '0')
+* `plantCountry` - The Country that the plant resides in
+* `plantType` - The 'type' of plant (numerical value - mapped to an Enum)
+* `plantIncome` - The formula used to calculate money per kwh
+* `plantAddress` - The address of the plant
+* `plantTimezone` - The timezone of the plant (relative to UTC)
+* `plantLng` - The longitude of the plant's location
+* `plantCity` - The city that the plant is located in
+* `plantCo2` - The formula used to calculate Co2 saving/reduction
+* `plantMoney` - The local currency e.g. gbp
+* `plantPower` - The capacity/size of the plant in W e.g. 6400 (6.4kw)
+* `plantLat` - The latitude of the plant's location
+* `plantDate` - The date that the plant was installed
+* `plantName` - The name of the plant
+
+The two functions `modify_plant_settings` and `apply_plant_settings` allow you to provide a python dictionary of any/all of the above settings and change their value.
+
+## Inverter Settings
+
+The inverter settings function(s) allow you to change individual values on your inverter e.g. time, charging period etc.
+From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
+
+Known working settings & parameters are as follows (all parameter values are strings):
+
+* Time/Date
+  * type: `pf_sys_year`
+  * params:
+    * param1: datetime in format: YYYY-MM-DD HH:MM:SS
+* Hybrid inverter AC charge times
+  * type: `mix_ac_charge_time_period`
+  * params:
+    * `param1`: Charging power % (value between 0 and 100)
+    * `param2`: Stop charging Statement of Charge % (value between 0 and 100)
+    * `param3`: Allow AC charging (0 = Disabled, 1 = Enabled)
+    * `param4`: Schedule 1 - Start time - Hour e.g. "01" (1am)
+    * `param5`: Schedule 1 - Start time - Minute e.g. "00" (0 minutes)
+    * `param6`: Schedule 1 - End time - Hour e.g. "02" (2am)
+    * `param7`: Schedule 1 - End time - Minute e.g. "00" (0 minutes)
+    * `param8`: Schedule 1 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+    * `param9`: Schedule 2 - Start time - Hour e.g. "01" (1am)
+    * `param10`: Schedule 2 - Start time - Minute e.g. "00" (0 minutes)
+    * `param11`: Schedule 2 - End time - Hour e.g. "02" (2am)
+    * `param12`: Schedule 2 - End time - Minute e.g. "00" (0 minutes)
+    * `param13`: Schedule 2 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+    * `param14`: Schedule 3 - Start time - Hour e.g. "01" (1am)
+    * `param15`: Schedule 3 - Start time - Minute e.g. "00" (0 minutes)
+    * `param16`: Schedule 3 - End time - Hour e.g. "02" (2am)
+    * `param17`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
+    * `param18`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+
+Note the function `apply_inverter_setting_array` is a convenience function that automatically generates the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+
+## Settings Discovery
+
+The settings for the Plant and Inverter have been reverse engineered by using the ShinePhone Android App and the NetCapture SSL application together to inspect the API calls that are made by the application and the parameters that are provided with it.
+
+## Disclaimer
+
+The developers & maintainers of this library accept no responsibility for any damage, problems or issues that arise with your Growatt systems as a result of its use.
+
+The library contains functions that allow you to modify the configuration of your plant & inverter which carries the ability to set values outside of normal operating parameters, therefore, settings should only be modified if you understand the consequences.
+
+To the best of our knowledge only the `settings` functions perform modifications to your system and all other operations are read only. Regardless of the operation:
+
+***The library is used entirely at your own risk.***
+

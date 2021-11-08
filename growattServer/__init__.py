@@ -612,6 +612,7 @@ class GrowattApi:
     def apply_inverter_setting(self, serial_number, setting_type, parameters):
         """
         Applies settings for specified system based on serial number
+        See README for known working settings
 
         Keyword arguments:
         serial_number -- The serial number (device_sn) of the inverter
@@ -620,12 +621,6 @@ class GrowattApi:
 
         Returns:
         A response from the server stating whether the configuration was successful or not
-
-
-        Known supported settings (TODO - Move this to the README)
-        type=pf_sys_year
-        param1=datetime in format: YYYY-MM-DD HH:MM:SS
-
         """
         default_params = {
             'op': 'mixSetApiNew',
