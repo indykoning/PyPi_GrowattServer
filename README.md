@@ -113,11 +113,11 @@ From what has been reverse engineered from the api, each setting has a `setting_
 
 Known working settings & parameters are as follows (all parameter values are strings):
 
-* Time/Date
+* **Time/Date**
   * type: `pf_sys_year`
   * params:
-    * param1: datetime in format: YYYY-MM-DD HH:MM:SS
-* Hybrid inverter AC charge times
+    * `param1`: datetime in format: `YYYY-MM-DD HH:MM:SS`
+* **Hybrid inverter AC charge times**
   * type: `mix_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
