@@ -36,7 +36,7 @@ device_sn = device['deviceSn']
 device_type = device['deviceType']
 
 
-#Get plant settings - This is performed for us inside 'modify_plant_settings' but you can get ALL of the settings using this
+#Get plant settings - This is performed for us inside 'update_plant_settings' but you can get ALL of the settings using this
 current_settings = api.get_plant_settings(plant_id)
 #pp.pprint(current_settings)
 
@@ -48,7 +48,7 @@ plant_settings_changes = {
 }
 print("Changing the following plant setting(s):")
 pp.pprint(plant_settings_changes)
-response = api.modify_plant_settings(plant_id, plant_settings_changes)
+response = api.update_plant_settings(plant_id, plant_settings_changes)
 print(response)
 print("")
 
@@ -62,7 +62,7 @@ time_settings={
   'param1': dt_string
 }
 print("Setting inverter time to: %s" %(dt_string))
-response = api.apply_inverter_setting(device_sn, 'pf_sys_year', time_settings)
+response = api.update_mix_inverter_setting(device_sn, 'pf_sys_year', time_settings)
 print(response)
 print("")
 
@@ -83,5 +83,5 @@ schedule_settings = ["100", #Charging power %
                      "0"]        #Schedule 3 - Enabled/Disabled (0 = Disabled)
 print("Setting the inverter charging schedule to:")
 pp.pprint(schedule_settings)
-response = api.apply_inverter_setting_array(device_sn, 'mix_ac_charge_time_period', schedule_settings)
+response = api.update_mix_inverter_setting(device_sn, 'mix_ac_charge_time_period', schedule_settings)
 print(response)

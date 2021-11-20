@@ -60,13 +60,9 @@ Any methods that may be useful.
 
 `api.get_plant_settings(plant_id)` Get the current settings for the specified plant
 
-`api.modify_plant_settings(plant_id, changed_settings)` Change the specified settings (dictionary) for the specified plant - See 'Plant settings' below for more information
+`api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
-`api.apply_plant_settings(current_settings, changed_settings)` Update the settings for a plant to the values specified in the dictionary (requires the current values to also be provided) - See 'Plant settings' below for more information
-
-`api.apply_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary) for the specified setting on the specified inverter - See 'Inverter settings' below for more information
-
-`api.apply_inverter_setting_array(serial_number, setting_type, params_array)` Convienience wrapper around `apply_inverter_setting` which takes an array of parameters and indexes them automatically for you. - See 'Inverter settings' below for more information
+`api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified inverter - See 'Inverter settings' below for more information - Appears to be limited to "mix" systems
 
 ### Variables
 
@@ -104,9 +100,10 @@ The plant settings function(s) allow you to re-configure the settings for a spec
 * `plantDate` - The date that the plant was installed
 * `plantName` - The name of the plant
 
-The two functions `modify_plant_settings` and `apply_plant_settings` allow you to provide a python dictionary of any/all of the above settings and change their value.
+The function `update_plant_settings` allows you to provide a python dictionary of any/all of the above settings and change their value.
 
 ## Inverter Settings
+NOTE: The inverter settings function appears to only work with 'mix' systems based on the API call that it makes being specific to 'mix' inverters
 
 The inverter settings function(s) allow you to change individual values on your inverter e.g. time, charging period etc.
 From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
@@ -139,7 +136,7 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param17`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param18`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 
-Note the function `apply_inverter_setting_array` is a convenience function that automatically generates the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+Note the function `update_mix_inverter_setting` takes either a dictionary or an array, if an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 
 ## Settings Discovery
 
