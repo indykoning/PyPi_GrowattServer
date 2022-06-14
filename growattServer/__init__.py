@@ -112,7 +112,7 @@ class GrowattApi:
         if not is_password_hashed:
             password = hash_password(password)
 
-        response = self.session.post(self.get_url('newLoginAPI.do'), data={
+        response = self.session.post(self.get_url('newTwoLoginAPI.do'), data={
             'userName': username,
             'password': password
         })
