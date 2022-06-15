@@ -11,14 +11,14 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v2
-      - name: Ensure latest tag is in setup.py if i forgot
-        run: |
-          sed -i "s/version=\"[0-9\.]*\"/version=\"$(git describe --tags)\"/g" setup.py
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add setup.py
-          git commit -m "Ensure setup.py contains the latest tag"
-          git push
+#      - name: Ensure latest tag is in setup.py if i forgot
+#        run: |
+#          sed -i "s/version=\"[0-9\.]*\"/version=\"$(git describe --tags)\"/g" setup.py
+#          git config user.name github-actions
+#          git config user.email github-actions@github.com
+#          git add setup.py
+#          git commit -m "Ensure setup.py contains the latest tag"
+#          git push
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
