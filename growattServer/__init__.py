@@ -124,7 +124,7 @@ class GrowattApi:
                     'userLevel': data['user']['rightlevel']
                 })
         except:
-            data = {'succsss': False}
+            data = {'success': False}
         return data
 
     def plant_list(self, user_id):
