@@ -613,3 +613,34 @@ class GrowattApi:
         response = self.session.post(self.get_url('newTcpsetAPI.do'), params=settings_params)
         data = json.loads(response.content.decode('utf-8'))
         return data
+
+    def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
+        """
+        Applies settings for specified system based on serial number
+        See README for known working settings
+
+        Keyword arguments:
+        serial_number -- The serial number (device_sn) of the inverter
+        setting_type -- The setting to be configured (list of known working settings below)
+        parameters -- A python dictionary of the parameters to be sent to the system based on the chosen setting_type, OR a python array which will be converted to a params dictionary
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+        """
+        setting_parameters = parameters
+
+        #If we've been passed an array then convert it into a dictionary
+        if isinstance(parameters, list):
+            setting_parameters = {}
+            for index, param in enumerate(parameters, start=1):
+                setting_parameters['param' + str(index)] = param
+
+        default_params = {
+            'action': 'spaSet',
+            'serialNum': serial_number,
+            'type': setting_type
+        }
+        settings_params = {**default_params, **setting_parameters}
+        response = self.session.post(self.get_url('tcpSet.do'), params=settings_params)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
