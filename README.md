@@ -62,7 +62,7 @@ Any methods that may be useful.
 
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
-`api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified inverter, `mix` should be set to False if an AC-coupled inverter is used - See 'Inverter settings' below for more information
+`api.update_inverter_setting(serial_number, setting_type, parameters, mix = True)` Applies the provided parameters (dictionary or array) for the specified setting on the specified inverter, `mix` should be set to False if an AC-coupled inverter is used - See 'Inverter settings' below for more information
 
 ### Variables
 
@@ -115,7 +115,7 @@ Known working settings & parameters are as follows (all parameter values are str
   * params:
     * `param1`: datetime in format: `YYYY-MM-DD HH:MM:SS`
 * **Hybrid inverter AC charge times**
-  * function: `api.update_mix_inverter_setting`
+  * function: `api.update_mix_inverter_setting` or `api.update_inverter_setting`
   * setting type: `mix_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
@@ -137,7 +137,7 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param17`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param18`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 * **AC-coupled inverter AC charge times**
-  * function: `api.update_mix_inverter_setting`
+  * function: `api.update_mix_inverter_setting` or `api.update_inverter_setting` with `mix = False`
   * setting type: `spa_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
@@ -158,13 +158,13 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param16`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param17`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 
-Both of the functions `update_mix_inverter_setting` and `update_ac_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+The three functions `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 
 ## Settings Discovery
 
 * The settings for the Plant and Inverter have been reverse engineered by using the ShinePhone Android App and the NetCapture SSL application together to inspect the API calls that are made by the application and the parameters that are provided with it.
 
-* The settings for an AC-coupled inverter were determined by examining requests and responses from the Shine web app.
+* The settings for an AC-coupled inverter were determined by [examining requests and responses from the Shine web app](https://github.com/indykoning/PyPi_GrowattServer/issues/33#issuecomment-1264320814 "@grunkyb tutorial").
 
 ## Disclaimer
 
@@ -175,4 +175,3 @@ The library contains functions that allow you to modify the configuration of you
 To the best of our knowledge only the `settings` functions perform modifications to your system and all other operations are read only. Regardless of the operation:
 
 ***The library is used entirely at your own risk.***
-
