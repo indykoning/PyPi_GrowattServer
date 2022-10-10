@@ -610,7 +610,7 @@ class GrowattApi:
                 settings_parameters['param' + str(index)] = param
         
         settings_parameters = {**default_parameters, **settings_parameters}
-        print(settings_parameters)
+
         response = self.session.post(self.get_url(endpoint), 
                                      params=settings_parameters)
         data = json.loads(response.content.decode('utf-8'))
