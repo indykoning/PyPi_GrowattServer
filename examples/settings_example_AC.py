@@ -53,10 +53,9 @@ if login_response['success']:
                          '00','00',      # Schedule 3 - End time
                          '0']            # Schedule 3 - Enabled/Disabled (1 = Enabled)
 
-    response = api.update_inverter_setting(device_sn,
-                                           'spa_ac_charge_time_period',
-                                           schedule_settings,
-                                           mix = False)
+    response = api.update_ac_inverter_setting(device_sn,
+                                              'spa_ac_charge_time_period',
+                                              schedule_settings)
 else:
     response = login_response
 print(json.dumps(response))
