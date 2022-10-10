@@ -62,7 +62,9 @@ Any methods that may be useful.
 
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
-`api.update_inverter_setting(serial_number, setting_type, parameters, mix = True)` Applies the provided parameters (dictionary or array) for the specified setting on the specified inverter, `mix` should be set to False if an AC-coupled inverter is used - See 'Inverter settings' below for more information
+`api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified mix inverter; see 'Inverter settings' below for more information
+
+`api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
 
 ### Variables
 
@@ -115,7 +117,7 @@ Known working settings & parameters are as follows (all parameter values are str
   * params:
     * `param1`: datetime in format: `YYYY-MM-DD HH:MM:SS`
 * **Hybrid inverter AC charge times**
-  * function: `api.update_mix_inverter_setting` or `api.update_inverter_setting`
+  * function: `api.update_mix_inverter_setting`
   * setting type: `mix_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
@@ -137,7 +139,7 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param17`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param18`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 * **AC-coupled inverter AC charge times**
-  * function: `api.update_mix_inverter_setting` or `api.update_inverter_setting` with `mix = False`
+  * function: `api.update_ac_inverter_setting`
   * setting type: `spa_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
