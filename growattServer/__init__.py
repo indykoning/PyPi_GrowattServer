@@ -590,16 +590,16 @@ class GrowattApi:
         Applies settings for specified system based on serial number
         See README for known working settings
 
-        Keyword arguments:
-            serial_number (str): Serial number (device_sn) of the inverter
-            setting_type (str): Setting to be configured
-            default_params (dict): Default set of parameters for the setting call
-            parameters (dict or list of str): Parameters to be sent to the system 
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        default_params -- Default set of parameters for the setting call (dict)
+        parameters -- Parameters to be sent to the system (dict or list of str)
                 (array which will be converted to a dictionary)
-            endpoint (str): The URL endpoint that should be called
+        endpoint -- The URL endpoint that should be called (str)
 
         Returns:
-            JSON response from the server whether the configuration was successful
+        JSON response from the server whether the configuration was successful
         """
         settings_parameters = parameters
         
@@ -619,6 +619,16 @@ class GrowattApi:
     def update_mix_inverter_setting(self, serial_number, setting_type, parameters):
         """
         Alias for setting inverter parameters on a mix inverter
+        See README for known working settings
+
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
         """
         default_parameters = {
             'op': 'mixSetApiNew',
@@ -633,6 +643,16 @@ class GrowattApi:
     def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
         """
         Alias for setting inverter parameters on an AC-coupled inverter
+        See README for known working settings
+
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
         """
         default_parameters = {
             'action': 'spaSet',
