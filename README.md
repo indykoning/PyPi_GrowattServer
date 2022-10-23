@@ -164,9 +164,7 @@ The three functions `update_mix_inverter_setting`, `update_ac_inverter_setting`,
 
 ## Settings Discovery
 
-* The settings for the Plant and Inverter have been reverse engineered by using the ShinePhone Android App and the NetCapture SSL application together to inspect the API calls that are made by the application and the parameters that are provided with it.
-
-* The settings for an AC-coupled inverter were determined by [examining requests and responses from the Shine web app](https://github.com/indykoning/PyPi_GrowattServer/issues/33#issuecomment-1264320814 "@grunkyb tutorial").
+The settings for the Plant and Inverter have been reverse engineered by using the ShinePhone Android App and the NetCapture SSL application together to inspect the API calls that are made by the application and the parameters that are provided with it.
 
 ## Disclaimer
 
