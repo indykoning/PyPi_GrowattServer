@@ -583,9 +583,8 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-
     def update_inverter_setting(self, serial_number, setting_type, 
-                                default_parameters, parameters, endpoint):
+                                default_parameters, parameters):
         """
         Applies settings for specified system based on serial number
         See README for known working settings
@@ -596,7 +595,6 @@ class GrowattApi:
         default_params -- Default set of parameters for the setting call (dict)
         parameters -- Parameters to be sent to the system (dict or list of str)
                 (array which will be converted to a dictionary)
-        endpoint -- The URL endpoint that should be called (str)
 
         Returns:
         JSON response from the server whether the configuration was successful
@@ -611,7 +609,7 @@ class GrowattApi:
         
         settings_parameters = {**default_parameters, **settings_parameters}
 
-        response = self.session.post(self.get_url(endpoint), 
+        response = self.session.post(self.get_url('newTcpsetAPI.do'), 
                                      params=settings_parameters)
         data = json.loads(response.content.decode('utf-8'))
         return data
@@ -635,10 +633,8 @@ class GrowattApi:
             'serialNum': serial_number,
             'type': setting_type
         }
-        endpoint = 'newTcpsetAPI.do'
         return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters, 
-                                            endpoint)
+                                            default_parameters, parameters)
 
     def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
         """
@@ -655,11 +651,9 @@ class GrowattApi:
         JSON response from the server whether the configuration was successful
         """
         default_parameters = {
-            'action': 'spaSet',
+            'op': 'spaSetApi',
             'serialNum': serial_number,
             'type': setting_type
         }
-        endpoint = 'tcpSet.do'
         return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters, 
-                                            endpoint)
+                                            default_parameters, parameters)
