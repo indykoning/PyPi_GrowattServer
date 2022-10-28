@@ -27,6 +27,8 @@ class GrowattApi:
 
     def __init__(self):
         self.session = requests.Session()
+        headers = {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android'}
+        self.session.headers.update(headers)
 
     def __get_date_string(self, timespan=None, date=None):
         if timespan is not None:
