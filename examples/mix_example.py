@@ -33,7 +33,10 @@ username=input("Enter username:")
 #Prompt user to input password
 user_pass=getpass.getpass("Enter password:")
 
-api = growattServer.GrowattApi()
+#Setting generate_user_agent to True will auto generate a User-Agent every run, leaving it False will use the default
+#Can override the default with 'user_agent' param
+api = growattServer.GrowattApi(generate_user_agent=False)
+print(("User-Agent being used: %s") % api.user_agent)
 login_response = api.login(username, user_pass)
 
 plant_list = api.plant_list(login_response['user']['id'])

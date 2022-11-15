@@ -4,6 +4,7 @@ import datetime
 from enum import IntEnum
 import hashlib
 import json
+import random
 import requests
 import warnings
 
@@ -24,11 +25,44 @@ class Timespan(IntEnum):
 
 class GrowattApi:
     server_url = 'https://server-api.growatt.com/'
+    user_agent=''
 
-    def __init__(self):
+    def __init__(self, generate_user_agent=False, user_agent='Dalvik/2.1.0 (Linux; U; Android 12; Device)'):
         self.session = requests.Session()
-        headers = {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android Device)'}
+        self.user_agent = user_agent
+
+        if generate_user_agent:
+          self.__generate_user_agent()
+
+        headers = {'User-Agent': self.user_agent}
         self.session.headers.update(headers)
+
+    def __generate_user_agent(self):
+      #Start by setting the generated version to our default in case we can't contact the server to generate a random user-agent
+      generated_user_agent = self.user_agent
+
+      #Request a list of Dalvik user-agents from a random android version
+      android_versions = [9,10,11,12,13]
+      and_vers = android_versions[random.randint(0,len(android_versions)-1)]
+      user_agents_url='https://user-agents.net/download'
+
+      post_data={
+        'browser': 'dalvik',
+        'name': '2.1.0 (Linux; U; Android ' + str(and_vers),
+        'download': 'json'
+      }
+
+      user_agent_response = requests.post(user_agents_url, data=post_data)
+
+      #Use a try block as we may fail to parse the response (no valid JSON if we hit the API too often)
+      try:
+        user_agents = user_agent_response.json()
+        generated_user_agent = user_agents[random.randint(0,len(user_agents)-1)]
+      except json.decoder.JSONDecodeError:
+        print("Caught error decoding JSON for generated User-Agent - Probably too many requests to the User-Agent generator, falling back to default user-agent")
+
+      self.user_agent = generated_user_agent
+
 
     def __get_date_string(self, timespan=None, date=None):
         if timespan is not None:
