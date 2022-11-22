@@ -6,6 +6,7 @@ import hashlib
 import json
 import requests
 import warnings
+from random import randint
 
 def hash_password(password):
     """
@@ -25,9 +26,19 @@ class Timespan(IntEnum):
 class GrowattApi:
     server_url = 'https://server-api.growatt.com/'
 
-    def __init__(self):
+    def __init__(self, add_random_user_id=False, user_agent=None):
+        user_agent_string = user_agent
+        if (user_agent_string == None):
+          user_agent_string = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
+
+        #If a random user id is required, generate a 5 digit number and add it to the user agent
+        if (add_random_user_id):
+          random_number = ''.join(["{}".format(randint(0,9)) for num in range(0,5)])
+          user_agent_string += " - " + random_number
+
         self.session = requests.Session()
-        headers = {'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android Device)'}
+
+        headers = {'User-Agent': user_agent_string}
         self.session.headers.update(headers)
 
     def __get_date_string(self, timespan=None, date=None):
