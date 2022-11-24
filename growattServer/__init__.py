@@ -25,20 +25,20 @@ class Timespan(IntEnum):
 
 class GrowattApi:
     server_url = 'https://server-api.growatt.com/'
+    agent_identifier = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
 
-    def __init__(self, add_random_user_id=False, user_agent=None):
-        user_agent_string = user_agent
-        if (user_agent_string == None):
-          user_agent_string = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
+    def __init__(self, add_random_user_id=False, agent_identifier=None):
+        if (agent_identifier != None):
+          self.agent_identifier = agent_identifier
 
         #If a random user id is required, generate a 5 digit number and add it to the user agent
         if (add_random_user_id):
           random_number = ''.join(["{}".format(randint(0,9)) for num in range(0,5)])
-          user_agent_string += " - " + random_number
+          self.agent_identifier += " - " + random_number
 
         self.session = requests.Session()
 
-        headers = {'User-Agent': user_agent_string}
+        headers = {'User-Agent': self.agent_identifier}
         self.session.headers.update(headers)
 
     def __get_date_string(self, timespan=None, date=None):
