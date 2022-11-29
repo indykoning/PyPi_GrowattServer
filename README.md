@@ -68,11 +68,29 @@ Any methods that may be useful.
 
 Some variables you may want to set.
 
-`api.server_url` The growatt server URL, default: 'https://server.growatt.com/'
+`api.server_url` The growatt server URL, default: 'https://server-api.growatt.com/'
 
 ## Note
 
 This is based on the endpoints used on the mobile app and could be changed without notice.
+
+## Initialisation
+
+The library can be initialised to introduce randomness into the User Agent field that is used when communicating with the servers.
+
+This has been added since the Growatt servers started checking for the presence of a `User-Agent` field in the headers that are sent.
+
+By default the library will use a pre-set `User-Agent` value which identifies this library while also appearing like an Android device. However, it is also possible to pass in parameters to the intialisation of the library to override this entirely, or just add a random ID to the value. e.g.
+
+```python
+api = growattServer.GrowattApi() # The default way to initialise
+
+api = growattServer.GrowattApi(True) # Adds a randomly generated User ID to the default User-Agent
+
+api = growattServer.GrowattApi(False, "my_user_agent_value") # Overrides the default and uses "my_user_agent_value" in the User-Agent header
+```
+
+Please see the `user_agent_options.py` example in the `examples` directory if you wish to investigate further.
 
 ## Examples
 
