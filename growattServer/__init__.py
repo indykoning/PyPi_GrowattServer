@@ -23,6 +23,19 @@ class Timespan(IntEnum):
     day = 1
     month = 2
 
+
+class GrowattApiUnknownException(Exception):
+    pass
+
+
+class GrowattApiIncorrectPasswordException(Exception):
+    pass
+
+
+class GrowattApiUserAgentBlockedException(Exception):
+    pass
+
+
 class GrowattApi:
     server_url = 'https://server-api.growatt.com/'
     agent_identifier = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
@@ -132,12 +145,31 @@ class GrowattApi:
             'userName': username,
             'password': password
         })
-        data = json.loads(response.content.decode('utf-8'))['back']
-        if data['success']:
-            data.update({
-                'userId': data['user']['id'],
-                'userLevel': data['user']['rightlevel']
-            })
+        
+        if response.status_code == 403:
+            # detect if the User Agent is being blocked by Growatt WAF
+            raise GrowattApiUserAgentBlockedException()
+        else:
+            # handle any other HTTP errors
+            response.raise_for_status()
+
+        json_doc = response.content.decode('utf-8')
+        json_dict = json.loads(json_doc)
+        
+        if 'back' not in json_dict:
+            raise GrowattApiUnknownException() 
+
+        data = json_dict['back']
+        if 'success' not in data:
+            raise GrowattApiUnknownException() 
+            
+        if not data['success']:
+            raise GrowattApiIncorrectPasswordException()
+
+        data.update({
+            'userId': data['user']['id'],
+            'userLevel': data['user']['rightlevel']
+        })
         return data
 
     def plant_list(self, user_id):
