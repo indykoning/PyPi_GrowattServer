@@ -595,33 +595,77 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def update_mix_inverter_setting(self, serial_number, setting_type, parameters):
+    def update_inverter_setting(self, serial_number, setting_type, 
+                                default_parameters, parameters):
         """
         Applies settings for specified system based on serial number
         See README for known working settings
 
-        Keyword arguments:
-        serial_number -- The serial number (device_sn) of the inverter
-        setting_type -- The setting to be configured (list of known working settings below)
-        parameters -- A python dictionary of the parameters to be sent to the system based on the chosen setting_type, OR a python array which will be converted to a params dictionary
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        default_params -- Default set of parameters for the setting call (dict)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
 
         Returns:
-        A response from the server stating whether the configuration was successful or not
+        JSON response from the server whether the configuration was successful
         """
-        setting_parameters = parameters
-
+        settings_parameters = parameters
+        
         #If we've been passed an array then convert it into a dictionary
         if isinstance(parameters, list):
-            setting_parameters = {}
+            settings_parameters = {}
             for index, param in enumerate(parameters, start=1):
-                setting_parameters['param' + str(index)] = param
+                settings_parameters['param' + str(index)] = param
+        
+        settings_parameters = {**default_parameters, **settings_parameters}
 
-        default_params = {
+        response = self.session.post(self.get_url('newTcpsetAPI.do'), 
+                                     params=settings_parameters)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
+    def update_mix_inverter_setting(self, serial_number, setting_type, parameters):
+        """
+        Alias for setting inverter parameters on a mix inverter
+        See README for known working settings
+
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
+        """
+        default_parameters = {
             'op': 'mixSetApiNew',
             'serialNum': serial_number,
             'type': setting_type
         }
-        settings_params = {**default_params, **setting_parameters}
-        response = self.session.post(self.get_url('newTcpsetAPI.do'), params=settings_params)
-        data = json.loads(response.content.decode('utf-8'))
-        return data
+        return self.update_inverter_setting(serial_number, setting_type, 
+                                            default_parameters, parameters)
+
+    def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
+        """
+        Alias for setting inverter parameters on an AC-coupled inverter
+        See README for known working settings
+
+        Arguments:
+        serial_number -- Serial number (device_sn) of the inverter (str)
+        setting_type -- Setting to be configured (str)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
+        """
+        default_parameters = {
+            'op': 'spaSetApi',
+            'serialNum': serial_number,
+            'type': setting_type
+        }
+        return self.update_inverter_setting(serial_number, setting_type, 
+                                            default_parameters, parameters)

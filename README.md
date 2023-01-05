@@ -62,7 +62,9 @@ Any methods that may be useful.
 
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
-`api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified inverter - See 'Inverter settings' below for more information - Appears to be limited to "mix" systems
+`api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified mix inverter; see 'Inverter settings' below for more information
+
+`api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
 
 ### Variables
 
@@ -133,7 +135,8 @@ Known working settings & parameters are as follows (all parameter values are str
   * params:
     * `param1`: datetime in format: `YYYY-MM-DD HH:MM:SS`
 * **Hybrid inverter AC charge times**
-  * type: `mix_ac_charge_time_period`
+  * function: `api.update_mix_inverter_setting`
+  * setting type: `mix_ac_charge_time_period`
   * params:
     * `param1`: Charging power % (value between 0 and 100)
     * `param2`: Stop charging Statement of Charge % (value between 0 and 100)
@@ -153,8 +156,29 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param16`: Schedule 3 - End time - Hour e.g. "02" (2am)
     * `param17`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param18`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+* **AC-coupled inverter AC charge times**
+  * function: `api.update_ac_inverter_setting`
+  * setting type: `spa_ac_charge_time_period`
+  * params:
+    * `param1`: Charging power % (value between 0 and 100)
+    * `param2`: Stop charging Statement of Charge % (value between 0 and 100)
+    * `param3`: Schedule 1 - Start time - Hour e.g. "01" (1am)
+    * `param4`: Schedule 1 - Start time - Minute e.g. "00" (0 minutes)
+    * `param5`: Schedule 1 - End time - Hour e.g. "02" (2am)
+    * `param6`: Schedule 1 - End time - Minute e.g. "00" (0 minutes)
+    * `param7`: Schedule 1 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+    * `param8`: Schedule 2 - Start time - Hour e.g. "01" (1am)
+    * `param9`: Schedule 2 - Start time - Minute e.g. "00" (0 minutes)
+    * `param10`: Schedule 2 - End time - Hour e.g. "02" (2am)
+    * `param11`: Schedule 2 - End time - Minute e.g. "00" (0 minutes)
+    * `param12`: Schedule 2 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+    * `param13`: Schedule 3 - Start time - Hour e.g. "01" (1am)
+    * `param14`: Schedule 3 - Start time - Minute e.g. "00" (0 minutes)
+    * `param15`: Schedule 3 - End time - Hour e.g. "02" (2am)
+    * `param16`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
+    * `param17`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 
-Note the function `update_mix_inverter_setting` takes either a dictionary or an array, if an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+The three functions `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 
 ## Settings Discovery
 
@@ -169,4 +193,3 @@ The library contains functions that allow you to modify the configuration of you
 To the best of our knowledge only the `settings` functions perform modifications to your system and all other operations are read only. Regardless of the operation:
 
 ***The library is used entirely at your own risk.***
-
