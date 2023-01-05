@@ -37,6 +37,9 @@ class GrowattApi:
           self.agent_identifier += " - " + random_number
 
         self.session = requests.Session()
+        self.session.hooks = {
+            'response': lambda response, *args, **kwargs: response.raise_for_status()
+        }
 
         headers = {'User-Agent': self.agent_identifier}
         self.session.headers.update(headers)
@@ -144,8 +147,7 @@ class GrowattApi:
         response = self.session.get(self.get_url('PlantListAPI.do'),
                                     params={'userId': user_id},
                                     allow_redirects=False)
-        if response.status_code != 200:
-            raise RuntimeError("Request failed: %s", response)
+
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
 
