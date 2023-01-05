@@ -116,15 +116,12 @@ class GrowattApi:
             'userName': username,
             'password': password
         })
-        try:
-            data = json.loads(response.content.decode('utf-8'))['back']
-            if data['success']:
-                data.update({
-                    'userId': data['user']['id'],
-                    'userLevel': data['user']['rightlevel']
-                })
-        except:
-            data = {'success': False}
+        data = json.loads(response.content.decode('utf-8'))['back']
+        if data['success']:
+            data.update({
+                'userId': data['user']['id'],
+                'userLevel': data['user']['rightlevel']
+            })
         return data
 
     def plant_list(self, user_id):
