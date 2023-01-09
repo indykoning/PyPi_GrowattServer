@@ -621,8 +621,8 @@ class GrowattApi:
         
         settings_parameters = {**default_parameters, **settings_parameters}
 
-        response = self.session.post(self.get_url('newTcpsetAPI.do'), 
-                                     params=settings_parameters)
+        response = self.session.post(self.get_url('tcpSet.do'), 
+                                     data=settings_parameters)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
