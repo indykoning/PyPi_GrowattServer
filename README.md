@@ -60,6 +60,8 @@ Any methods that may be useful.
 
 `api.get_plant_settings(plant_id)` Get the current settings for the specified plant
 
+`api.get_mix_inverter_settings(serial_number)` Get the current inverter settings for the specified serial number including charge/discharge schedule for hybrid systems.
+
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
 `api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified mix inverter; see 'Inverter settings' below for more information
