@@ -28,7 +28,7 @@ Any methods that may be useful.
 
 `api.plant_info(plant_id)` Get info for specified plant.
 
-`api.plant_detail(plant_id, timespan<1=day, 2=month>, date)` Get details of a specific plant.
+`api.plant_detail(plant_id, timespan<1=day, 2=month, 3=year, 4=all>, date)` Get details of a specific plant.
 
 `api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
 
