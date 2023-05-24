@@ -160,7 +160,8 @@ class GrowattApi:
         response = self.session.get(self.get_url('newPlantDetailAPI.do'), params={
             'plantId': plant_id,
             'type': timespan.value,
-            'date': date_str
+            'date': date_str,
+            'dataType' : 0
         })
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
