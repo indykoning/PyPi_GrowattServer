@@ -157,7 +157,7 @@ class GrowattApi:
         """
         date_str = self.__get_date_string(timespan, date)
 
-        response = self.session.get(self.get_url('PlantDetailAPI.do'), params={
+        response = self.session.get(self.get_url('newPlantDetailAPI.do'), params={
             'plantId': plant_id,
             'type': timespan.value,
             'date': date_str
