@@ -22,9 +22,11 @@ class Timespan(IntEnum):
     hour = 0
     day = 1
     month = 2
+    year = 3
+    all = 4
 
 class GrowattApi:
-    server_url = 'https://server-api.growatt.com/'
+    server_url = 'https://server.growatt.com/'
     agent_identifier = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
 
     def __init__(self, add_random_user_id=False, agent_identifier=None):
@@ -54,8 +56,10 @@ class GrowattApi:
         date_str=""
         if timespan == Timespan.month:
             date_str = date.strftime('%Y-%m')
-        else:
+        elif timespan == Timespan.day or timespan == Timespan.hour:
             date_str = date.strftime('%Y-%m-%d')
+        else:
+            date_str = date.strftime('%Y')
 
         return date_str
 
@@ -157,7 +161,7 @@ class GrowattApi:
         """
         date_str = self.__get_date_string(timespan, date)
 
-        response = self.session.get(self.get_url('PlantDetailAPI.do'), params={
+        response = self.session.get(self.get_url('newPlantDetailAPI.do'), params={
             'plantId': plant_id,
             'type': timespan.value,
             'date': date_str
