@@ -22,6 +22,8 @@ class Timespan(IntEnum):
     hour = 0
     day = 1
     month = 2
+    year = 3
+    all = 4
 
 class GrowattApi:
     server_url = 'https://server.growatt.com/'
@@ -54,8 +56,10 @@ class GrowattApi:
         date_str=""
         if timespan == Timespan.month:
             date_str = date.strftime('%Y-%m')
-        else:
+        elif timespan == Timespan.day or timespan == Timespan.hour:
             date_str = date.strftime('%Y-%m-%d')
+        else:
+            date_str = date.strftime('%Y')
 
         return date_str
 
