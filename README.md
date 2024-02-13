@@ -70,7 +70,13 @@ Any methods that may be useful.
 
 Some variables you may want to set.
 
-`api.server_url` The growatt server URL, default: 'https://server-api.growatt.com/'
+`api.server_url` The growatt server URL, default: 'https://openapi.growatt.com/'
+
+You may need a different URL depending on where your account is registered:
+
+'https://openapi-cn.growatt.com/' (Chinese server)
+'https://openapi-us.growatt.com/' (North American server)
+'https://openapi.growatt.com/' (Other regional server: e.g. Europe)
 
 ## Note
 
