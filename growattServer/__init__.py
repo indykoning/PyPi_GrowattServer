@@ -595,15 +595,12 @@ class GrowattApi:
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def update_inverter_setting(self, serial_number, setting_type, 
-                                default_parameters, parameters):
+    def update_inverter_setting(self, default_parameters, parameters):
         """
         Applies settings for specified system based on serial number
         See README for known working settings
 
         Arguments:
-        serial_number -- Serial number (device_sn) of the inverter (str)
-        setting_type -- Setting to be configured (str)
         default_params -- Default set of parameters for the setting call (dict)
         parameters -- Parameters to be sent to the system (dict or list of str)
                 (array which will be converted to a dictionary)
@@ -621,8 +618,8 @@ class GrowattApi:
         
         settings_parameters = {**default_parameters, **settings_parameters}
 
-        response = self.session.post(self.get_url('newTcpsetAPI.do'), 
-                                     params=settings_parameters)
+        response = self.session.post(self.get_url('tcpSet.do'), 
+                                     data=settings_parameters)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
@@ -645,8 +642,7 @@ class GrowattApi:
             'serialNum': serial_number,
             'type': setting_type
         }
-        return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters)
+        return self.update_inverter_setting(default_parameters, parameters)
 
     def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
         """
@@ -667,5 +663,4 @@ class GrowattApi:
             'serialNum': serial_number,
             'type': setting_type
         }
-        return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters)
+        return self.update_inverter_setting(default_parameters, parameters)
