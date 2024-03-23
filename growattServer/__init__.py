@@ -65,7 +65,7 @@ class GrowattApi:
         """
         return self.server_url + page
 
-    def login(self, username, password, is_password_hashed=False):
+    def login(self, username, password, is_password_hashed=False, timeout=None):
         """
         Log the user in.
 
@@ -131,7 +131,7 @@ class GrowattApi:
         response = self.session.post(self.get_url('newTwoLoginAPI.do'), data={
             'userName': username,
             'password': password
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))['back']
         if data['success']:
             data.update({
@@ -140,18 +140,19 @@ class GrowattApi:
             })
         return data
 
-    def plant_list(self, user_id):
+    def plant_list(self, user_id, timeout=None):
         """
         Get a list of plants connected to this account.
         """
         response = self.session.get(self.get_url('PlantListAPI.do'),
                                     params={'userId': user_id},
-                                    allow_redirects=False)
+                                    allow_redirects=False,
+                                    timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
 
-    def plant_detail(self, plant_id, timespan, date=None):
+    def plant_detail(self, plant_id, timespan, date=None, timeout=None):
         """
         Get plant details for specified timespan.
         """
@@ -161,11 +162,11 @@ class GrowattApi:
             'plantId': plant_id,
             'type': timespan.value,
             'date': date_str
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data['back']
 
-    def inverter_data(self, inverter_id, date=None):
+    def inverter_data(self, inverter_id, date=None, timeout=None):
         """
         Get inverter data for specified date or today.
         """
@@ -175,35 +176,35 @@ class GrowattApi:
             'id': inverter_id,
             'type': 1,
             'date': date_str
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def inverter_detail(self, inverter_id):
+    def inverter_detail(self, inverter_id, timeout=None):
         """
         Get "All parameters" from PV inverter.
         """
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData',
             'inverterId': inverter_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def inverter_detail_two(self, inverter_id):
+    def inverter_detail_two(self, inverter_id, timeout=None):
         """
         Get "All parameters" from PV inverter.
         """
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData_two',
             'inverterId': inverter_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def tlx_data(self, tlx_id, date=None):
+    def tlx_data(self, tlx_id, date=None, timeout=None):
         """
         Get inverter data for specified date or today.
         """
@@ -213,23 +214,23 @@ class GrowattApi:
             'id': tlx_id,
             'type': 1,
             'date': date_str
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def tlx_detail(self, tlx_id):
+    def tlx_detail(self, tlx_id, timeout=None):
         """
         Get "All parameters" from PV inverter.
         """
         response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxDetailData',
             'id': tlx_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def mix_info(self, mix_id, plant_id = None):
+    def mix_info(self, mix_id, plant_id = None, timeout=None):
         """
         Returns high level values from Mix device
 
@@ -268,12 +269,12 @@ class GrowattApi:
         if (plant_id):
           request_params['plantId'] = plant_id
 
-        response = self.session.get(self.get_url('newMixApi.do'), params=request_params)
+        response = self.session.get(self.get_url('newMixApi.do'), params=request_params, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_totals(self, mix_id, plant_id):
+    def mix_totals(self, mix_id, plant_id, timeout=None):
         """
         Returns "Totals" values from Mix device
 
@@ -300,12 +301,12 @@ class GrowattApi:
             'op': 'getEnergyOverview',
             'mixId': mix_id,
             'plantId': plant_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_system_status(self, mix_id, plant_id):
+    def mix_system_status(self, mix_id, plant_id, timeout=None):
         """
         Returns current "Status" from Mix device
 
@@ -343,12 +344,12 @@ class GrowattApi:
             'op': 'getSystemStatus_KW',
             'mixId': mix_id,
             'plantId': plant_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=None):
+    def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=None, timeout=None):
         """
         Get Mix details for specified timespan
 
@@ -405,12 +406,12 @@ class GrowattApi:
             'mixId': mix_id,
             'type': timespan.value,
             'date': date_str
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
 
         return data['obj']
 
-    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None):
+    def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None, timeout=None):
         """
         Get 'dashboard' data for specified timespan
         NOTE - All numerical values returned by this api call include units e.g. kWh or %
@@ -463,61 +464,61 @@ class GrowattApi:
             'date': date_str,
             'type': timespan.value,
             'plantId': plant_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def storage_detail(self, storage_id):
+    def storage_detail(self, storage_id, timeout=None):
         """
         Get "All parameters" from battery storage.
         """
         response = self.session.get(self.get_url('newStorageAPI.do'), params={
             'op': 'getStorageInfo_sacolar',
             'storageId': storage_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def storage_params(self, storage_id):
+    def storage_params(self, storage_id, timeout=None):
         """
         Get much more detail from battery storage.
         """
         response = self.session.get(self.get_url('newStorageAPI.do'), params={
             'op': 'getStorageParams_sacolar',
             'storageId': storage_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def storage_energy_overview(self, plant_id, storage_id):
+    def storage_energy_overview(self, plant_id, storage_id, timeout=None):
         """
         Get some energy/generation overview data.
         """
         response = self.session.post(self.get_url('newStorageAPI.do?op=getEnergyOverviewData_sacolar'), params={
             'plantId': plant_id,
             'storageSn': storage_id
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data['obj']
 
-    def inverter_list(self, plant_id):
+    def inverter_list(self, plant_id, timeout=None):
         """
         Use device_list, it's more descriptive since the list contains more than inverters.
         """
         warnings.warn("This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning)
-        return self.device_list(plant_id)
+        return self.device_list(plant_id, timeout)
 
-    def device_list(self, plant_id):
+    def device_list(self, plant_id, timeout=None):
         """
         Get a list of all devices connected to plant.
         """
-        return self.plant_info(plant_id)['deviceList']
+        return self.plant_info(plant_id, timeout)['deviceList']
 
-    def plant_info(self, plant_id):
+    def plant_info(self, plant_id, timeout=None):
         """
         Get basic plant information with device list.
         """
@@ -526,12 +527,12 @@ class GrowattApi:
             'plantId': plant_id,
             'pageNum': 1,
             'pageSize': 1
-        })
+        }, timeout=timeout)
 
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def get_plant_settings(self, plant_id):
+    def get_plant_settings(self, plant_id, timeout=None):
         """
         Returns a dictionary containing the settings for the specified plant
 
@@ -544,11 +545,11 @@ class GrowattApi:
         response = self.session.get(self.get_url('newPlantAPI.do'), params={
             'op': 'getPlant',
             'plantId': plant_id
-        })
+        }, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def update_plant_settings(self, plant_id, changed_settings, current_settings = None):
+    def update_plant_settings(self, plant_id, changed_settings, current_settings = None, timeout=None):
         """
         Applies settings to the plant e.g. ID, Location, Timezone
         See README for all possible settings options
@@ -591,12 +592,12 @@ class GrowattApi:
         for setting, value in changed_settings.items():
             form_settings[setting] = (None, str(value))
 
-        response = self.session.post(self.get_url('newTwoPlantAPI.do?op=updatePlant'), files = form_settings)
+        response = self.session.post(self.get_url('newTwoPlantAPI.do?op=updatePlant'), files = form_settings, timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
     def update_inverter_setting(self, serial_number, setting_type, 
-                                default_parameters, parameters):
+                                default_parameters, parameters, timeout=None):
         """
         Applies settings for specified system based on serial number
         See README for known working settings
@@ -622,11 +623,12 @@ class GrowattApi:
         settings_parameters = {**default_parameters, **settings_parameters}
 
         response = self.session.post(self.get_url('newTcpsetAPI.do'), 
-                                     params=settings_parameters)
+                                     params=settings_parameters,
+                                     timeout=timeout)
         data = json.loads(response.content.decode('utf-8'))
         return data
 
-    def update_mix_inverter_setting(self, serial_number, setting_type, parameters):
+    def update_mix_inverter_setting(self, serial_number, setting_type, parameters, timeout=None):
         """
         Alias for setting inverter parameters on a mix inverter
         See README for known working settings
@@ -646,9 +648,9 @@ class GrowattApi:
             'type': setting_type
         }
         return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters)
+                                            default_parameters, parameters, timeout)
 
-    def update_ac_inverter_setting(self, serial_number, setting_type, parameters):
+    def update_ac_inverter_setting(self, serial_number, setting_type, parameters, timeout=None):
         """
         Alias for setting inverter parameters on an AC-coupled inverter
         See README for known working settings
@@ -668,4 +670,4 @@ class GrowattApi:
             'type': setting_type
         }
         return self.update_inverter_setting(serial_number, setting_type, 
-                                            default_parameters, parameters)
+                                            default_parameters, parameters, timeout)
