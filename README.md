@@ -60,11 +60,19 @@ Any methods that may be useful.
 
 `api.get_plant_settings(plant_id)` Get the current settings for the specified plant
 
+`api.is_plant_noah_system(plant_id)` Get the Information if noah devices are configured for the specified plant
+
+`api.noah_system_status(serial_number)` Get the current status for the specified noah device e.g. workMode, soc, chargePower, disChargePower, current import/export etc.
+
+`api.noah_info(serial_number)` Get all information for the specified noah device e.g. configured Operation Modes, configured Battery Management charging upper & lower limit, configured System Default Output Power, Firmware Version
+
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
 `api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified mix inverter; see 'Inverter settings' below for more information
 
 `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
+
+`api.update_noah_settings(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified noah device; see 'Noah settings' below for more information
 
 ### Variables
 
@@ -185,6 +193,41 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param17`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
 
 The three functions `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+
+## Noah Settings
+The noah settings function allow you to change individual values on your noah system e.g. system default output power, battery management, operation mode and currency
+From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
+
+Known working settings & parameters are as follows (all parameter values are strings):
+* **Change "System Default Output Power"**
+  * function: `api.update_noah_settings`
+  * setting type: `default_power`
+  * params:
+    * `param1`: System default output power in watt
+* **Change "Battery Management"**
+  * function: `api.update_noah_settings`
+  * setting type: `charging_soc`
+  * params:
+    * `param1`: Charge upper limit in %
+    * `param2`: Charge lower limit in %
+* **Change "Operation Mode" Time Segment**
+  * function: `api.update_noah_settings`
+  * setting type: `time_segment` key from `api.noah_info(serial_number)`, for new `time_segment` count the ending number up
+  * params:
+    * `param1`: Workingmode (0 = Load First, 1 = Battery First)
+    * `param2`: Start time - Hour e.g. "01" (1am)
+    * `param3`: Start time - Minute e.g. "00" (0 minutes)
+    * `param4`: End time - Hour e.g. "02" (2am)
+    * `param5`: End time - Minute e.g. "00" (0 minutes)
+    * `param6`: Output power in watt (For Workingmode "Battery First" always "0")
+    * `param7`: Enabled/Disabled (0 = Disabled, 1 = Enabled)
+* **Change "Currency"**
+  * function: `api.update_noah_settings`
+  * setting type: `updatePlantMoney`
+  * params:
+    * `param1`: Plant Id
+    * `param2`: Cost per kWh e.g. "0.22"
+    * `param3`: Unit value from `api.noah_info(serial_number)` - `unitList`
 
 ## Settings Discovery
 

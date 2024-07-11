@@ -522,7 +522,7 @@ class GrowattApi:
         Get basic plant information with device list.
         """
         response = self.session.get(self.get_url('newTwoPlantAPI.do'), params={
-            'op': 'getAllDeviceList',
+            'op': 'getAllDeviceListTwo',
             'plantId': plant_id,
             'pageNum': 1,
             'pageSize': 1
@@ -544,6 +544,109 @@ class GrowattApi:
         response = self.session.get(self.get_url('newPlantAPI.do'), params={
             'op': 'getPlant',
             'plantId': plant_id
+        })
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+    
+    def is_plant_noah_system(self, plant_id):
+        """
+        Returns a dictionary containing if noah devices are configured for the specified plant
+
+        Keyword arguments:
+        plant_id -- The id of the plant you want the noah devices of (str)
+
+        Returns
+        'msg'
+        'result'    -- True or False
+        'obj'   -- An Object containing if noah devices are configured
+            'isPlantNoahSystem' -- Is the specified plant a noah system (True or False)
+            'plantId'   -- The ID of the plant
+            'isPlantHaveNoah'   -- Are noah devices configured in the specified plant (True or False)
+            'deviceSn'  -- Serial number of the configured noah device
+            'plantName' -- Friendly name of the plant
+        """
+        response = self.session.post(self.get_url('noahDeviceApi/noah/isPlantNoahSystem'), data={
+            'plantId': plant_id
+        })
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+    
+    def noah_system_status(self, serial_number):
+        """
+        Returns a dictionary containing the status for the specified Noah Device
+
+        Keyword arguments:
+        serial_number -- The Serial number of the noah device you want the status of (str)
+
+        Returns
+        'msg'
+        'result'    -- True or False
+        'obj' -- An Object containing the noah device status
+            'chargePower'   -- Battery charging rate in watt e.g. '200Watt'
+            'workMode'  -- Workingmode of the battery (0 = Load First, 1 = Battery First)
+            'soc'   -- Statement of charge (remaining battery %)
+            'associatedInvSn'   -- ???
+            'batteryNum'    -- Numbers of batterys
+            'profitToday'   -- Today generated profit through noah device
+            'plantId'   -- The ID of the plant
+            'disChargePower'    -- Battery discharging rate in watt e.g. '200Watt'
+            'eacTotal'  -- Total energy exported to the grid in kWh e.g. '20.5kWh'
+            'eacToday'  -- Today energy exported to the grid in kWh e.g. '20.5kWh'
+            'pac'   -- Export to grid rate in watt e.g. '200Watt'
+            'ppv'   -- Solar generation in watt e.g. '200Watt'
+            'alias' -- Friendly name of the noah device
+            'profitTotal'   -- Total generated profit through noah device
+            'moneyUnit' -- Unit of currency e.g. '€'
+            'status'    -- Is the noah device online (True or False)
+        """
+        response = self.session.post(self.get_url('noahDeviceApi/noah/getSystemStatus'), data={
+            'deviceSn': serial_number
+        })
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+    
+    def noah_info(self, serial_number):
+        """
+        Returns a dictionary containing the informations for the specified Noah Device
+
+        Keyword arguments:
+        serial_number -- The Serial number of the noah device you want the informations of (str)
+
+        Returns
+        'msg'
+        'result'    -- True or False
+        'obj' -- An Object containing the noah device informations
+            'neoList'   -- A List containing Objects
+            'unitList'  -- A Object containing currency units e.g. "Euro": "euro", "DOLLAR": "dollar"
+            'noah'  -- A Object containing the folowing
+                'time_segment'  -- A List containing Objects with configured "Operation Mode"
+                    NOTE: The keys are generated numerical, the values are generated with folowing syntax "[workingmode (0 = Load First, 1 = Battery First)]_[starttime]_[endtime]_[output power]"
+                    'time_segment': {
+                        'time_segment1': "0_0:0_8:0_150", ([Load First]_[00:00]_[08:00]_[150 watt])
+                        'time_segment2': "1_8:0_18:0_0", ([Battery First]_[08:00]_[18:00]_[0 watt])
+                        ....
+                     }
+                'batSns'    -- A List containing all battery Serial Numbers 
+                'associatedInvSn'   -- ???
+                'plantId'   -- The ID of the plant
+                'chargingSocHighLimit'  -- Configured "Battery Management" charging upper limit
+                'chargingSocLowLimit'   -- Configured "Battery Management" charging lower limit
+                'defaultPower'  -- Configured "System Default Output Power"
+                'version'   -- The Firmware Version of the noah device
+                'deviceSn'  -- The Serial number of the noah device
+                'formulaMoney'  -- Configured "Select Currency" energy cost per kWh e.g. '0.22'
+                'alias' -- Friendly name of the noah device
+                'model' -- Model Name of the noah device
+                'plantName' -- Friendly name of the plant
+                'tempType'  -- ???
+                'moneyUnitText' -- Configured "Select Currency" (Value from the unitList) e.G. "euro"
+            'plantList' -- A List containing Objects containing the folowing
+                'plantId'   -- The ID of the plant
+                'plantImgName'  -- Friendly name of the plant Image
+                'plantName' -- Friendly name of the plant
+        """        
+        response = self.session.post(self.get_url('noahDeviceApi/noah/getNoahInfoBySn'), data={
+            'deviceSn': serial_number
         })
         data = json.loads(response.content.decode('utf-8'))
         return data
@@ -669,3 +772,36 @@ class GrowattApi:
         }
         return self.update_inverter_setting(serial_number, setting_type, 
                                             default_parameters, parameters)
+
+    def update_noah_settings(self, serial_number, setting_type, parameters):
+        """
+        Applies settings for specified noah device based on serial number
+        See README for known working settings
+
+        Arguments:
+        serial_number -- Serial number (device_sn) of the noah (str)
+        setting_type -- Setting to be configured (str)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
+        """
+        default_parameters = {
+            'serialNum': serial_number,
+            'type': setting_type
+        }
+        settings_parameters = parameters
+        
+        #If we've been passed an array then convert it into a dictionary
+        if isinstance(parameters, list):
+            settings_parameters = {}
+            for index, param in enumerate(parameters, start=1):
+                settings_parameters['param' + str(index)] = param
+        
+        settings_parameters = {**default_parameters, **settings_parameters}
+
+        response = self.session.post(self.get_url('noahDeviceApi/noah/set'), 
+                                     data=settings_parameters)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
