@@ -41,31 +41,43 @@ plant_id = plant_list[0]['id']
 plant_info = api.plant_info(plant_id)
 print("Plant info:", json.dumps(plant_info, indent=4, sort_keys=True))
 
-# Energy data
+# Energy data (used in the 'Plant' Tab)
 energy_data = api.get_energy_data(plant_id)
-print("Energy data", json.dumps(energy_data, indent=4, sort_keys=True))
+print("Plant Energy data", json.dumps(energy_data, indent=4, sort_keys=True))
 
 # Devices
 devices = api.get_all_devices(plant_id)
 print("Devices:", json.dumps(devices, indent=4, sort_keys=True))
 
-for device in devices['deviceList']:
+for device in devices:
     if device['deviceType'] == 'tlx':
-        # Inverter info
+        # Inverter info (used in inverter view)
         inverter_sn = device['deviceSn']
         inverter_info = api.tlx_params(inverter_sn)
-        print("TLX inverter info:", json.dumps(inverter_info, indent=4, sort_keys=True))
+        print("Inverter info:", json.dumps(inverter_info, indent=4, sort_keys=True))
 
-        # Data
+        # PV production data
         data = api.tlx_data(inverter_sn, datetime.datetime.now())
-        print("TLX data:", json.dumps(data, indent=4, sort_keys=True))
+        print("PV production data:", json.dumps(data, indent=4, sort_keys=True))
 
-        # Settings
+        # System settings
         all_settings = api.tlx_get_all_settings(inverter_sn)
         enabled_settings = api.tlx_get_enabled_settings(inverter_sn)
         enabled_keys = enabled_settings['enable'].keys()
         available_settings = {k: v for k, v in all_settings.items() if k in enabled_keys}
-        print("Settings:", json.dumps(available_settings, indent=4, sort_keys=True))
+        print("System settings:", json.dumps(available_settings, indent=4, sort_keys=True))
+
+        # System status
+        data = api.tlx_get_system_status(plant_id, inverter_sn)
+        print("System status:", json.dumps(data, indent=4, sort_keys=True))
+
+        # Energy overview
+        data = api.tlx_get_energy_overview(plant_id, inverter_sn)
+        print("Energy overview:", json.dumps(data, indent=4, sort_keys=True))
+       
+        # Energy production & consumption
+        data = api.tlx_get_energy_prod_cons(plant_id, inverter_sn)
+        print("Energy production & consumption:", json.dumps(data, indent=4, sort_keys=True))
 
     elif device['deviceType'] == 'bat':
         # Battery info

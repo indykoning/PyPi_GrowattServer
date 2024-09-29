@@ -30,6 +30,8 @@ Any methods that may be useful.
 
 `api.plant_detail(plant_id, timespan<1=day, 2=month>, date)` Get details of a specific plant.
 
+`api.get_energy_data(plant_id)` Get energy data for the specified plant.
+
 `api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
 
 `api.device_list(plant_id)` Get a list of devices in specified plant.
@@ -37,6 +39,12 @@ Any methods that may be useful.
 `api.inverter_data(inverter_id, date)` Get some basic data of a specific date for the inverter.
 
 `api.inverter_detail(inverter_id)` Get detailed data on inverter.
+
+`api.tlx_get_system_status(plant_id, tlx_id)` Get system status.
+
+`api.tlx_get_energy_overview(plant_id, tlx_id)` Get energy overview of the system.
+
+`api.tlx_get_energy_prod_cons(plant_id, tlx_id)` Get energy production and consumption for the system.
 
 `api.tlx_data(tlx_id, date)` Get some basic data of a specific date for the tlx type inverter.
 

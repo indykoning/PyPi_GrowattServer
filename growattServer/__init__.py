@@ -305,6 +305,95 @@ class GrowattApi:
         else:
             raise Exception('Failed to retrieve inverter details')
 
+    def tlx_get_system_status(self, plant_id, tlx_id):
+        """
+        Get status of the system
+
+        Args:
+            plant_id (str): The ID of the plant.
+            tlx_id (str): The ID of the TLX inverter.
+
+        Returns:
+            dict: A dictionary containing system status.
+
+        Raises:
+            Exception: If the request to the server fails.
+        """
+        response = self.session.post(
+            self.__get_url("newTlxApi.do"),
+            params={"op": "getSystemStatus_KW"},
+            data={"plantId": plant_id,
+                  "id": tlx_id}
+        )
+
+        if response.status_code == 200:
+            return response.json()['obj']
+        else:
+            raise Exception("Failed to retrieve system status")
+
+    def tlx_get_energy_overview(self, plant_id, tlx_id):
+        """
+        Get energy overview
+
+        Args:
+            plant_id (str): The ID of the plant.
+            tlx_id (str): The ID of the TLX inverter.
+
+        Returns:
+            dict: A dictionary containing energy data.
+
+        Raises:
+            Exception: If the request to the server fails.
+        """
+        response = self.session.post(
+            self.__get_url("newTlxApi.do"),
+            params={"op": "getEnergyOverview"},
+            data={"plantId": plant_id,
+                  "id": tlx_id}
+        )
+
+        if response.status_code == 200:
+            return response.json()['obj']
+        else:
+            raise Exception("Failed to retrieve energy data")
+
+    def tlx_get_energy_prod_cons(self, plant_id, tlx_id, timespan=Timespan.hour, date=None):
+        """
+        Get energy production and consumption (KW)
+
+        Args:
+            tlx_id (str): The ID of the TLX inverter.
+            timespan (Timespan): The ENUM value conforming to the time window you want e.g. hours from today, days, or months.
+            date (datetime): The date you are interested in.
+
+        Returns:
+            dict: A dictionary containing energy data.
+
+        Raises:
+            ValueError: If the timespan is not a valid Timespan.
+            Exception: If the request to the server fails.
+        """
+        if not isinstance(timespan, Timespan):
+            raise ValueError("Invalid timespan value")
+
+        if date is None:
+            date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+        response = self.session.post(
+            self.__get_url("newTlxApi.do"),
+            params={"op": "getEnergyProdAndCons_KW"},
+            data={'date': date,
+                "plantId": plant_id,
+                "language": "1",
+                 "id": tlx_id,
+                 "type": timespan.value}
+        )
+
+        if response.status_code == 200:
+            return response.json()['obj']
+        else:
+            raise Exception("Failed to retrieve energy production/consumption")
+
     def tlx_data(self, tlx_id, date=None):
         """
         Get TLX inverter data for specified date or today.
@@ -702,6 +791,8 @@ class GrowattApi:
         'ratio4' -- % of 'Load consumption' that is imported from the grid e.g '50.2%' (not accurate for Mix systems)
         'ratio5' -- % of Self consumption that is from batteries e.g. '92.1%' (not accurate for Mix systems)
         'ratio6' -- % of Self consumption that is directly from Solar e.g. '7.9%' (not accurate for Mix systems)
+
+        NOTE: Does not return any data for a tlx system. Use get_energy_data() instead.
         """
         date_str = self.__get_date_string(timespan, date)
 
@@ -713,6 +804,26 @@ class GrowattApi:
         })
 
         return response.json()
+
+    def get_plant_settings(self, plant_id):
+        """
+        Returns a dictionary containing the settings for the specified plant
+
+        Keyword arguments:
+        plant_id -- The id of the plant you want the settings of
+
+        Returns:
+        A python dictionary containing the settings for the specified plant
+        """
+        response = self.session.get(self.__get_url('newPlantAPI.do'), params={
+            'op': 'getPlant',
+            'plantId': plant_id
+        })
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception('Failed to get plant settings')
 
     def storage_detail(self, storage_id):
         """
@@ -787,13 +898,13 @@ class GrowattApi:
                                              'language': 1})
 
         if response.status_code == 200:
-            return response.json()
+            return response.json()['deviceList']
         else:
             raise Exception('Failed to get device data')
 
     def get_energy_data(self, plant_id):
         """
-        Get energy data
+        Get the energy data used in the 'Plant' tab in the phone
         """
         response = self.session.post(self.__get_url('newTwoPlantAPI.do'), 
                                      params={'op': 'getUserCenterEnertyDataByPlantid'}, 
@@ -804,27 +915,6 @@ class GrowattApi:
             return response.json()
         else:
             raise Exception('Failed to energy data')
-
-    def get_plant_settings(self, plant_id):
-        """
-        Returns a dictionary containing the settings for the specified plant
-
-        Keyword arguments:
-        plant_id -- The id of the plant you want the settings of
-
-        Returns:
-        A python dictionary containing the settings for the specified plant
-        """
-        response = self.session.get(self.__get_url('newPlantAPI.do'), params={
-            'op': 'getPlant',
-            'plantId': plant_id
-        })
-        
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to get plant settings')
-
     
     def is_plant_noah_system(self, plant_id):
         """
