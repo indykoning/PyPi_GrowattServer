@@ -63,7 +63,7 @@ class GrowattApi:
 
         return date_str
 
-    def __get_url(self, page):
+    def get_url(self, page):
         """
         Simple helper function to get the page URL.
         """
@@ -305,7 +305,7 @@ class GrowattApi:
         else:
             raise Exception('Failed to retrieve inverter details')
 
-    def tlx_get_system_status(self, plant_id, tlx_id):
+    def tlx_system_status(self, tlx_id, plant_id):
         """
         Get status of the system
 
@@ -331,7 +331,7 @@ class GrowattApi:
         else:
             raise Exception("Failed to retrieve system status")
 
-    def tlx_get_energy_overview(self, plant_id, tlx_id):
+    def tlx_energy_overview(self, plant_id, tlx_id):
         """
         Get energy overview
 
@@ -357,7 +357,7 @@ class GrowattApi:
         else:
             raise Exception("Failed to retrieve energy data")
 
-    def tlx_get_energy_prod_cons(self, plant_id, tlx_id, timespan=Timespan.hour, date=None):
+    def tlx_energy_prod_cons(self, plant_id, tlx_id, timespan=Timespan.hour, date=None):
         """
         Get energy production and consumption (KW)
 
@@ -517,7 +517,7 @@ class GrowattApi:
         else:
             raise Exception('Failed to retrieve enabled inverter settings')
 
-    def get_battery_info(self, serial_num):
+    def tlx_battery_info(self, serial_num):
         """
         Get battery information.
         
@@ -541,7 +541,7 @@ class GrowattApi:
         else:
             raise Exception('Failed to retrieve battery info')
 
-    def get_battery_info_detailed(self, plant_id, serial_num):
+    def tlx_battery_details(self, plant_id, serial_num):
         """
         Get detailed battery information.
         
@@ -902,7 +902,7 @@ class GrowattApi:
         else:
             raise Exception('Failed to get device data')
 
-    def get_energy_data(self, plant_id):
+    def plant_energy_data(self, plant_id):
         """
         Get the energy data used in the 'Plant' tab in the phone
         """
