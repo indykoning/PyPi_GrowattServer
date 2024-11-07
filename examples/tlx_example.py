@@ -22,10 +22,10 @@ import json
 #  
 """
 
-#Prompt user for username
+# Prompt user for username
 username=input("Enter username:")
 
-#Prompt user to input password
+# Prompt user to input password
 user_pass=getpass.getpass("Enter password:")
 
 user_agent = 'ShinePhone/8.1.17 (iPhone; iOS 15.6.1; Scale/2.00)'
@@ -42,11 +42,11 @@ plant_info = api.plant_info(plant_id)
 print("Plant info:", json.dumps(plant_info, indent=4, sort_keys=True))
 
 # Energy data (used in the 'Plant' Tab)
-energy_data = api.get_energy_data(plant_id)
+energy_data = api.plant_energy_data(plant_id)
 print("Plant Energy data", json.dumps(energy_data, indent=4, sort_keys=True))
 
 # Devices
-devices = api.get_all_devices(plant_id)
+devices = api.device_list(plant_id)
 print("Devices:", json.dumps(devices, indent=4, sort_keys=True))
 
 for device in devices:
@@ -61,36 +61,39 @@ for device in devices:
         print("PV production data:", json.dumps(data, indent=4, sort_keys=True))
 
         # System settings
-        all_settings = api.tlx_get_all_settings(inverter_sn)
-        enabled_settings = api.tlx_get_enabled_settings(inverter_sn)
+        all_settings = api.tlx_all_settings(inverter_sn)
+        enabled_settings = api.tlx_enabled_settings(inverter_sn)
+        # 'on_grid_discharge_stop_soc' is present in web UI, but for some reason not
+        # returned in enabled settings so we enable it manually here instead
+        enabled_settings['enable']['on_grid_discharge_stop_soc'] = '1' 
         enabled_keys = enabled_settings['enable'].keys()
         available_settings = {k: v for k, v in all_settings.items() if k in enabled_keys}
         print("System settings:", json.dumps(available_settings, indent=4, sort_keys=True))
 
         # System status
-        data = api.tlx_get_system_status(plant_id, inverter_sn)
+        data = api.tlx_system_status(plant_id, inverter_sn)
         print("System status:", json.dumps(data, indent=4, sort_keys=True))
 
         # Energy overview
-        data = api.tlx_get_energy_overview(plant_id, inverter_sn)
+        data = api.tlx_energy_overview(plant_id, inverter_sn)
         print("Energy overview:", json.dumps(data, indent=4, sort_keys=True))
        
         # Energy production & consumption
-        data = api.tlx_get_energy_prod_cons(plant_id, inverter_sn)
+        data = api.tlx_energy_prod_cons(plant_id, inverter_sn)
         print("Energy production & consumption:", json.dumps(data, indent=4, sort_keys=True))
 
     elif device['deviceType'] == 'bat':
         # Battery info
-        batt_info = api.get_battery_info(device['deviceSn'])
+        batt_info = api.tlx_battery_info(device['deviceSn'])
         print("Battery info:", json.dumps(batt_info, indent=4, sort_keys=True))
-        batt_info_detailed = api.get_battery_info_detailed(plant_id, device['deviceSn'])
+        batt_info_detailed = api.tlx_battery_info_detailed(plant_id, device['deviceSn'])
         print("Battery info: detailed", json.dumps(batt_info_detailed, indent=4, sort_keys=True))
 
 
 # Examples of updating settings, uncomment to use
 
 # Set charging power to 95%
-#res = api.update_tlx_inverter_setting(inverter_sn, 'charge_power', 96)
+#res = api.update_tlx_inverter_setting(inverter_sn, 'charge_power', 95)
 #print(res)
 
 # Turn on AC charging

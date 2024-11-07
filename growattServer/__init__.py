@@ -1,12 +1,11 @@
-name = "growattServer"
-
 import datetime
 from enum import IntEnum
-import hashlib
-import json
 import requests
-import warnings
 from random import randint
+import warnings
+import hashlib
+
+name = "growattServer"
 
 BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
@@ -50,10 +49,10 @@ class GrowattApi:
 
     def __get_date_string(self, timespan=None, date=None):
         if timespan is not None:
-         assert timespan in Timespan
+            assert timespan in Timespan
 
         if date is None:
-          date = datetime.datetime.now()
+            date = datetime.datetime.now()
 
         date_str=""
         if timespan == Timespan.month:
@@ -63,7 +62,7 @@ class GrowattApi:
 
         return date_str
 
-    def __get_url(self, page):
+    def get_url(self, page):
         """
         Simple helper function to get the page URL.
         """
@@ -132,21 +131,18 @@ class GrowattApi:
         if not is_password_hashed:
             password = hash_password(password)
 
-        response = self.session.post(self.__get_url('newTwoLoginAPI.do'), data={
+        response = self.session.post(self.get_url('newTwoLoginAPI.do'), data={
             'userName': username,
             'password': password
         })
 
-        if response.status_code == 200:
-            data = response.json()['back']
-            if data['success']:
-                data.update({
-                    'userId': data['user']['id'],
-                    'userLevel': data['user']['rightlevel']
-                })
-            return data
-        else:
-            raise Exception('Login failed')
+        data = response.json()['back']
+        if data['success']:
+            data.update({
+                'userId': data['user']['id'],
+                'userLevel': data['user']['rightlevel']
+            })
+        return data
 
     def plant_list(self, user_id):
         """
@@ -162,16 +158,12 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         response = self.session.get(
-            self.__get_url('PlantListAPI.do'),
+            self.get_url('PlantListAPI.do'),
             params={'userId': user_id},
             allow_redirects=False
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get('back', [])
-        else:
-            raise Exception('Failed to retrieve plant list')
+        return response.json().get('back', [])
 
     def plant_detail(self, plant_id, timespan, date=None):
         """
@@ -186,24 +178,17 @@ class GrowattApi:
             dict: A dictionary containing the plant details.
 
         Raises:
-            ValueError: If the timespan is not a valid Timespan.
             Exception: If the request to the server fails.
         """
-        if not isinstance(timespan, Timespan):
-            raise ValueError("Invalid timespan value")
-
         date_str = self.__get_date_string(timespan, date)
 
-        response = self.session.get(self.__get_url('PlantDetailAPI.do'), params={
+        response = self.session.get(self.get_url('PlantDetailAPI.do'), params={
             'plantId': plant_id,
             'type': timespan.value,
             'date': date_str
         })
 
-        if response.status_code == 200:
-            return response.json().get('back', {})
-        else:
-            raise Exception('Failed to retrieve plant details')
+        return response.json().get('back', {})
 
     def plant_list_two(self):
         """
@@ -213,7 +198,7 @@ class GrowattApi:
             list: A list of plants with detailed information.
         """
         response = self.session.post(
-            self.__get_url('newTwoPlantAPI.do'),
+            self.get_url('newTwoPlantAPI.do'),
             params={'op': 'getAllPlantListTwo'},
             data={
                 'language': '1',
@@ -226,11 +211,7 @@ class GrowattApi:
             }
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get('PlantList', [])
-        else:
-            raise Exception('Failed to retrieve plant list')
+        return response.json().get('PlantList', [])
 
     def inverter_data(self, inverter_id, date=None):
         """
@@ -247,17 +228,14 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         date_str = self.__get_date_string(date=date)
-        response = self.session.get(self.__get_url('newInverterAPI.do'), params={
+        response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterData',
             'id': inverter_id,
             'type': 1,
             'date': date_str
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve inverter data')
+        return response.json()
 
     def inverter_detail(self, inverter_id):
         """
@@ -272,15 +250,12 @@ class GrowattApi:
         Raises:
             Exception: If the request to the server fails.
         """
-        response = self.session.get(self.__get_url('newInverterAPI.do'), params={
+        response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData',
             'inverterId': inverter_id
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve inverter details')
+        return response.json()
 
     def inverter_detail_two(self, inverter_id):
         """
@@ -295,17 +270,14 @@ class GrowattApi:
         Raises:
             Exception: If the request to the server fails.
         """
-        response = self.session.get(self.__get_url('newInverterAPI.do'), params={
+        response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterDetailData_two',
             'inverterId': inverter_id
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve inverter details')
+        return response.json()
 
-    def tlx_get_system_status(self, plant_id, tlx_id):
+    def tlx_system_status(self, plant_id, tlx_id):
         """
         Get status of the system
 
@@ -320,18 +292,15 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         response = self.session.post(
-            self.__get_url("newTlxApi.do"),
+            self.get_url("newTlxApi.do"),
             params={"op": "getSystemStatus_KW"},
             data={"plantId": plant_id,
                   "id": tlx_id}
         )
 
-        if response.status_code == 200:
-            return response.json()['obj']
-        else:
-            raise Exception("Failed to retrieve system status")
+        return response.json().get('obj', {})
 
-    def tlx_get_energy_overview(self, plant_id, tlx_id):
+    def tlx_energy_overview(self, plant_id, tlx_id):
         """
         Get energy overview
 
@@ -346,18 +315,15 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         response = self.session.post(
-            self.__get_url("newTlxApi.do"),
+            self.get_url("newTlxApi.do"),
             params={"op": "getEnergyOverview"},
             data={"plantId": plant_id,
                   "id": tlx_id}
         )
 
-        if response.status_code == 200:
-            return response.json()['obj']
-        else:
-            raise Exception("Failed to retrieve energy data")
+        return response.json().get('obj', {})
 
-    def tlx_get_energy_prod_cons(self, plant_id, tlx_id, timespan=Timespan.hour, date=None):
+    def tlx_energy_prod_cons(self, plant_id, tlx_id, timespan=Timespan.hour, date=None):
         """
         Get energy production and consumption (KW)
 
@@ -370,29 +336,22 @@ class GrowattApi:
             dict: A dictionary containing energy data.
 
         Raises:
-            ValueError: If the timespan is not a valid Timespan.
             Exception: If the request to the server fails.
         """
-        if not isinstance(timespan, Timespan):
-            raise ValueError("Invalid timespan value")
 
-        if date is None:
-            date = datetime.datetime.now().strftime("%Y-%m-%d")
+        date_str = self.__get_date_string(timespan, date)
 
         response = self.session.post(
-            self.__get_url("newTlxApi.do"),
+            self.get_url("newTlxApi.do"),
             params={"op": "getEnergyProdAndCons_KW"},
-            data={'date': date,
+            data={'date': date_str,
                 "plantId": plant_id,
                 "language": "1",
                  "id": tlx_id,
                  "type": timespan.value}
         )
 
-        if response.status_code == 200:
-            return response.json()['obj']
-        else:
-            raise Exception("Failed to retrieve energy production/consumption")
+        return response.json().get('obj', {})
 
     def tlx_data(self, tlx_id, date=None):
         """
@@ -409,17 +368,14 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         date_str = self.__get_date_string(date=date)
-        response = self.session.get(self.__get_url('newTlxApi.do'), params={
+        response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxData',
             'id': tlx_id,
             'type': 1,
             'date': date_str
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve TLX inverter data')
+        return response.json()
 
     def tlx_detail(self, tlx_id):
         """
@@ -434,15 +390,12 @@ class GrowattApi:
         Raises:
             Exception: If the request to the server fails.
         """
-        response = self.session.get(self.__get_url('newTlxApi.do'), params={
+        response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxDetailData',
             'id': tlx_id
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve detailed TLX inverter data')
+        return response.json()
 
     def tlx_params(self, tlx_id):
         """
@@ -457,17 +410,14 @@ class GrowattApi:
         Raises:
             Exception: If the request to the server fails.
         """
-        response = self.session.get(self.__get_url('newTlxApi.do'), params={
+        response = self.session.get(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxParams',
             'id': tlx_id 
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve TLX inverter parameters')
+        return response.json()
 
-    def tlx_get_all_settings(self, tlx_id):
+    def tlx_all_settings(self, tlx_id):
         """
         Get all possible settings from TLX inverter.
 
@@ -480,19 +430,15 @@ class GrowattApi:
         Raises:
             Exception: If the request to the server fails.
         """
-        response = self.session.post(self.__get_url('newTlxApi.do'), params={
+        response = self.session.post(self.get_url('newTlxApi.do'), params={
             'op': 'getTlxSetData'
         }, data={
             'serialNum': tlx_id
         })
 
-        if response.status_code == 200:
-            data = response.json()
-            return data['obj']['tlxSetBean']
-        else:
-            raise Exception('Failed to retrieve TLX inverter settings')
+        return response.json().get('obj', {}).get('tlxSetBean')
 
-    def tlx_get_enabled_settings(self, tlx_id):
+    def tlx_enabled_settings(self, tlx_id):
         """
         Get "Enabled settings" from TLX inverter.
         
@@ -507,17 +453,14 @@ class GrowattApi:
         """
         string_time = datetime.datetime.now().strftime('%Y-%m-%d')
         response = self.session.post(
-            self.__get_url('newLoginAPI.do'),
+            self.get_url('newLoginAPI.do'),
             params={'op': 'getSetPass'},
             data={'deviceSn': tlx_id, 'stringTime': string_time, 'type': '5'}
         )
 
-        if response.status_code == 200:
-            return response.json().get('obj', {})
-        else:
-            raise Exception('Failed to retrieve enabled inverter settings')
+        return response.json().get('obj', {})
 
-    def get_battery_info(self, serial_num):
+    def tlx_battery_info(self, serial_num):
         """
         Get battery information.
         
@@ -531,17 +474,14 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         response = self.session.post(
-            self.__get_url('newTlxApi.do'),
+            self.get_url('newTlxApi.do'),
             params={'op': 'getBatInfo'},
             data={'lan': 1, 'serialNum': serial_num}
         )
 
-        if response.status_code == 200:
-            return response.json().get('obj', {})
-        else:
-            raise Exception('Failed to retrieve battery info')
+        return response.json().get('obj', {})
 
-    def get_battery_info_detailed(self, plant_id, serial_num):
+    def tlx_battery_info_detailed(self, plant_id, serial_num):
         """
         Get detailed battery information.
         
@@ -556,15 +496,12 @@ class GrowattApi:
             Exception: If the request to the server fails.
         """
         response = self.session.post(
-            self.__get_url('newTlxApi.do'),
+            self.get_url('newTlxApi.do'),
             params={'op': 'getBatDetailData'},
             data={'lan': 1, 'plantId': plant_id, 'id': serial_num}
         )
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to retrieve detailed battery info')
+        return response.json()
 
     def mix_info(self, mix_id, plant_id = None):
         """
@@ -605,10 +542,9 @@ class GrowattApi:
         if (plant_id):
           request_params['plantId'] = plant_id
 
-        response = self.session.get(self.__get_url('newMixApi.do'), params=request_params)
+        response = self.session.get(self.get_url('newMixApi.do'), params=request_params)
 
-        data = response.json()
-        return data['obj']
+        return response.json().get('obj', {})
 
     def mix_totals(self, mix_id, plant_id):
         """
@@ -633,14 +569,13 @@ class GrowattApi:
         'photovoltaicRevenueTotal' -- Revenue earned from PV total (all time) in 'unit' currency
         'unit' -- Unit of currency for 'Revenue'
         """
-        response = self.session.post(self.__get_url('newMixApi.do'), params={
+        response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getEnergyOverview',
             'mixId': mix_id,
             'plantId': plant_id
         })
 
-        data = response.json()
-        return data['obj']
+        return response.json().get('obj', {})
 
     def mix_system_status(self, mix_id, plant_id):
         """
@@ -676,14 +611,13 @@ class GrowattApi:
         'vac1' -- Grid voltage in V (same as vAc1)
         'wBatteryType' -- ??? 1
         """
-        response = self.session.post(self.__get_url('newMixApi.do'), params={
+        response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getSystemStatus_KW',
             'mixId': mix_id,
             'plantId': plant_id
         })
 
-        data = response.json()
-        return data['obj']
+        return response.json().get('obj', {})
 
     def mix_detail(self, mix_id, plant_id, timespan=Timespan.hour, date=None):
         """
@@ -736,15 +670,15 @@ class GrowattApi:
         """
         date_str = self.__get_date_string(timespan, date)
 
-        response = self.session.post(self.__get_url('newMixApi.do'), params={
+        response = self.session.post(self.get_url('newMixApi.do'), params={
             'op': 'getEnergyProdAndCons_KW',
             'plantId': plant_id,
             'mixId': mix_id,
             'type': timespan.value,
             'date': date_str
         })
-        data = response.json()
-        return data['obj']
+
+        return response.json().get('obj', {})
 
     def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None):
         """
@@ -792,11 +726,11 @@ class GrowattApi:
         'ratio5' -- % of Self consumption that is from batteries e.g. '92.1%' (not accurate for Mix systems)
         'ratio6' -- % of Self consumption that is directly from Solar e.g. '7.9%' (not accurate for Mix systems)
 
-        NOTE: Does not return any data for a tlx system. Use get_energy_data() instead.
+        NOTE: Does not return any data for a tlx system. Use plant_energy_data() instead.
         """
         date_str = self.__get_date_string(timespan, date)
 
-        response = self.session.post(self.__get_url('newPlantAPI.do'), params={
+        response = self.session.post(self.get_url('newPlantAPI.do'), params={
             'action': "getEnergyStorageData",
             'date': date_str,
             'type': timespan.value,
@@ -805,7 +739,7 @@ class GrowattApi:
 
         return response.json()
 
-    def get_plant_settings(self, plant_id):
+    def plant_settings(self, plant_id):
         """
         Returns a dictionary containing the settings for the specified plant
 
@@ -815,21 +749,18 @@ class GrowattApi:
         Returns:
         A python dictionary containing the settings for the specified plant
         """
-        response = self.session.get(self.__get_url('newPlantAPI.do'), params={
+        response = self.session.get(self.get_url('newPlantAPI.do'), params={
             'op': 'getPlant',
             'plantId': plant_id
         })
         
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to get plant settings')
+        return response.json()
 
     def storage_detail(self, storage_id):
         """
         Get "All parameters" from battery storage.
         """
-        response = self.session.get(self.__get_url('newStorageAPI.do'), params={
+        response = self.session.get(self.get_url('newStorageAPI.do'), params={
             'op': 'getStorageInfo_sacolar',
             'storageId': storage_id
         })
@@ -840,7 +771,7 @@ class GrowattApi:
         """
         Get much more detail from battery storage.
         """
-        response = self.session.get(self.__get_url('newStorageAPI.do'), params={
+        response = self.session.get(self.get_url('newStorageAPI.do'), params={
             'op': 'getStorageParams_sacolar',
             'storageId': storage_id
         })
@@ -851,13 +782,12 @@ class GrowattApi:
         """
         Get some energy/generation overview data.
         """
-        response = self.session.post(self.__get_url('newStorageAPI.do?op=getEnergyOverviewData_sacolar'), params={
+        response = self.session.post(self.get_url('newStorageAPI.do?op=getEnergyOverviewData_sacolar'), params={
             'plantId': plant_id,
             'storageSn': storage_id
         })
 
-        data = response.json()
-        return data['obj']
+        return response.json().get('obj', {})
 
     def inverter_list(self, plant_id):
         """
@@ -866,55 +796,53 @@ class GrowattApi:
         warnings.warn("This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning)
         return self.device_list(plant_id)
 
+    def __get_all_devices(self, plant_id):
+        """
+        Get basic plant information with device list.
+        """
+        response = self.session.get(self.get_url('newTwoPlantAPI.do'), 
+                                     params={'op': 'getAllDeviceList',                                
+                                             'plantId': plant_id,
+                                             'language': 1})
+
+        return response.json().get('deviceList', {})
+
     def device_list(self, plant_id):
         """
         Get a list of all devices connected to plant.
         """
-        return self.plant_info(plant_id)['deviceList']
+        
+        device_list = self.plant_info(plant_id).get('deviceList', [])
+        
+        if not device_list:
+            # for tlx systems, the device_list in plant is empty, so use __get_all_devices() instead
+            device_list = self.__get_all_devices(plant_id)
+
+        return device_list
 
     def plant_info(self, plant_id):
         """
         Get basic plant information with device list.
         """
-        response = self.session.get(self.__get_url('newTwoPlantAPI.do'), params={
+        response = self.session.get(self.get_url('newTwoPlantAPI.do'), params={
             'op': 'getAllDeviceListTwo',
             'plantId': plant_id,
             'pageNum': 1,
             'pageSize': 1
         })
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to get plant info')
+        return response.json()
 
-    def get_all_devices(self, plant_id):
-        """
-        Get basic plant information with device list.
-        """
-        response = self.session.get(self.__get_url('newTwoPlantAPI.do'), 
-                                     params={'op': 'getAllDeviceList',                                
-                                             'plantId': plant_id,
-                                             'language': 1})
-
-        if response.status_code == 200:
-            return response.json()['deviceList']
-        else:
-            raise Exception('Failed to get device data')
-
-    def get_energy_data(self, plant_id):
+    def plant_energy_data(self, plant_id):
         """
         Get the energy data used in the 'Plant' tab in the phone
         """
-        response = self.session.post(self.__get_url('newTwoPlantAPI.do'), 
+        response = self.session.post(self.get_url('newTwoPlantAPI.do'), 
                                      params={'op': 'getUserCenterEnertyDataByPlantid'}, 
                                      data={ 'language': 1,
                                             'plantId': plant_id})
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to energy data')
+        return response.json()
     
     def is_plant_noah_system(self, plant_id):
         """
@@ -933,7 +861,7 @@ class GrowattApi:
             'deviceSn'  -- Serial number of the configured noah device
             'plantName' -- Friendly name of the plant
         """
-        response = self.session.post(self.__get_url('noahDeviceApi/noah/isPlantNoahSystem'), data={
+        response = self.session.post(self.get_url('noahDeviceApi/noah/isPlantNoahSystem'), data={
             'plantId': plant_id
         })
         return response.json()
@@ -967,7 +895,7 @@ class GrowattApi:
             'moneyUnit' -- Unit of currency e.g. '€'
             'status'    -- Is the noah device online (True or False)
         """
-        response = self.session.post(self.__get_url('noahDeviceApi/noah/getSystemStatus'), data={
+        response = self.session.post(self.get_url('noahDeviceApi/noah/getSystemStatus'), data={
             'deviceSn': serial_number
         })
         return response.json()
@@ -1013,7 +941,7 @@ class GrowattApi:
                 'plantImgName'  -- Friendly name of the plant Image
                 'plantName' -- Friendly name of the plant
         """        
-        response = self.session.post(self.__get_url('noahDeviceApi/noah/getNoahInfoBySn'), data={
+        response = self.session.post(self.get_url('noahDeviceApi/noah/getNoahInfoBySn'), data={
             'deviceSn': serial_number
         })
         return response.json()
@@ -1027,14 +955,14 @@ class GrowattApi:
         Keyword arguments:
         plant_id -- The id of the plant you wish to update the settings for
         changed_settings -- A python dictionary containing the settings to be changed and their value
-        current_settings -- A python dictionary containing the current settings of the plant (use the response from get_plant_settings), if None - fetched for you
+        current_settings -- A python dictionary containing the current settings of the plant (use the response from plant_settings), if None - fetched for you
 
         Returns:
         A response from the server stating whether the configuration was successful or not
         """
         #If no existing settings have been provided then get them from the growatt server
         if current_settings == None:
-            current_settings = self.get_plant_settings(plant_id)
+            current_settings = self.plant_settings(plant_id)
 
         #These are the parameters that the form requires, without these an error is thrown. Pre-populate their values with the current values
         form_settings = {
@@ -1062,12 +990,9 @@ class GrowattApi:
         for setting, value in changed_settings.items():
             form_settings[setting] = (None, str(value))
 
-        response = self.session.post(self.__get_url('newTwoPlantAPI.do?op=updatePlant'), files = form_settings)
+        response = self.session.post(self.get_url('newTwoPlantAPI.do?op=updatePlant'), files = form_settings)
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to update plant settings')
+        return response.json()
 
     def update_inverter_setting(self, serial_number, setting_type, 
                                 default_parameters, parameters):
@@ -1095,13 +1020,10 @@ class GrowattApi:
         
         settings_parameters = {**default_parameters, **settings_parameters}
 
-        response = self.session.post(self.__get_url('newTcpsetAPI.do'), 
+        response = self.session.post(self.get_url('newTcpsetAPI.do'), 
                                      params=settings_parameters)
         
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception('Failed to update inverter settings')
+        return response.json()
 
     def update_mix_inverter_setting(self, serial_number, setting_type, parameters):
         """
@@ -1175,14 +1097,9 @@ class GrowattApi:
             'param5': end_time.strftime('%M'),
             'param6': '1' if enabled else '0'
         }
-
-        print(f"Params: {params}")
-        print(f"Data: {data}")
         
-        response = self.session.post(self.__get_url('newTcpsetAPI.do'), params=params, data=data)
+        response = self.session.post(self.get_url('newTcpsetAPI.do'), params=params, data=data)
         result = response.json()
-        
-        print(f"Response: {result}")
         
         if not result.get('success', False):
             raise Exception(f"Failed to update TLX inverter time segment: {result.get('msg', 'Unknown error')}")
@@ -1247,7 +1164,7 @@ class GrowattApi:
         
         settings_parameters = {**default_parameters, **settings_parameters}
 
-        response = self.session.post(self.__get_url('noahDeviceApi/noah/set'), 
+        response = self.session.post(self.get_url('noahDeviceApi/noah/set'), 
                                      data=settings_parameters)
         
         return response.json()

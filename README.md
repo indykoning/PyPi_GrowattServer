@@ -28,9 +28,11 @@ Any methods that may be useful.
 
 `api.plant_info(plant_id)` Get info for specified plant.
 
+`api.plant_settings(plant_id)` Get the current settings for the specified plant
+
 `api.plant_detail(plant_id, timespan<1=day, 2=month>, date)` Get details of a specific plant.
 
-`api.get_energy_data(plant_id)` Get energy data for the specified plant.
+`api.plant_energy_data(plant_id)` Get energy data for the specified plant.
 
 `api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
 
@@ -40,11 +42,11 @@ Any methods that may be useful.
 
 `api.inverter_detail(inverter_id)` Get detailed data on inverter.
 
-`api.tlx_get_system_status(plant_id, tlx_id)` Get system status.
+`api.tlx_system_status(plant_id, tlx_id)` Get system status.
 
-`api.tlx_get_energy_overview(plant_id, tlx_id)` Get energy overview of the system.
+`api.tlx_energy_overview(plant_id, tlx_id)` Get energy overview of the system.
 
-`api.tlx_get_energy_prod_cons(plant_id, tlx_id)` Get energy production and consumption for the system.
+`api.tlx_energy_prod_cons(plant_id, tlx_id)` Get energy production and consumption for the system.
 
 `api.tlx_data(tlx_id, date)` Get some basic data of a specific date for the tlx type inverter.
 
@@ -56,9 +58,9 @@ Any methods that may be useful.
 
 `api.tlx_get_enabled_settings(tlx_id)` Get all enabled settings for the tlx type inverter. 
 
-`api.get_battery_info(serial_num)` Get battery info. Uses the tlx API, so might only work for tlx type inverter. 
+`api.tlx_battery_info(serial_num)` Get battery info for tlx systems.
 
-`api.get_battery_info_detailed(serial_num)` Get detailed battery info. Uses the tlx API, so might only work for tlx type inverter.
+`api.tlx_battery_info_detailed(serial_num)` Get detailed battery info.
 
 `api.mix_info(mix_id, plant_id=None)` Get high level information about the Mix system including daily and overall totals. NOTE: `plant_id` is an optional parameter, it does not appear to be used by the remote API, but is used by the mobile app these calls were reverse-engineered from.
 
@@ -75,8 +77,6 @@ Any methods that may be useful.
 `api.storage_params(storage_id)` Get a ton of info on storage (More info, more convoluted).
 
 `api.storage_energy_overview(plant_id, storage_id)` Get the information you see in the "Generation overview".
-
-`api.get_plant_settings(plant_id)` Get the current settings for the specified plant
 
 `api.is_plant_noah_system(plant_id)` Get the Information if noah devices are configured for the specified plant
 
@@ -221,11 +221,13 @@ Known working settings & parameters are as follows (all parameter values are str
    *   param1: Charge Stop SOC
   * type: `discharge_power`
    *   param1: Discharging power % (value between 0 and 100)
+  * type: `on_grid_discharge_stop_soc`
+   *   param1: On-grid discharge Stop SOC
   * type: `discharge_stop_soc`
-   *   param1: Discharge Stop SOC
+   *   param1: Off-grid discharge Stop SOC
   * type: `ac_charge`
    *   param1: Allow AC (grid) charging (0 = Disabled, 1 = Enabled)
-  *  type: `pf_sys_year` 
+  * type: `pf_sys_year` 
    *   param1: datetime in format: `YYYY-MM-DD HH:MM:SS`
   * function: `api.update_tlx_inverter_time_segment`
    *   segment_id: The segment to update (1-9)
