@@ -84,6 +84,8 @@ Any methods that may be useful.
 
 `api.noah_info(serial_number)` Get all information for the specified noah device e.g. configured Operation Modes, configured Battery Management charging upper & lower limit, configured System Default Output Power, Firmware Version
 
+`api.get_mix_inverter_settings(serial_number)` Get the current inverter settings for the specified serial number including charge/discharge schedule for hybrid systems.
+
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
 `api.update_tlx_inverter_setting(serial_number, setting_type, parameter)` Applies the provided parameter for the specified setting on the specified tlx inverter; see 'Inverter settings' below for more information.
