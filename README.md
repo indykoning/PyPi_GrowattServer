@@ -28,7 +28,11 @@ Any methods that may be useful.
 
 `api.plant_info(plant_id)` Get info for specified plant.
 
+`api.plant_settings(plant_id)` Get the current settings for the specified plant
+
 `api.plant_detail(plant_id, timespan<1=day, 2=month>, date)` Get details of a specific plant.
+
+`api.plant_energy_data(plant_id)` Get energy data for the specified plant.
 
 `api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
 
@@ -38,9 +42,25 @@ Any methods that may be useful.
 
 `api.inverter_detail(inverter_id)` Get detailed data on inverter.
 
+`api.tlx_system_status(plant_id, tlx_id)` Get system status.
+
+`api.tlx_energy_overview(plant_id, tlx_id)` Get energy overview of the system.
+
+`api.tlx_energy_prod_cons(plant_id, tlx_id)` Get energy production and consumption for the system.
+
 `api.tlx_data(tlx_id, date)` Get some basic data of a specific date for the tlx type inverter.
 
 `api.tlx_detail(tlx_id)` Get detailed data on a tlx type inverter.
+
+`api.tlx_params(tlx_id)` Get parameters for the tlx type inverter.
+
+`api.tlx_get_all_settings(tlx_id)` Get all possible settings for the tlx type inverter.
+
+`api.tlx_get_enabled_settings(tlx_id)` Get all enabled settings for the tlx type inverter. 
+
+`api.tlx_battery_info(serial_num)` Get battery info for tlx systems.
+
+`api.tlx_battery_info_detailed(serial_num)` Get detailed battery info.
 
 `api.mix_info(mix_id, plant_id=None)` Get high level information about the Mix system including daily and overall totals. NOTE: `plant_id` is an optional parameter, it does not appear to be used by the remote API, but is used by the mobile app these calls were reverse-engineered from.
 
@@ -58,21 +78,37 @@ Any methods that may be useful.
 
 `api.storage_energy_overview(plant_id, storage_id)` Get the information you see in the "Generation overview".
 
-`api.get_plant_settings(plant_id)` Get the current settings for the specified plant
+`api.is_plant_noah_system(plant_id)` Get the Information if noah devices are configured for the specified plant
+
+`api.noah_system_status(serial_number)` Get the current status for the specified noah device e.g. workMode, soc, chargePower, disChargePower, current import/export etc.
+
+`api.noah_info(serial_number)` Get all information for the specified noah device e.g. configured Operation Modes, configured Battery Management charging upper & lower limit, configured System Default Output Power, Firmware Version
 
 `api.get_mix_inverter_settings(serial_number)` Get the current inverter settings for the specified serial number including charge/discharge schedule for hybrid systems.
 
 `api.update_plant_settings(plant_id, changed_settings, current_settings)` Update the settings for a plant to the values specified in the dictionary, if the `current_settings` are not provided it will look them up automatically using the `get_plant_settings` function - See 'Plant settings' below for more information
 
+`api.update_tlx_inverter_setting(serial_number, setting_type, parameter)` Applies the provided parameter for the specified setting on the specified tlx inverter; see 'Inverter settings' below for more information.
+
+`api.update_tlx_inverter_time_segment(serial_number, segment_id, batt_mode, start_time, end_time, enabled)` Updates one of the 9 time segments with the specified battery mode (load, battery, grid first); see 'Inverter settings' below for more information.
+
 `api.update_mix_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified mix inverter; see 'Inverter settings' below for more information
 
 `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
+
+`api.update_noah_settings(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified noah device; see 'Noah settings' below for more information
 
 ### Variables
 
 Some variables you may want to set.
 
-`api.server_url` The growatt server URL, default: 'https://server-api.growatt.com/'
+`api.server_url` The growatt server URL, default: 'https://openapi.growatt.com/'
+
+You may need a different URL depending on where your account is registered:
+
+'https://openapi-cn.growatt.com/' (Chinese server)
+'https://openapi-us.growatt.com/' (North American server)
+'https://openapi.growatt.com/' (Other regional server: e.g. Europe)
 
 ## Note
 
@@ -125,7 +161,7 @@ The plant settings function(s) allow you to re-configure the settings for a spec
 The function `update_plant_settings` allows you to provide a python dictionary of any/all of the above settings and change their value.
 
 ## Inverter Settings
-NOTE: The inverter settings function appears to only work with 'mix' systems based on the API call that it makes being specific to 'mix' inverters
+NOTE: The inverter settings function appears to only work with 'mix' and 'tlx' systems based on the API call that it makes being specific to those inverter types
 
 The inverter settings function(s) allow you to change individual values on your inverter e.g. time, charging period etc.
 From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
@@ -179,8 +215,67 @@ Known working settings & parameters are as follows (all parameter values are str
     * `param15`: Schedule 3 - End time - Hour e.g. "02" (2am)
     * `param16`: Schedule 3 - End time - Minute e.g. "00" (0 minutes)
     * `param17`: Schedule 3 - Enabled/Disabled (0 = Disabled, 1 = Enabled)
+* **TLX inverter settings**
+  * function: `api.update_tlx_inverter_setting`
+  * type: `charge_power`
+   *   param1: Charging power % (value between 0 and 100)
+  * type: `charge_stop_soc`
+   *   param1: Charge Stop SOC
+  * type: `discharge_power`
+   *   param1: Discharging power % (value between 0 and 100)
+  * type: `on_grid_discharge_stop_soc`
+   *   param1: On-grid discharge Stop SOC
+  * type: `discharge_stop_soc`
+   *   param1: Off-grid discharge Stop SOC
+  * type: `ac_charge`
+   *   param1: Allow AC (grid) charging (0 = Disabled, 1 = Enabled)
+  * type: `pf_sys_year` 
+   *   param1: datetime in format: `YYYY-MM-DD HH:MM:SS`
+  * function: `api.update_tlx_inverter_time_segment`
+   *   segment_id: The segment to update (1-9)
+   *   batt_mode: Battery Mode for the segment: 0=Load First(Self-Consumption), 1=Battery First, 2=Grid First  
+   *   start_time: timedate object with start time of segment with format HH:MM
+   *   end_time: timedate object with end time of segment with format HH:MM
+   *   enabled: time segment enabled, boolean: True (Enabled), False (Disabled)
 
-The three functions `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+The four functions `update_tlx_inverter_setting`, `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
+
+Only the settings described above have been tested with `update_tlx_inverter_setting` and they all take only one single parameter. It is very likely that the function works with all settings returned by `tlx_get_enabled_settings`, but this has not been tested. A helper function `update_tlx_inverter_time_segment` is provided for the settings that require more than one parameter.
+
+## Noah Settings
+The noah settings function allow you to change individual values on your noah system e.g. system default output power, battery management, operation mode and currency
+From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
+
+Known working settings & parameters are as follows (all parameter values are strings):
+* **Change "System Default Output Power"**
+  * function: `api.update_noah_settings`
+  * setting type: `default_power`
+  * params:
+    * `param1`: System default output power in watt
+* **Change "Battery Management"**
+  * function: `api.update_noah_settings`
+  * setting type: `charging_soc`
+  * params:
+    * `param1`: Charge upper limit in %
+    * `param2`: Charge lower limit in %
+* **Change "Operation Mode" Time Segment**
+  * function: `api.update_noah_settings`
+  * setting type: `time_segment` key from `api.noah_info(serial_number)`, for new `time_segment` count the ending number up
+  * params:
+    * `param1`: Workingmode (0 = Load First, 1 = Battery First)
+    * `param2`: Start time - Hour e.g. "01" (1am)
+    * `param3`: Start time - Minute e.g. "00" (0 minutes)
+    * `param4`: End time - Hour e.g. "02" (2am)
+    * `param5`: End time - Minute e.g. "00" (0 minutes)
+    * `param6`: Output power in watt (For Workingmode "Battery First" always "0")
+    * `param7`: Enabled/Disabled (0 = Disabled, 1 = Enabled)
+* **Change "Currency"**
+  * function: `api.update_noah_settings`
+  * setting type: `updatePlantMoney`
+  * params:
+    * `param1`: Plant Id
+    * `param2`: Cost per kWh e.g. "0.22"
+    * `param3`: Unit value from `api.noah_info(serial_number)` - `unitList`
 
 ## Settings Discovery
 
