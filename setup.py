@@ -5,15 +5,15 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="growattServer",
-    version="1.6.0",
-    author="IndyKoning",
-    author_email="indykoningnl@gmail.com",
-    description="A package to talk to growatt server",
+    name="growattServerSR",
+    version="1.7.0",
+    author="Simon Rankine",
+    author_email="simon@srankine.uk",
+    description="A package to talk to growatt server - forked from the original by @indykoning",
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/indykoning/PyPi_GrowattServer",
+    url="https://github.com/simonrankine/PyPi_GrowattServer",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
