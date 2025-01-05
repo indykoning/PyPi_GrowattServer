@@ -670,8 +670,7 @@ class GrowattApi:
         return self.update_inverter_setting(serial_number, setting_type, 
                                             default_parameters, parameters)
     
-        def get_mix_inverter_settings(self, serial_number):
-
+    def get_mix_inverter_settings(self, serial_number):
         """
         Gets the inverter settings related to battery modes
         Keyword arguments:
@@ -685,7 +684,6 @@ class GrowattApi:
             'serialNum': serial_number,
             'kind': 0
         }
-        settings_params = {**default_params}
         response = self.session.get(self.get_url('newMixApi.do'), params=default_params)
         data = json.loads(response.content.decode('utf-8'))
         return data

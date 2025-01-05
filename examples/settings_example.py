@@ -40,7 +40,9 @@ device_type = device['deviceType']
 current_settings = api.get_plant_settings(plant_id)
 #pp.pprint(current_settings)
 
-
+#Get mix inverter settings
+inverter_settings = api.get_mix_inverter_settings(device_sn)
+pp.pprint(inverter_settings)
 
 #Change the timezone of the plant
 plant_settings_changes = {
