@@ -4,6 +4,7 @@ import requests
 from random import randint
 import warnings
 import hashlib
+from enum import Enum
 
 name = "growattServer"
 
@@ -29,6 +30,26 @@ class Timespan(IntEnum):
 class GrowattApi:
     server_url = 'https://openapi.growatt.com/'
     agent_identifier = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
+
+    class inverterN000ueData(int, Enum):
+        """ Enumerator class for the data type to be used with self.inverter_data().
+            Tested on the 3-phase inverters 3000UE, 4000UE & 5000UE
+        """
+        UNKNOWN_0       = 0
+        MPPT_POWER      = 1
+        MPPT1_VOLTAGE   = 2
+        MPPT1_CURRENT   = 3
+        MPPT2_VOLTAGE   = 4
+        MPPT2_CURRENT   = 5
+        R_PHASE_POWER   = 6
+        S_PHASE_POWER   = 7
+        T_PHASE_POWER   = 8
+        PAC             = 9
+        # Anything higher returns UNKNOWN_0
+
+        def __str__(self):
+            # Return the string representation of the enum's value
+            return str(self.value)
 
     def __init__(self, add_random_user_id=False, agent_identifier=None):
         if (agent_identifier != None):
@@ -213,13 +234,14 @@ class GrowattApi:
 
         return response.json().get('PlantList', [])
 
-    def inverter_data(self, inverter_id, date=None):
+    def inverter_data(self, inverter_id, date=None, data_type:int=1):
         """
         Get inverter data for specified date or today.
 
         Args:
             inverter_id (str): The ID of the inverter.
             date (datetime, optional): The date you are interested in. Defaults to datetime.datetime.now().
+            type (int) : Type of data to querry (PAC, MPPT_POWER, MPPT_CURRENT, etc)
 
         Returns:
             dict: A dictionary containing the inverter data.
@@ -231,7 +253,7 @@ class GrowattApi:
         response = self.session.get(self.get_url('newInverterAPI.do'), params={
             'op': 'getInverterData',
             'id': inverter_id,
-            'type': 1,
+            'type': data_type,
             'date': date_str
         })
 
