@@ -34,7 +34,7 @@ Any methods that may be useful.
 
 `api.plant_energy_data(plant_id)` Get energy data for the specified plant.
 
-`api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
+`api.inverter_list(plant_id)` Get a list of inverters in specified plant. (Maybe deprecated in the future, since it gets all devices. Use `device_list` instead).
 
 `api.device_list(plant_id)` Get a list of devices in specified plant.
 
@@ -95,6 +95,35 @@ Any methods that may be useful.
 `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
 
 `api.update_noah_settings(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified noah device; see 'Noah settings' below for more information
+
+#### Power/Energy chart data
+
+Methods returning power/energy metrics by time/day/month/year. Depending on your inverter, some endpoints might return invalid/inaccurate data.
+
+* `api.dashboard_data(plant_id, timespan, date)`
+  * power (pAC, pPV, (dis)charge) by time for single day
+  * energy (eAC, (dis)charge) by day/month/year
+* `api.plant_power_chart(plant_id, timespan, date)`
+  * power (pAC) by time for single day
+  * energy (eAC) by day/month/year
+* `api.plant_energy_chart(timespan, date)`
+  * energy (eAC) by day/month/year
+* `api.plant_energy_chart_comparison(timespan, date)`
+  * energy (eAC) by month/quarter - compare multiple years
+* `api.inverter_energy_chart(plant_id, inverter_id, date, timespan)`
+  * power (pAC, pPV1/2/3/4, vPV1/2/3/4, iPV1/2/3/4, vAC, iAC, fAC, Temp) by time for single day
+  * energy (eAC, ePV1/2/3/4) by day/month/year
+* `api.tlx_data(tlx_id, date, tlx_data_type)`
+  * power (pAC, pPV) by time for single day
+  * panel voltage/current by time for single day
+* `api.tlx_energy_chart(tlx_id, date, timespan)`
+  * energy (eAC) by day/month/year
+* `api.tlx_energy_prod_cons(plant_id, tlx_id, timespan, date)`
+  * power (pAC, pPV, (dis)charge) by time for single day
+  * energy (eAC, (dis)charge) by day/month/year
+* `api.mix_detail(mix_id, plant_id, timespan, date)`
+  * power (pAC, pPV, (dis)charge) by time for single day
+  * energy (eAC, (dis)charge) by day/month/year
 
 ### Variables
 
