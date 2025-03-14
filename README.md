@@ -5,7 +5,13 @@ Package to retrieve PV information from the growatt server.
 Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
 These projects may merge in the future since they are simmilar in code and function.
 
+In addition to the reverse-engineered APIs used by ShinePhone this library now also support the public Growatt API (v1) for MIN systems (TLX are identified as MIN system in the public API). Certain endpoints are not supported anymore by openapi.growatt.com. For example `api.min_write_parameter()` should be used instead of old `api.update_tlx_inverter_setting()`.
+
 ## Usage
+
+# Classic API
+
+Uses username/password basic authentication
 
 ```python
 import growattServer
@@ -16,15 +22,31 @@ login_response = api.login(<username>, <password>)
 print(api.plant_list(login_response['user']['id']))
 ```
 
+# Public API
+
+The public v1 API requires token based authentication
+
+```python
+import growattServer
+
+api = growattServer.GrowattApi(token="YOUR_API_TOKEN")
+#Get a list of growatt plants.
+plants = api.plant_list_v1()
+print(plants)
+```
+
+
 ## Methods and Variables
 
 ### Methods
 
 Any methods that may be useful.
 
-`api.login(username, password)` Log into the growatt API. This must be done before making any request. After this you will be logged in. You will want to capture the response to get the `userId` variable.
+`api.login(username, password)` Log into the growatt API. This must be done before making any request. After this you will be logged in. You will want to capture the response to get the `userId` variable. Should not be used for public v1 APIs.
 
 `api.plant_list(user_id)` Get a list of plants registered to your account.
+
+`api.plant_list_v1()` Get a list of plants registered to your account, using public v1 API.
 
 `api.plant_info(plant_id)` Get info for specified plant.
 
@@ -37,6 +59,8 @@ Any methods that may be useful.
 `api.inverter_list(plant_id)` Get a list of inverters in specified plant. (May be deprecated in the future, since it gets all devices. Use `device_list` instead).
 
 `api.device_list(plant_id)` Get a list of devices in specified plant.
+
+`api.device_list_v1(plant_id)` Get a list of devices in specified plant using the public v1 API.
 
 `api.inverter_data(inverter_id, date)` Get some basic data of a specific date for the inverter.
 
@@ -95,6 +119,23 @@ Any methods that may be useful.
 `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified AC-coupled inverter; see 'Inverter settings' below for more information
 
 `api.update_noah_settings(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified noah device; see 'Noah settings' below for more information
+
+`api.min_energy(device_sn)` Get current energy data for a min inverter, including power and energy values.
+
+`api.min_detail(device_sn)` Get detailed data for a min inverter.
+
+`api.min_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` Get energy history data for a min inverter (7-day max range).
+
+`api.min_settings(device_sn)` Get all settings for a min inverter.
+
+`api.min_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` Read a specific setting for a min inverter.
+
+`api.min_write_parameter(device_sn, parameter_id, parameter_values)` Set parameters on a min inverter. Parameter values can be a single value, a list, or a dictionary.
+
+`api.min_write_time_segment(device_sn, segment_id, batt_mode, start_time, end_time, enabled=True)` Update a specific time segment for a min inverter.
+
+`api.min_read_time_segments(device_sn, settings_data=None)` Read all time segments from a MIN inverter. Optionally pass settings_data to avoid redundant API calls.
+
 
 ### Variables
 
