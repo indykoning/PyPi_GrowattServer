@@ -1216,6 +1216,105 @@ class GrowattApi:
 
         return response.json()
 
+    def plant_details_v1(self, plant_id):
+        """
+        Get basic information about a power station.
+        
+        Args:
+            plant_id (int): Power Station ID
+            
+        Returns:
+            dict: A dictionary containing the plant details.
+            
+        """
+        if not self.v1_api_enabled:
+            warnings.warn("V1 API is not enabled. This method requires an API token.", RuntimeWarning)
+            return {"error_code": 1, "error_msg": "API token required", "data": None}
+            
+        response = self.session.get(
+            self.get_v1_url('plant/details'),
+            params={'plant_id': plant_id}
+        )
+        
+        return response.json()
+        
+    def plant_energy_overview_v1(self, plant_id):
+        """
+        Get an overview of a plant's energy data.
+        
+        Args:
+            plant_id (int): Power Station ID
+            
+        Returns:
+            dict: A dictionary containing the plant energy overview.
+            
+        """
+        if not self.v1_api_enabled:
+            warnings.warn("V1 API is not enabled. This method requires an API token.", RuntimeWarning)
+            return {"error_code": 1, "error_msg": "API token required", "data": None}
+            
+        response = self.session.get(
+            self.get_v1_url('plant/data'),
+            params={'plant_id': plant_id}
+        )
+        
+        return response.json()
+        
+    def plant_energy_history_v1(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
+        """
+        Retrieve plant energy data for multiple days/months/years.
+        
+        Args:
+            plant_id (int): Power Station ID
+            start_date (date, optional): Start Date - defaults to today
+            end_date (date, optional): End Date - defaults to today
+            time_unit (str, optional): Time unit ('day', 'month', 'year') - defaults to 'day'
+            page (int, optional): Page number - defaults to 1
+            perpage (int, optional): Number of items per page - defaults to 20, max 100
+            
+        Returns:
+            dict: A dictionary containing the plant energy history.
+            
+        Notes:
+            - When time_unit is 'day', date interval cannot exceed 7 days
+            - When time_unit is 'month', start date must be within same or previous year
+            - When time_unit is 'year', date interval must not exceed 20 years
+            
+        """
+        if not self.v1_api_enabled:
+            warnings.warn("V1 API is not enabled. This method requires an API token.", RuntimeWarning)
+            return {"error_code": 1, "error_msg": "API token required", "data": None}
+            
+        if start_date is None and end_date is None:
+            start_date = date.today()
+            end_date = date.today()
+        elif start_date is None:
+            start_date = end_date
+        elif end_date is None:
+            end_date = start_date
+            
+        # Validate date ranges based on time_unit
+        if time_unit == "day" and (end_date - start_date).days > 7:
+            warnings.warn("Date interval must not exceed 7 days in 'day' mode.", RuntimeWarning)
+        elif time_unit == "month" and (end_date.year - start_date.year > 1):
+            warnings.warn("Start date must be within same or previous year in 'month' mode.", RuntimeWarning)
+        elif time_unit == "year" and (end_date.year - start_date.year > 20):
+            warnings.warn("Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning)
+        
+        response = self.session.get(
+            self.get_v1_url('plant/energy'),
+            params={
+                'plant_id': plant_id,
+                'start_date': start_date.strftime("%Y-%m-%d"),
+                'end_date': end_date.strftime("%Y-%m-%d"),
+                'time_unit': time_unit,
+                'page': page,
+                'perpage': perpage
+            }
+        )
+        
+        return response.json()
+
     def device_list_v1(self, plant_id):
         """
         Get devices associated with plant.

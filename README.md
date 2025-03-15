@@ -48,6 +48,12 @@ Any methods that may be useful.
 
 `api.plant_list_v1()` Get a list of plants registered to your account, using public v1 API.
 
+`api.plant_details_v1(plant_id)` Get detailed information about a power station, using public v1 API.
+
+`api.plant_energy_overview_v1(plant_id)` Get energy overview data for a plant, using public v1 API.
+
+`api.plant_energy_history_v1(plant_id, start_date, end_date, time_unit, page, perpage)` Get historical energy data for a plant for multiple days/months/years, using public v1 API.
+
 `api.plant_info(plant_id)` Get info for specified plant.
 
 `api.plant_settings(plant_id)` Get the current settings for the specified plant
