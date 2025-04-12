@@ -1169,5 +1169,48 @@ class GrowattApi:
         
         return response.json()
 
+    def winter_battery_info(self, serial_number):
+        """
+        Get winter mode settings
+        """
+        response = self.session.post(self.get_url('winter/getWinterInformation'), data={
+            'deviceSn': serial_number
+        })
 
+        return response.json().get('obj', {})
+
+    def update_winter_battery_setting(self, serial_number, parameters):
+        """
+        Apply winter mode settings to specified battery
+
+        Keyword arguments:
+        serial_number -- The serial number of the battery you wish to update winter mode settings for
+        parameters -- A python dictionary containing the settings to be changed and their value
+
+        Returns:
+        A response from the server stating whether the configuration was successful or not
+        """
+        current_settings = self.winter_battery_info(serial_number)
+
+        default_parameters = {
+                'deviceSns': serial_number,
+                'plantId': current_settings['plantId'],
+        }
+
+        settings_parameters = {
+                'status': current_settings['status'],
+                'winterStart': current_settings['winterStart'],
+                'winterEnd': current_settings['winterEnd'],
+                'onGridDischargeStopSoc': current_settings['onGridDischargeStopSocRegister'],
+                'offGridDischargeStopSoc': current_settings['offGridDischargeStopSocRegister'],
+        }
+
+        for setting, value in parameters.items():
+            settings_parameters[setting] = str(value)
+
+        settings_parameters.update(default_parameters)
+
+        response = self.session.post(self.get_url('winter/recordWinterParameter'), data=settings_parameters)
+
+        return response.json().get('obj', {})
 
