@@ -1196,7 +1196,6 @@ class GrowattApi:
         
         return response.json()
 
-
     def plant_list_v1(self):
         """
         Get a list of all plants with detailed information.
