@@ -4,10 +4,11 @@ from . import GrowattApi
 import platform
 
 
-class GrowattApiV1(GrowattApi):
+class OpenApiV1(GrowattApi):
     """
     Extended Growatt API client with V1 API support.
-    This class extends the base GrowattApi class with methods for the V1 API.
+    This class extends the base GrowattApi class with methods for MIN inverters using
+    the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0
     """
 
     def _create_user_agent(self):
@@ -33,17 +34,15 @@ class GrowattApiV1(GrowattApi):
         self.api_url = f"{self.server_url}v1/"
 
         # Set up authentication for V1 API using the provided token
-        print("Using token-based authentication")
-        # Use token-based auth for V1 API
         self.session.headers.update({"token": token})
 
-    def get_v1_url(self, page):
+    def _get_url(self, page):
         """
         Simple helper function to get the page URL for v1 API.
         """
         return self.api_url + page
 
-    def plant_list_v1(self):
+    def plant_list(self):
         """
         Get a list of all plants with detailed information.
 
@@ -60,13 +59,13 @@ class GrowattApiV1(GrowattApi):
 
         # Make the request
         response = self.session.get(
-            url=self.get_v1_url('plant/list'),
+            url=self._get_url('plant/list'),
             data=request_data
         )
 
         return response.json()
 
-    def plant_details_v1(self, plant_id):
+    def plant_details(self, plant_id):
         """
         Get basic information about a power station.
 
@@ -79,13 +78,13 @@ class GrowattApiV1(GrowattApi):
         """
 
         response = self.session.get(
-            self.get_v1_url('plant/details'),
+            self._get_url('plant/details'),
             params={'plant_id': plant_id}
         )
 
         return response.json()
 
-    def plant_energy_overview_v1(self, plant_id):
+    def plant_energy_overview(self, plant_id):
         """
         Get an overview of a plant's energy data.
 
@@ -98,13 +97,13 @@ class GrowattApiV1(GrowattApi):
         """
 
         response = self.session.get(
-            self.get_v1_url('plant/data'),
+            self._get_url('plant/data'),
             params={'plant_id': plant_id}
         )
 
         return response.json()
 
-    def plant_energy_history_v1(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
+    def plant_energy_history(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
         """
         Retrieve plant energy data for multiple days/months/years.
 
@@ -146,7 +145,7 @@ class GrowattApiV1(GrowattApi):
                 "Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning)
 
         response = self.session.get(
-            self.get_v1_url('plant/energy'),
+            self._get_url('plant/energy'),
             params={
                 'plant_id': plant_id,
                 'start_date': start_date.strftime("%Y-%m-%d"),
@@ -159,7 +158,7 @@ class GrowattApiV1(GrowattApi):
 
         return response.json()
 
-    def device_list_v1(self, plant_id):
+    def device_list(self, plant_id):
         """
         Get devices associated with plant.
 
@@ -204,7 +203,7 @@ class GrowattApiV1(GrowattApi):
             }
         """
         response = self.session.get(
-            url=self.get_v1_url("device/list"),
+            url=self._get_url("device/list"),
             params={
                 "plant_id": plant_id,
                 "page": "",
@@ -228,7 +227,7 @@ class GrowattApiV1(GrowattApi):
         """
 
         response = self.session.get(
-            self.get_v1_url('device/tlx/tlx_data_info'),
+            self._get_url('device/tlx/tlx_data_info'),
             params={
                 'device_sn': device_sn
             }
@@ -251,7 +250,7 @@ class GrowattApiV1(GrowattApi):
         """
 
         response = self.session.post(
-            url=self.get_v1_url("device/tlx/tlx_last_data"),
+            url=self._get_url("device/tlx/tlx_last_data"),
             data={
                 "tlx_sn": device_sn,
             },
@@ -291,7 +290,7 @@ class GrowattApiV1(GrowattApi):
             raise ValueError("date interval must not exceed 7 days")
 
         response = self.session.post(
-            url=self.get_v1_url('device/tlx/tlx_data'),
+            url=self._get_url('device/tlx/tlx_data'),
             data={
                 "tlx_sn": device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -319,7 +318,7 @@ class GrowattApiV1(GrowattApi):
         """
 
         response = self.session.get(
-            self.get_v1_url('device/tlx/tlx_set_info'),
+            self._get_url('device/tlx/tlx_set_info'),
             params={
                 'device_sn': device_sn
             }
@@ -364,7 +363,7 @@ class GrowattApiV1(GrowattApi):
                 end_address = start_address
 
         response = self.session.post(
-            self.get_v1_url('readMinParam'),
+            self._get_url('readMinParam'),
             data={
                 "device_sn": device_sn,
                 "paramId": parameter_id,
@@ -424,7 +423,7 @@ class GrowattApiV1(GrowattApi):
 
         # Send the request
         response = self.session.post(
-            self.get_v1_url('tlxSet'),
+            self._get_url('tlxSet'),
             data=request_data
         )
 
@@ -472,7 +471,7 @@ class GrowattApiV1(GrowattApi):
 
         # Send the request
         response = self.session.post(
-            self.get_v1_url('tlxSet'),
+            self._get_url('tlxSet'),
             data=all_params
         )
 
@@ -485,7 +484,9 @@ class GrowattApiV1(GrowattApi):
         Retrieves all 9 time segments from a Growatt MIN/TLX inverter and
         parses them into a structured format.
 
-        Note that this function uses min_settings() internally to get the data, so same endpoint rate limit applies
+        Note that this function uses min_settings() internally to get the settings data,
+        To avoid endpoint rate limit, you can pass the settings_data parameter
+        with the data returned from min_settings().
 
         Args:
             device_sn (str): The device serial number of the inverter
@@ -518,18 +519,16 @@ class GrowattApiV1(GrowattApi):
             # Fetch settings if not provided
             settings_response = self.min_settings(device_sn=device_sn)
             if settings_response.get('error_code', 1) != 0:
-                print(
+                raise Exception(
                     f"Failed to get settings, error: {settings_response.get('error_msg', 'Unknown error')}")
-                return []
             settings_data = settings_response.get('data', {})
         else:
             # Check if we were given the full API response or just the data portion
             if 'error_code' in settings_data and 'data' in settings_data:
                 # This is the full API response
                 if settings_data['error_code'] != 0:
-                    print(
+                    raise Exception(
                         f"Settings data contains an error: {settings_data.get('error_msg', 'Unknown error')}")
-                    return []
                 settings_data = settings_data.get('data', {})
             # If it's just the data portion, use it directly (nothing to do)
 

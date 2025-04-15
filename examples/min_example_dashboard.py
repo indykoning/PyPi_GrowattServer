@@ -13,10 +13,10 @@ using the V1 API with token-based authentication.
 api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # gitleaks:allow
 
 # Initialize the API with token
-api = growattServer.GrowattApiV1(token=api_token)
+api = growattServer.OpenApiV1(token=api_token)
 
 # Get plant list using V1 API
-plant_response = api.plant_list_v1()
+plant_response = api.plant_list()
 if plant_response['error_code'] != 0:
     print(f"Failed to get plants, error: {plant_response['error_msg']}")
     exit()
@@ -24,7 +24,7 @@ if plant_response['error_code'] != 0:
 plant_id = plant_response['data']['plants'][0]['plant_id']
 
 # Get devices in plant using V1 API
-devices_response = api.device_list_v1(plant_id)
+devices_response = api.device_list(plant_id)
 if devices_response['error_code'] != 0:
     print(f"Failed to get devices, error: {devices_response['error_msg']}")
     exit()

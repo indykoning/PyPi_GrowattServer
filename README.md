@@ -29,7 +29,7 @@ The public v1 API requires token-based authentication
 ```python
 import growattServer
 
-api = growattServer.GrowattApiV1(token="YOUR_API_TOKEN")
+api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
 #Get a list of growatt plants.
 plants = api.plant_list_v1()
 print(plants)
@@ -119,15 +119,15 @@ Any methods that may be useful.
 
 #### V1 API Methods
 
-`api.plant_list_v1()` Get a list of plants registered to your account, using public v1 API.
+`api.plant_list()` Get a list of plants registered to your account, using public v1 API.
 
-`api.plant_details_v1(plant_id)` Get detailed information about a power station, using public v1 API.
+`api.plant_details(plant_id)` Get detailed information about a power station, using public v1 API.
 
-`api.plant_energy_overview_v1(plant_id)` Get energy overview data for a plant, using public v1 API.
+`api.plant_energy_overview(plant_id)` Get energy overview data for a plant, using public v1 API.
 
-`api.plant_energy_history_v1(plant_id, start_date, end_date, time_unit, page, perpage)` Get historical energy data for a plant for multiple days/months/years, using public v1 API.
+`api.plant_energy_history(plant_id, start_date, end_date, time_unit, page, perpage)` Get historical energy data for a plant for multiple days/months/years, using public v1 API.
 
-`api.device_list_v1(plant_id)` Get a list of devices in specified plant using the public v1 API.
+`api.device_list(plant_id)` Get a list of devices in specified plant using the public v1 API.
 
 `api.min_energy(device_sn)` Get current energy data for a min inverter, including power and energy values.
 
