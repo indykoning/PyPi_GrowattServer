@@ -5,7 +5,13 @@ Package to retrieve PV information from the growatt server.
 Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
 These projects may merge in the future since they are simmilar in code and function.
 
+This library now supports both the legacy password-based authentication and the V1 API with token-based authentication for MIN systems (TLX are identified as MIN system in the public API). Certain endpoints are not supported anymore by openapi.growatt.com. For example `api.min_write_parameter()` should be used instead of old `api.update_tlx_inverter_setting()`.
+
 ## Usage
+
+### Legacy API
+
+Uses username/password basic authentication
 
 ```python
 import growattServer
@@ -16,13 +22,28 @@ login_response = api.login(<username>, <password>)
 print(api.plant_list(login_response['user']['id']))
 ```
 
+### V1 API
+
+The public v1 API requires token-based authentication
+
+```python
+import growattServer
+
+api = growattServer.GrowattApiV1(token="YOUR_API_TOKEN")
+#Get a list of growatt plants.
+plants = api.plant_list_v1()
+print(plants)
+```
+
 ## Methods and Variables
 
 ### Methods
 
 Any methods that may be useful.
 
-`api.login(username, password)` Log into the growatt API. This must be done before making any request. After this you will be logged in. You will want to capture the response to get the `userId` variable.
+#### Legacy API Methods
+
+`api.login(username, password)` Log into the growatt API. This must be done before making any request. After this you will be logged in. You will want to capture the response to get the `userId` variable. Should not be used for public v1 APIs.
 
 `api.plant_list(user_id)` Get a list of plants registered to your account.
 
@@ -96,6 +117,34 @@ Any methods that may be useful.
 
 `api.update_noah_settings(serial_number, setting_type, parameters)` Applies the provided parameters (dictionary or array) for the specified setting on the specified noah device; see 'Noah settings' below for more information
 
+#### V1 API Methods
+
+`api.plant_list_v1()` Get a list of plants registered to your account, using public v1 API.
+
+`api.plant_details_v1(plant_id)` Get detailed information about a power station, using public v1 API.
+
+`api.plant_energy_overview_v1(plant_id)` Get energy overview data for a plant, using public v1 API.
+
+`api.plant_energy_history_v1(plant_id, start_date, end_date, time_unit, page, perpage)` Get historical energy data for a plant for multiple days/months/years, using public v1 API.
+
+`api.device_list_v1(plant_id)` Get a list of devices in specified plant using the public v1 API.
+
+`api.min_energy(device_sn)` Get current energy data for a min inverter, including power and energy values.
+
+`api.min_detail(device_sn)` Get detailed data for a min inverter.
+
+`api.min_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` Get energy history data for a min inverter (7-day max range).
+
+`api.min_settings(device_sn)` Get all settings for a min inverter.
+
+`api.min_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` Read a specific setting for a min inverter.
+
+`api.min_write_parameter(device_sn, parameter_id, parameter_values)` Set parameters on a min inverter. Parameter values can be a single value, a list, or a dictionary.
+
+`api.min_write_time_segment(device_sn, segment_id, batt_mode, start_time, end_time, enabled=True)` Update a specific time segment for a min inverter.
+
+`api.min_read_time_segments(device_sn, settings_data=None)` Read all time segments from a MIN inverter. Optionally pass settings_data to avoid redundant API calls.
+
 ### Variables
 
 Some variables you may want to set.
@@ -118,6 +167,8 @@ The library can be initialised to introduce randomness into the User Agent field
 
 This has been added since the Growatt servers started checking for the presence of a `User-Agent` field in the headers that are sent.
 
+#### Legacy API Initialization
+
 By default the library will use a pre-set `User-Agent` value which identifies this library while also appearing like an Android device. However, it is also possible to pass in parameters to the intialisation of the library to override this entirely, or just add a random ID to the value. e.g.
 
 ```python
@@ -126,6 +177,12 @@ api = growattServer.GrowattApi() # The default way to initialise
 api = growattServer.GrowattApi(True) # Adds a randomly generated User ID to the default User-Agent
 
 api = growattServer.GrowattApi(False, "my_user_agent_value") # Overrides the default and uses "my_user_agent_value" in the User-Agent header
+```
+
+#### V1 API Initialization
+
+```python
+api = growattServer.GrowattApiV1(token="YOUR_API_TOKEN") # Initialize with your API token
 ```
 
 Please see the `user_agent_options.py` example in the `examples` directory if you wish to investigate further.
@@ -239,6 +296,40 @@ Known working settings & parameters are as follows (all parameter values are str
 The four functions `update_tlx_inverter_setting`, `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 
 Only the settings described above have been tested with `update_tlx_inverter_setting` and they all take only one single parameter. It is very likely that the function works with all settings returned by `tlx_get_enabled_settings`, but this has not been tested. A helper function `update_tlx_inverter_time_segment` is provided for the settings that require more than one parameter.
+
+## MIN/TLX Inverter Settings Using V1 API
+
+For MIN/TLX systems, the public V1 API provides a more robust way to read and write inverter settings:
+
+* **Read Parameter**
+  * function: `api.min_read_parameter`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `parameter_id`: Parameter ID to read (e.g., "discharge_power")
+    * `start_address`, `end_address`: Optional, for reading registers by address
+
+* **Write Parameter**
+  * function: `api.min_write_parameter`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `parameter_id`: Parameter ID to write (e.g., "ac_charge")
+    * `parameter_values`: Value to set (single value, list, or dictionary)
+
+* **Time Segments**
+  * function: `api.min_write_time_segment`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `segment_id`: Segment number (1-9)
+    * `batt_mode`: Battery mode (0=Load First, 1=Battery First, 2=Grid First)
+    * `start_time`: Datetime.time object for segment start
+    * `end_time`: Datetime.time object for segment end
+    * `enabled`: Boolean to enable/disable segment
+
+* **Read Time Segments**
+  * function: `api.min_read_time_segments`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `settings_data`: Optional settings data to avoid redundant API calls
 
 ## Noah Settings
 The noah settings function allow you to change individual values on your noah system e.g. system default output power, battery management, operation mode and currency
