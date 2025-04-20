@@ -2,6 +2,7 @@ import warnings
 from datetime import date, timedelta
 from . import GrowattApi
 import platform
+from .exceptions import GrowattParameterError, GrowattV1ApiError
 
 
 class OpenApiV1(GrowattApi):
@@ -36,6 +37,28 @@ class OpenApiV1(GrowattApi):
         # Set up authentication for V1 API using the provided token
         self.session.headers.update({"token": token})
 
+    def _process_response(self, response, operation_name="API operation"):
+        """
+        Process API response and handle errors.
+
+        Args:
+            response (dict): The JSON response from the API
+            operation_name (str): Name of the operation for error messages
+
+        Returns:
+            dict: The 'data' field from the response
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response
+        """
+        if response.get('error_code', 1) != 0:
+            raise GrowattV1ApiError(
+                f"Error during {operation_name}",
+                error_code=response.get('error_code'),
+                error_msg=response.get('error_msg', 'Unknown error')
+            )
+        return response.get('data')
+
     def _get_url(self, page):
         """
         Simple helper function to get the page URL for v1 API.
@@ -47,7 +70,11 @@ class OpenApiV1(GrowattApi):
         Get a list of all plants with detailed information.
 
         Returns:
-            list: A list of plants with detailed information.
+            dict: A dictionary containing plants information with 'count' and 'plants' keys.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
         # Prepare request data
         request_data = {
@@ -63,7 +90,7 @@ class OpenApiV1(GrowattApi):
             data=request_data
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting plant list")
 
     def plant_details(self, plant_id):
         """
@@ -75,6 +102,9 @@ class OpenApiV1(GrowattApi):
         Returns:
             dict: A dictionary containing the plant details.
 
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         response = self.session.get(
@@ -82,7 +112,7 @@ class OpenApiV1(GrowattApi):
             params={'plant_id': plant_id}
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting plant details")
 
     def plant_energy_overview(self, plant_id):
         """
@@ -94,6 +124,9 @@ class OpenApiV1(GrowattApi):
         Returns:
             dict: A dictionary containing the plant energy overview.
 
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         response = self.session.get(
@@ -101,7 +134,7 @@ class OpenApiV1(GrowattApi):
             params={'plant_id': plant_id}
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting plant energy overview")
 
     def plant_energy_history(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
         """
@@ -123,6 +156,10 @@ class OpenApiV1(GrowattApi):
             - When time_unit is 'month', start date must be within same or previous year
             - When time_unit is 'year', date interval must not exceed 20 years
 
+        Raises:
+            GrowattParameterError: If date parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         if start_date is None and end_date is None:
@@ -156,7 +193,7 @@ class OpenApiV1(GrowattApi):
             }
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting plant energy history")
 
     def device_list(self, plant_id):
         """
@@ -210,7 +247,7 @@ class OpenApiV1(GrowattApi):
                 "perpage": "",
             },
         )
-        return response.json()
+        return self._process_response(response.json(), "getting device list")
 
     def min_detail(self, device_sn):
         """
@@ -223,7 +260,8 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the MIN inverter details.
 
         Raises:
-            Exception: If the request to the server fails.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         response = self.session.get(
@@ -233,7 +271,7 @@ class OpenApiV1(GrowattApi):
             }
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting MIN inverter details")
 
     def min_energy(self, device_sn):
         """
@@ -246,7 +284,8 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the MIN inverter energy data.
 
         Raises:
-            Exception: If the request to the server fails.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         response = self.session.post(
@@ -256,7 +295,7 @@ class OpenApiV1(GrowattApi):
             },
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting MIN inverter energy data")
 
     def min_energy_history(self, device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None):
         """
@@ -274,7 +313,9 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the MIN inverter history data.
 
         Raises:
-            Exception: If the request to the server fails.
+            GrowattParameterError: If date interval is invalid (exceeds 7 days).
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         if start_date is None and end_date is None:
@@ -287,7 +328,7 @@ class OpenApiV1(GrowattApi):
 
         # check interval validity
         if end_date - start_date > timedelta(days=7):
-            raise ValueError("date interval must not exceed 7 days")
+            raise GrowattParameterError("date interval must not exceed 7 days")
 
         response = self.session.post(
             url=self._get_url('device/tlx/tlx_data'),
@@ -301,7 +342,7 @@ class OpenApiV1(GrowattApi):
             }
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting MIN inverter energy history")
 
     def min_settings(self, device_sn):
         """
@@ -314,7 +355,8 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the MIN inverter settings.
 
         Raises:
-            Exception: If the request to the server fails.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         response = self.session.get(
@@ -324,7 +366,7 @@ class OpenApiV1(GrowattApi):
             }
         )
 
-        return response.json()
+        return self._process_response(response.json(), "getting MIN inverter settings")
 
     def min_read_parameter(self, device_sn, parameter_id, start_address=None, end_address=None):
         """
@@ -340,14 +382,16 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the setting value.
 
         Raises:
-            Exception: If the request to the server fails.
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         if parameter_id is None and start_address is None:
-            raise ValueError(
+            raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address")
         elif parameter_id is not None and start_address is not None:
-            raise ValueError(
+            raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address - not both."
             )
         elif parameter_id is not None:
@@ -372,7 +416,7 @@ class OpenApiV1(GrowattApi):
             }
         )
 
-        return response.json()
+        return self._process_response(response.json(), f"reading parameter {parameter_id}")
 
     def min_write_parameter(self, device_sn, parameter_id, parameter_values=None):
         """
@@ -389,6 +433,9 @@ class OpenApiV1(GrowattApi):
         Returns:
             dict: JSON response from the server
 
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         # Initialize all parameters as empty strings
@@ -427,7 +474,7 @@ class OpenApiV1(GrowattApi):
             data=request_data
         )
 
-        return response.json()
+        return self._process_response(response.json(), f"writing parameter {parameter_id}")
 
     def min_write_time_segment(self, device_sn, segment_id, batt_mode, start_time, end_time, enabled=True):
         """
@@ -443,13 +490,18 @@ class OpenApiV1(GrowattApi):
 
         Returns:
             dict: The server response.
+
+        Raises:
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         if not 1 <= segment_id <= 9:
-            raise ValueError("segment_id must be between 1 and 9")
+            raise GrowattParameterError("segment_id must be between 1 and 9")
 
         if not 0 <= batt_mode <= 2:
-            raise ValueError("batt_mode must be between 0 and 2")
+            raise GrowattParameterError("batt_mode must be between 0 and 2")
 
         # Initialize ALL 19 parameters as empty strings, not just the ones we need
         all_params = {
@@ -475,7 +527,7 @@ class OpenApiV1(GrowattApi):
             data=all_params
         )
 
-        return response.json()
+        return self._process_response(response.json(), f"writing time segment {segment_id}")
 
     def min_read_time_segments(self, device_sn, settings_data=None):
         """
@@ -491,7 +543,7 @@ class OpenApiV1(GrowattApi):
         Args:
             device_sn (str): The device serial number of the inverter
             settings_data (dict, optional): Settings data from min_settings call to avoid repeated API calls.
-                                        Can be either the complete response or just the data portion.
+                                            Can be either the complete response or just the data portion.
 
         Returns:
             list: A list of dictionaries, each containing details for one time segment:
@@ -503,34 +555,22 @@ class OpenApiV1(GrowattApi):
                 - enabled (bool): Whether the segment is enabled
 
         Example:
-            api = GrowattApi(token="your_api_token")
-
             # Option 1: Make a single call
-            tou_settings = api.min_read_tou_settings("DEVICE_SERIAL_NUMBER")
+            tou_settings = api.min_read_time_segments("DEVICE_SERIAL_NUMBER")
 
             # Option 2: Reuse existing settings data
             settings_response = api.min_settings("DEVICE_SERIAL_NUMBER")
-            tou_settings = api.min_read_tou_settings("DEVICE_SERIAL_NUMBER", settings_response)
+            tou_settings = api.min_read_time_segments("DEVICE_SERIAL_NUMBER", settings_response)
 
+        Raises:
+            GrowattV1ApiError: If the API request fails
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
         # Process the settings data
         if settings_data is None:
             # Fetch settings if not provided
-            settings_response = self.min_settings(device_sn=device_sn)
-            if settings_response.get('error_code', 1) != 0:
-                raise Exception(
-                    f"Failed to get settings, error: {settings_response.get('error_msg', 'Unknown error')}")
-            settings_data = settings_response.get('data', {})
-        else:
-            # Check if we were given the full API response or just the data portion
-            if 'error_code' in settings_data and 'data' in settings_data:
-                # This is the full API response
-                if settings_data['error_code'] != 0:
-                    raise Exception(
-                        f"Settings data contains an error: {settings_data.get('error_msg', 'Unknown error')}")
-                settings_data = settings_data.get('data', {})
-            # If it's just the data portion, use it directly (nothing to do)
+            settings_data = self.min_settings(device_sn=device_sn)
 
         # Define mode names
         mode_names = {
