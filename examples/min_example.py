@@ -1,7 +1,6 @@
 import growattServer
 import datetime
 import json
-import os
 
 """
 # Example script controlling a MID/TLX Growatt (MID-30KTL3-XH + APX battery) system using the public growatt API 
@@ -9,16 +8,16 @@ import os
 """
 
 # Get the API token from user input or environment variable
-#api_token = os.environ.get("GROWATT_API_TOKEN") or input("Enter your Growatt API token: ")
+# api_token = os.environ.get("GROWATT_API_TOKEN") or input("Enter your Growatt API token: ")
 
 # test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
 api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # gitleaks:allow
 
 # Initialize the API with token instead of using login
-api = growattServer.GrowattApi(token=api_token)
+api = growattServer.OpenApiV1(token=api_token)
 
 # Plant info
-plant_list = api.plant_list_v1()  # Use V1 endpoint
+plant_list = api.plant_list()  # Use V1 endpoint
 if plant_list['error_code'] != 0:
     print(f"Failed to get plant list, error: {plant_list['error_msg']}")
     exit()
@@ -27,15 +26,15 @@ print(f"Plants: Found {plant_list['data']['count']} plants")
 plant_id = plant_list['data']['plants'][0]['plant_id']
 
 # Devices
-devices_response = api.device_list_v1(plant_id)
+devices_response = api.device_list(plant_id)
 if devices_response['error_code'] != 0:
     print(f"Failed to get devices, error: {plant_list['error_msg']}")
     exit()
 
 for device in devices_response['data']['devices']:
-    if device['type'] == 7: # (MIN/TLX)
+    if device['type'] == 7:  # (MIN/TLX)
         inverter_sn = device['device_sn']
-                        
+
         # Get device details using v1 API
         inverter_detail_response = api.min_detail(inverter_sn)
         if inverter_detail_response['error_code'] == 0:
@@ -43,7 +42,7 @@ for device in devices_response['data']['devices']:
             print("Saving inverter data to inverter_data.json")
             with open('inverter_data.json', 'w') as f:
                 json.dump(inverter_data, f, indent=4, sort_keys=True)
-                
+
         # Get energy data using v1 API
         energy_response = api.min_energy(device_sn=inverter_sn)
         if energy_response['error_code'] == 0:
@@ -59,10 +58,11 @@ for device in devices_response['data']['devices']:
             print("Saving energy history data to energy_history.json")
             with open('energy_history.json', 'w') as f:
                 json.dump(energy_history_data, f, indent=4, sort_keys=True)
-                    
+
         # Get settings using v1 API
         settings_response = api.min_settings(device_sn=inverter_sn)
         if settings_response['error_code'] == 0:
+            print("Saving settings data to settings_data.json")
             settings_data = settings_response['data']
             with open('settings_data.json', 'w') as f:
                 json.dump(settings_data, f, indent=4, sort_keys=True)
@@ -72,10 +72,13 @@ for device in devices_response['data']['devices']:
 
         # Example of reading individual parameter
         res = api.min_read_parameter(inverter_sn, 'discharge_power')
-        print("Current discharge power: ", res)
+        if res['error_code'] != 0:
+            print(f"Failed to read parameters, error: {res['error_msg']}")
+            exit()
+        print("Current discharge power:", res['data'], "%")
 
-        ## Settings parameters. Uncomment to test
-        
+        # Settings parameters. Uncomment to test
+
         # Turn on AC charging
 #        res = api.min_write_parameter(inverter_sn, 'ac_charge', 1)
 #        print("AC charging enabled: ", res)
@@ -90,4 +93,3 @@ for device in devices_response['data']['devices']:
 #            enabled=True
 #        )
 #        print(res)
-        
