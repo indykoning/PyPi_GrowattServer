@@ -136,7 +136,7 @@ class OpenApiV1(GrowattApi):
 
         return self._process_response(response.json(), "getting plant energy overview")
 
-    def plant_power_overview(self, plant_id: int, day: str | Date = None) -> dict:
+    def plant_power_overview(self, plant_id: int, day: str | date = None) -> dict:
         """
         Obtain power data of a certain power station.
         Get the frequency once every 5 minutes
