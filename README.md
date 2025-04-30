@@ -135,6 +135,8 @@ Any methods that may be useful.
 
 `api.plant_energy_overview(plant_id)` Get energy overview data for a plant, using public v1 API.
 
+`api.plant_power_overview(plant_id, day)` Get power data from a specific power station, recorded every 5 minutes for one day.
+
 `api.plant_energy_history(plant_id, start_date, end_date, time_unit, page, perpage)` Get historical energy data for a plant for multiple days/months/years, using public v1 API.
 
 `api.device_list(plant_id)` Get a list of devices in specified plant using the public v1 API.
