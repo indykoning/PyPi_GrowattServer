@@ -9,12 +9,12 @@ It can also be used to update Settings on your Plant, Inverters and Battery bank
 ### Legacy API
 
 This is the original way this package has started, at the time of writing it is still the most used.
-Please refer to the [docs](./docs/README.md) for [ShinePhone/legacy](./docs/shinephone.md) for it's usage and available methods.
+Please refer to the docs for [ShinePhone/legacy](./shinephone.md) for it's usage and available methods.
 
 ### V1 API
 
 This follows Growatt's OpenAPI V1.
-Please refer to the [docs](./docs/README.md) for [OpenAPI V1](./docs/openapiv1.md) for it's usage and available methods.
+Please refer to the docs for [OpenAPI V1](./openapiv1.md) for it's usage and available methods.
 
 ## Note
 
