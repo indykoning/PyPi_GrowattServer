@@ -1,24 +1,24 @@
-# Growatt Server
-[![Version](https://img.shields.io/pypi/v/GrowattServer?style=flat-square)
-](https://pypi.org/project/growattServer/)
-[![Total Downloads](https://img.shields.io/pepy/dt/GrowattServer?style=flat-square)](https://pypi.org/project/growattServer/)
+# Growatt Server Docs
 
+Welcome to the docs for the [GrowattServer Python package](https://pypi.org/project/growattServer/)
 Package to retrieve PV information from the growatt server.
 
-Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
-That project has since ben archived.
-
-This library now supports both the legacy password-based authentication and the V1 API with token-based authentication for MIN systems (TLX are identified as MIN system in the public API). Certain endpoints are not supported anymore by openapi.growatt.com. For example `api.min_write_parameter()` should be used instead of old `api.update_tlx_inverter_setting()`.
-
-## Usage
+This package uses the Growatt Cloud in order to retrieve information from your "Power Plant"/home, Inverters, Battery banks and more!
+It can also be used to update Settings on your Plant, Inverters and Battery banks made by Growatt.
 
 ### Legacy API
 
+This is the original way this package has started, at the time of writing it is still the most used.
 Please refer to the [docs](./docs/README.md) for [ShinePhone/legacy](./docs/shinephone.md) for it's usage and available methods.
 
 ### V1 API
 
+This follows Growatt's OpenAPI V1.
 Please refer to the [docs](./docs/README.md) for [OpenAPI V1](./docs/openapiv1.md) for it's usage and available methods.
+
+## Note
+
+This is based on the endpoints used on the mobile app and could be changed without notice.
 
 ## Examples
 
