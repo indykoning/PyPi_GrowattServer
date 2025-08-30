@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Feature Requests and Ideas
+    url: https://github.com/indykoning/PyPi_GrowattServer/discussions/categories/ideas
+    about: Unfortunately i've implemented eveything i have access to. But with help of the community we can add more features. Please add your ideas here.
+  - name: Support, Questions & Other
+    url: https://github.com/indykoning/PyPi_GrowattServer/discussions/categories/q-a
+    about: If you have questions or need help, take a look here. You can also ask your question here.
