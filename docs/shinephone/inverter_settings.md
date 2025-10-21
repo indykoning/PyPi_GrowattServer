@@ -78,6 +78,13 @@ Known working settings & parameters are as follows (all parameter values are str
    *   start_time: timedate object with start time of segment with format HH:MM
    *   end_time: timedate object with end time of segment with format HH:MM
    *   enabled: time segment enabled, boolean: True (Enabled), False (Disabled)
+* **Classic inverter settings**
+  * function: `api.update_classic_inverter_setting`
+  * description: Applies settings for specified system based on serial number. This function is only going to work for classic inverters.
+  * params:
+    * `param1`: First parameter (specific to the setting type)
+    * `param2`: Second parameter (specific to the setting type)
+    * Additional parameters can be passed as needed.
 
 The four functions `update_tlx_inverter_setting`, `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 

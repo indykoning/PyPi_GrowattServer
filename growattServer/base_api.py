@@ -1176,3 +1176,31 @@ class GrowattApi:
                                      data=settings_parameters)
 
         return response.json()
+
+    def update_classic_inverter_setting(self, default_parameters, parameters):
+        """
+        Applies settings for specified system based on serial number
+        See README for known working settings
+
+        Arguments:
+        default_params -- Default set of parameters for the setting call (dict)
+        parameters -- Parameters to be sent to the system (dict or list of str)
+                (array which will be converted to a dictionary)
+
+        Returns:
+        JSON response from the server whether the configuration was successful
+        """
+        settings_parameters = parameters
+
+        # If we've been passed an array then convert it into a dictionary
+        if isinstance(parameters, list):
+            settings_parameters = {}
+            for index, param in enumerate(parameters, start=1):
+                settings_parameters['param' + str(index)] = param
+
+        settings_parameters = {**default_parameters, **settings_parameters}
+
+        response = self.session.post(self.get_url('tcpSet.do'),
+                                     params=settings_parameters)
+
+        return response.json()
