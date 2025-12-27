@@ -89,3 +89,5 @@ Known working settings & parameters are as follows (all parameter values are str
 The four functions `update_tlx_inverter_setting`, `update_mix_inverter_setting`, `update_ac_inverter_setting`, and `update_inverter_setting` take either a dictionary or an array. If an array is passed it will automatically generate the `paramN` key based on array index since all params for settings seem to used the same numbering scheme.
 
 Only the settings described above have been tested with `update_tlx_inverter_setting` and they all take only one single parameter. It is very likely that the function works with all settings returned by `tlx_get_enabled_settings`, but this has not been tested. A helper function `update_tlx_inverter_time_segment` is provided for the settings that require more than one parameter.
+
+The `api.get_mix_inverter_settings` method can be used to get the current inverter settings for the specified serial number including charge/discharge schedule for hybrid systems.

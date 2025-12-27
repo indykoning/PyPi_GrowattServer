@@ -685,6 +685,24 @@ class GrowattApi:
 
         return response.json().get('obj', {})
 
+    def get_mix_inverter_settings(self, serial_number):
+        """
+        Gets the inverter settings related to battery modes
+        Keyword arguments:
+        serial_number -- The serial number (device_sn) of the inverter
+        Returns:
+        A dictionary of settings
+        """
+
+        default_params = {
+            'op': 'getMixSetParams',
+            'serialNum': serial_number,
+            'kind': 0
+        }
+        response = self.session.get(self.get_url('newMixApi.do'), params=default_params)
+        data = json.loads(response.content.decode('utf-8'))
+        return data
+
     def dashboard_data(self, plant_id, timespan=Timespan.hour, date=None):
         """
         Get 'dashboard' data for specified timespan
