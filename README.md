@@ -8,7 +8,7 @@ Package to retrieve PV information from the growatt server.
 Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
 That project has since ben archived.
 
-This library now supports both the legacy password-based authentication and the V1 API with token-based authentication for MIN and SPH systems. MIN devices (type 7) correspond to MIN/MID series inverters, while SPH devices (type 5) are hybrid inverters. The V1 API is officially supported by Growatt and recommended over legacy authentication. Certain endpoints are not supported anymore by openapi.growatt.com. For example `api.min_write_parameter()` should be used instead of old `api.update_tlx_inverter_setting()`.
+This library supports both the classic password-based API and the token-based V1 API, officially supported by Growatt. Currently, the V1 API implementation supports MIN and SPH devices, where MIN broadly corresponds to classic TLX and SPH to classic MIX. If your inverter supports the V1 API, it is encouraged to use this over the classic API, as it offers better security, more features, and more relaxed rate limiting.
 
 ## Usage
 
