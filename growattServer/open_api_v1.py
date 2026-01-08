@@ -1,14 +1,30 @@
 import warnings
 from datetime import date, timedelta
+from enum import Enum
 from . import GrowattApi
 import platform
 from .exceptions import GrowattParameterError, GrowattV1ApiError
 
 
+class DeviceType(Enum):
+    """Enumeration of Growatt device types."""
+
+    INVERTER = 1
+    STORAGE = 2
+    OTHER = 3
+    MAX = 4
+    SPH = 5  # (MIX)
+    SPA = 6
+    MIN = 7 
+    PCS = 8
+    HPS = 9
+    PBD = 10
+
+
 class OpenApiV1(GrowattApi):
     """
     Extended Growatt API client with V1 API support.
-    This class extends the base GrowattApi class with methods for MIN inverters using
+    This class extends the base GrowattApi class with methods for MIN and SPH devices using
     the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0
     """
 
@@ -135,45 +151,6 @@ class OpenApiV1(GrowattApi):
         )
 
         return self._process_response(response.json(), "getting plant energy overview")
-
-    def plant_power_overview(self, plant_id: int, day: str | date = None) -> dict:
-        """
-        Obtain power data of a certain power station.
-        Get the frequency once every 5 minutes
-
-        Args:
-            plant_id (int): Power Station ID
-            day (date): Date - defaults to today
-
-        Returns:
-            dict: A dictionary containing the plants power data.
-            .. code-block:: python
-
-                {
-                    'count': int,  # Total number of records
-                    'powers': list[dict],  # List of power data entries
-                    # Each entry in 'powers' is a dictionary with:
-                    #   'time': str,  # Time of the power reading
-                    #   'power': float | None  # Power value in Watts (can be None)
-                }
-        Raises:
-            GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
-
-        API-Doc: https://www.showdoc.com.cn/262556420217021/1494062656174173
-        """
-        if day is None:
-            day = date.today()
-
-        response = self.session.get(
-            self._get_url('plant/power'),
-            params={
-                'plant_id': plant_id,
-                'date': day,
-            }
-        )
-
-        return self._process_response(response.json(), "getting plant power overview")
 
     def plant_energy_history(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
         """
@@ -681,3 +658,538 @@ class OpenApiV1(GrowattApi):
             segments.append(segment)
 
         return segments
+
+    # SPH Device Methods (Device Type 5)
+
+    def sph_detail(self, device_sn):
+        """
+        Get detailed data for an SPH inverter.
+
+        Args:
+            device_sn (str): The serial number of the SPH inverter.
+
+        Returns:
+            dict: A dictionary containing the SPH inverter details.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        response = self.session.get(
+            self._get_url('device/mix/mix_data_info'),
+            params={
+                'device_sn': device_sn
+            }
+        )
+
+        return self._process_response(response.json(), "getting SPH inverter details")
+
+    def sph_energy(self, device_sn):
+        """
+        Get energy data for an SPH inverter.
+
+        Args:
+            device_sn (str): The serial number of the SPH inverter.
+
+        Returns:
+            dict: A dictionary containing the SPH inverter energy data.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        response = self.session.post(
+            url=self._get_url("device/mix/mix_last_data"),
+            data={
+                "mix_sn": device_sn,
+            },
+        )
+
+        return self._process_response(response.json(), "getting SPH inverter energy data")
+
+    def sph_energy_history(self, device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None):
+        """
+        Get SPH inverter data history.
+
+        Args:
+            device_sn (str): The ID of the SPH inverter.
+            start_date (date, optional): Start date. Defaults to today.
+            end_date (date, optional): End date. Defaults to today.
+            timezone (str, optional): Timezone ID.
+            page (int, optional): Page number.
+            limit (int, optional): Results per page.
+
+        Returns:
+            dict: A dictionary containing the SPH inverter history data.
+
+        Raises:
+            GrowattParameterError: If date interval is invalid (exceeds 7 days).
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        if start_date is None and end_date is None:
+            start_date = date.today()
+            end_date = date.today()
+        elif start_date is None:
+            start_date = end_date
+        elif end_date is None:
+            end_date = start_date
+
+        # check interval validity
+        if end_date - start_date > timedelta(days=7):
+            raise GrowattParameterError("date interval must not exceed 7 days")
+
+        response = self.session.post(
+            url=self._get_url('device/mix/mix_data'),
+            data={
+                "mix_sn": device_sn,
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d"),
+                "timezone_id": timezone,
+                "page": page,
+                "perpage": limit,
+            }
+        )
+
+        return self._process_response(response.json(), "getting SPH inverter energy history")
+
+    def sph_settings(self, device_sn):
+        """
+        Get settings for an SPH inverter.
+
+        Args:
+            device_sn (str): The serial number of the SPH inverter.
+
+        Returns:
+            dict: A dictionary containing the SPH inverter settings.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        response = self.session.get(
+            self._get_url('device/mix/mix_data_info'),
+            params={
+                'device_sn': device_sn
+            }
+        )
+
+        return self._process_response(response.json(), "getting SPH inverter settings")
+
+    def sph_read_parameter(self, device_sn, parameter_id, start_address=None, end_address=None):
+        """
+        Read setting from SPH inverter.
+
+        Args:
+            device_sn (str): The ID of the SPH inverter.
+            parameter_id (str): Parameter ID to read. Don't use start_address and end_address if this is set.
+            start_address (int, optional): Register start address (for set_any_reg). Don't use parameter_id if this is set.
+            end_address (int, optional): Register end address (for set_any_reg). Don't use parameter_id if this is set.
+
+        Returns:
+            dict: A dictionary containing the setting value.
+
+        Raises:
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        if parameter_id is None and start_address is None:
+            raise GrowattParameterError(
+                "specify either parameter_id or start_address/end_address")
+        elif parameter_id is not None and start_address is not None:
+            raise GrowattParameterError(
+                "specify either parameter_id or start_address/end_address - not both."
+            )
+        elif parameter_id is not None:
+            # named parameter
+            start_address = 0
+            end_address = 0
+        else:
+            # address range
+            parameter_id = "set_any_reg"
+
+        response = self.session.post(
+            self._get_url('readMixParam'),
+            data={
+                "mix_sn": device_sn,
+                "type": parameter_id,
+                "param1": start_address,
+                "param2": end_address
+            }
+        )
+
+        return self._process_response(response.json(), f"reading parameter {parameter_id}")
+
+    def sph_write_parameter(self, device_sn, parameter_id, parameter_values=None):
+        """
+        Set parameters on an SPH inverter.
+
+        Args:
+            device_sn (str): Serial number of the inverter
+            parameter_id (str): Setting type to be configured
+            parameter_values: Parameter values to be sent to the system.
+                Can be a single string (for param1 only),
+                a list of strings (for sequential params),
+                or a dictionary mapping param positions to values
+
+        Returns:
+            dict: JSON response from the server
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        # Initialize all parameters as empty strings
+        parameters = {i: "" for i in range(1, 20)}
+
+        # Process parameter values based on type
+        if parameter_values is not None:
+            if isinstance(parameter_values, (str, int, float, bool)):
+                # Single value goes to param1
+                parameters[1] = str(parameter_values)
+            elif isinstance(parameter_values, list):
+                # List of values go to sequential params
+                for i, value in enumerate(parameter_values, 1):
+                    if i <= 19:  # Only use up to 19 parameters
+                        parameters[i] = str(value)
+            elif isinstance(parameter_values, dict):
+                # Dict maps param positions to values
+                for pos, value in parameter_values.items():
+                    pos = int(pos) if not isinstance(pos, int) else pos
+                    if 1 <= pos <= 19:  # Validate parameter positions
+                        parameters[pos] = str(value)
+
+        # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
+        request_data = {
+            "mix_sn": device_sn,
+            "type": parameter_id
+        }
+
+        # Add all 19 parameters to the request
+        for i in range(1, 20):
+            request_data[f"param{i}"] = str(parameters[i])
+
+        # Send the request
+        response = self.session.post(
+            self._get_url('mixSet'),
+            data=request_data
+        )
+
+        return self._process_response(response.json(), f"writing parameter {parameter_id}")
+
+    def sph_write_ac_charge_time(self, device_sn, period_id, charge_power, charge_stop_soc,
+                                  start_time, end_time, mains_enabled=True, enabled=True):
+        """
+        Set an AC charge time period for an SPH inverter.
+
+        Args:
+            device_sn (str): The serial number of the inverter.
+            period_id (int): Period ID (1-3).
+            charge_power (int): Charging power percentage (0-100).
+            charge_stop_soc (int): Stop charging at this SOC percentage (0-100).
+            start_time (datetime.time): Start time for the period.
+            end_time (datetime.time): End time for the period.
+            mains_enabled (bool): Enable grid charging. Default True.
+            enabled (bool): Whether this period is enabled. Default True.
+
+        Returns:
+            dict: The server response.
+
+        Raises:
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        if not 1 <= period_id <= 3:
+            raise GrowattParameterError("period_id must be between 1 and 3")
+
+        if not 0 <= charge_power <= 100:
+            raise GrowattParameterError("charge_power must be between 0 and 100")
+
+        if not 0 <= charge_stop_soc <= 100:
+            raise GrowattParameterError("charge_stop_soc must be between 0 and 100")
+
+        # Initialize ALL 19 parameters as empty strings
+        all_params = {
+            "mix_sn": device_sn,
+            "type": "mix_ac_charge_time_period"
+        }
+
+        # Period-specific parameter offsets
+        base_param = (period_id - 1) * 5
+
+        # Set parameters according to SPH AC charge format
+        all_params["param1"] = str(charge_power)
+        all_params["param2"] = str(charge_stop_soc)
+        all_params["param3"] = "1" if mains_enabled else "0"
+        all_params[f"param{base_param + 4}"] = str(start_time.hour)
+        all_params[f"param{base_param + 5}"] = str(start_time.minute)
+        all_params[f"param{base_param + 6}"] = str(end_time.hour)
+        all_params[f"param{base_param + 7}"] = str(end_time.minute)
+        all_params[f"param{base_param + 8}"] = "1" if enabled else "0"
+
+        # Add empty strings for all other parameters
+        for i in range(1, 20):
+            if f"param{i}" not in all_params:
+                all_params[f"param{i}"] = ""
+
+        # Send the request
+        response = self.session.post(
+            self._get_url('mixSet'),
+            data=all_params
+        )
+
+        return self._process_response(response.json(), f"writing AC charge period {period_id}")
+
+    def sph_write_ac_discharge_time(self, device_sn, period_id, discharge_power, discharge_stop_soc,
+                                     start_time, end_time, enabled=True):
+        """
+        Set an AC discharge time period for an SPH inverter.
+
+        Args:
+            device_sn (str): The serial number of the inverter.
+            period_id (int): Period ID (1-3).
+            discharge_power (int): Discharging power percentage (0-100).
+            discharge_stop_soc (int): Stop discharging at this SOC percentage (0-100).
+            start_time (datetime.time): Start time for the period.
+            end_time (datetime.time): End time for the period.
+            enabled (bool): Whether this period is enabled. Default True.
+
+        Returns:
+            dict: The server response.
+
+        Raises:
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        if not 1 <= period_id <= 3:
+            raise GrowattParameterError("period_id must be between 1 and 3")
+
+        if not 0 <= discharge_power <= 100:
+            raise GrowattParameterError("discharge_power must be between 0 and 100")
+
+        if not 0 <= discharge_stop_soc <= 100:
+            raise GrowattParameterError("discharge_stop_soc must be between 0 and 100")
+
+        # Initialize ALL 19 parameters as empty strings
+        all_params = {
+            "mix_sn": device_sn,
+            "type": "mix_ac_discharge_time_period"
+        }
+
+        # Period-specific parameter offsets
+        base_param = (period_id - 1) * 5
+
+        # Set parameters according to SPH AC discharge format
+        all_params["param1"] = str(discharge_power)
+        all_params["param2"] = str(discharge_stop_soc)
+        all_params[f"param{base_param + 3}"] = str(start_time.hour)
+        all_params[f"param{base_param + 4}"] = str(start_time.minute)
+        all_params[f"param{base_param + 5}"] = str(end_time.hour)
+        all_params[f"param{base_param + 6}"] = str(end_time.minute)
+        all_params[f"param{base_param + 7}"] = "1" if enabled else "0"
+
+        # Add empty strings for all other parameters
+        for i in range(1, 20):
+            if f"param{i}" not in all_params:
+                all_params[f"param{i}"] = ""
+
+        # Send the request
+        response = self.session.post(
+            self._get_url('mixSet'),
+            data=all_params
+        )
+
+        return self._process_response(response.json(), f"writing AC discharge period {period_id}")
+
+    def sph_read_ac_charge_times(self, device_sn, settings_data=None):
+        """
+        Read AC charge time periods from an SPH inverter.
+
+        Retrieves all 3 AC charge time periods from an SPH inverter and
+        parses them into a structured format.
+
+        Note that this function uses sph_settings() internally to get the settings data.
+        To avoid endpoint rate limit, you can pass the settings_data parameter
+        with the data returned from sph_settings().
+
+        Args:
+            device_sn (str): The device serial number of the inverter
+            settings_data (dict, optional): Settings data from sph_settings call to avoid repeated API calls.
+
+        Returns:
+            list: A list of dictionaries, each containing details for one time period:
+                - period_id (int): The period number (1-3)
+                - start_time (str): Start time in format "HH:MM"
+                - end_time (str): End time in format "HH:MM"
+                - enabled (bool): Whether the period is enabled
+
+        Example:
+            # Option 1: Make a single call
+            charge_times = api.sph_read_ac_charge_times("DEVICE_SERIAL_NUMBER")
+
+            # Option 2: Reuse existing settings data
+            settings_response = api.sph_settings("DEVICE_SERIAL_NUMBER")
+            charge_times = api.sph_read_ac_charge_times("DEVICE_SERIAL_NUMBER", settings_response)
+
+        Raises:
+            GrowattV1ApiError: If the API request fails
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        # Process the settings data
+        if settings_data is None:
+            settings_data = self.sph_settings(device_sn=device_sn)
+
+        periods = []
+
+        # Process each time period (1-3 for SPH)
+        for i in range(1, 4):
+            # Get raw time values
+            start_time_raw = settings_data.get(f'forcedChargeTimeStart{i}', "0:0")
+            end_time_raw = settings_data.get(f'forcedChargeTimeStop{i}', "0:0")
+            enabled_raw = settings_data.get(f'forcedChargeStopSwitch{i}', 0)
+
+            # Handle 'null' string values
+            if start_time_raw == 'null' or not start_time_raw:
+                start_time_raw = "0:0"
+            if end_time_raw == 'null' or not end_time_raw:
+                end_time_raw = "0:0"
+
+            # Format times with leading zeros (HH:MM)
+            try:
+                start_parts = start_time_raw.split(":")
+                start_hour = int(start_parts[0])
+                start_min = int(start_parts[1])
+                start_time = f"{start_hour:02d}:{start_min:02d}"
+            except (ValueError, IndexError):
+                start_time = "00:00"
+
+            try:
+                end_parts = end_time_raw.split(":")
+                end_hour = int(end_parts[0])
+                end_min = int(end_parts[1])
+                end_time = f"{end_hour:02d}:{end_min:02d}"
+            except (ValueError, IndexError):
+                end_time = "00:00"
+
+            # Get the enabled status
+            if enabled_raw == 'null' or enabled_raw is None:
+                enabled = False
+            else:
+                try:
+                    enabled = int(enabled_raw) == 1
+                except (ValueError, TypeError):
+                    enabled = False
+
+            period = {
+                'period_id': i,
+                'start_time': start_time,
+                'end_time': end_time,
+                'enabled': enabled
+            }
+
+            periods.append(period)
+
+        return periods
+
+    def sph_read_ac_discharge_times(self, device_sn, settings_data=None):
+        """
+        Read AC discharge time periods from an SPH inverter.
+
+        Retrieves all 3 AC discharge time periods from an SPH inverter and
+        parses them into a structured format.
+
+        Note that this function uses sph_settings() internally to get the settings data.
+        To avoid endpoint rate limit, you can pass the settings_data parameter
+        with the data returned from sph_settings().
+
+        Args:
+            device_sn (str): The device serial number of the inverter
+            settings_data (dict, optional): Settings data from sph_settings call to avoid repeated API calls.
+
+        Returns:
+            list: A list of dictionaries, each containing details for one time period:
+                - period_id (int): The period number (1-3)
+                - start_time (str): Start time in format "HH:MM"
+                - end_time (str): End time in format "HH:MM"
+                - enabled (bool): Whether the period is enabled
+
+        Example:
+            # Option 1: Make a single call
+            discharge_times = api.sph_read_ac_discharge_times("DEVICE_SERIAL_NUMBER")
+
+            # Option 2: Reuse existing settings data
+            settings_response = api.sph_settings("DEVICE_SERIAL_NUMBER")
+            discharge_times = api.sph_read_ac_discharge_times("DEVICE_SERIAL_NUMBER", settings_response)
+
+        Raises:
+            GrowattV1ApiError: If the API request fails
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        """
+
+        # Process the settings data
+        if settings_data is None:
+            settings_data = self.sph_settings(device_sn=device_sn)
+
+        periods = []
+
+        # Process each time period (1-3 for SPH)
+        for i in range(1, 4):
+            # Get raw time values
+            start_time_raw = settings_data.get(f'forcedDischargeTimeStart{i}', "0:0")
+            end_time_raw = settings_data.get(f'forcedDischargeTimeStop{i}', "0:0")
+            enabled_raw = settings_data.get(f'forcedDischargeStopSwitch{i}', 0)
+
+            # Handle 'null' string values
+            if start_time_raw == 'null' or not start_time_raw:
+                start_time_raw = "0:0"
+            if end_time_raw == 'null' or not end_time_raw:
+                end_time_raw = "0:0"
+
+            # Format times with leading zeros (HH:MM)
+            try:
+                start_parts = start_time_raw.split(":")
+                start_hour = int(start_parts[0])
+                start_min = int(start_parts[1])
+                start_time = f"{start_hour:02d}:{start_min:02d}"
+            except (ValueError, IndexError):
+                start_time = "00:00"
+
+            try:
+                end_parts = end_time_raw.split(":")
+                end_hour = int(end_parts[0])
+                end_min = int(end_parts[1])
+                end_time = f"{end_hour:02d}:{end_min:02d}"
+            except (ValueError, IndexError):
+                end_time = "00:00"
+
+            # Get the enabled status
+            if enabled_raw == 'null' or enabled_raw is None:
+                enabled = False
+            else:
+                try:
+                    enabled = int(enabled_raw) == 1
+                except (ValueError, TypeError):
+                    enabled = False
+
+            period = {
+                'period_id': i,
+                'start_time': start_time,
+                'end_time': end_time,
+                'enabled': enabled
+            }
+
+            periods.append(period)
+
+        return periods
