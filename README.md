@@ -5,7 +5,7 @@ Package to retrieve PV information from the growatt server.
 Special thanks to [Sjoerd Langkemper](https://github.com/Sjord) who has provided a strong base to start off from https://github.com/Sjord/growatt_api_client
 These projects may merge in the future since they are simmilar in code and function.
 
-This library now supports both the legacy password-based authentication and the V1 API with token-based authentication for MIN systems (TLX are identified as MIN system in the public API). Certain endpoints are not supported anymore by openapi.growatt.com. For example `api.min_write_parameter()` should be used instead of old `api.update_tlx_inverter_setting()`.
+This library supports both the classic password-based API and the token-based V1 API, officially supported by Growatt. Currently, the V1 API implementation supports MIN and SPH devices, where MIN broadly corresponds to classic TLX and SPH to classic MIX. If your inverter supports the V1 API, it is encouraged to use this over the classic API, as it offers better security, more features, and more relaxed rate limiting.
 
 ## Usage
 
@@ -154,6 +154,26 @@ Any methods that may be useful.
 `api.min_write_time_segment(device_sn, segment_id, batt_mode, start_time, end_time, enabled=True)` Update a specific time segment for a min inverter.
 
 `api.min_read_time_segments(device_sn, settings_data=None)` Read all time segments from a MIN inverter. Optionally pass settings_data to avoid redundant API calls.
+
+`api.sph_detail(device_sn)` Get detailed data for an SPH hybrid inverter.
+
+`api.sph_energy(device_sn)` Get current energy data for an SPH inverter, including power and energy values.
+
+`api.sph_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` Get energy history data for an SPH inverter (7-day max range).
+
+`api.sph_settings(device_sn)` Get all settings for an SPH inverter.
+
+`api.sph_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` Read a specific setting for an SPH inverter.
+
+`api.sph_write_parameter(device_sn, parameter_id, parameter_values)` Set parameters on an SPH inverter. Parameter values can be a single value, a list, or a dictionary.
+
+`api.sph_write_ac_charge_time(device_sn, period_id, charge_power, charge_stop_soc, start_time, end_time, mains_enabled=True, enabled=True)` Update a specific AC charge time period for an SPH inverter (periods 1-3).
+
+`api.sph_write_ac_discharge_time(device_sn, period_id, discharge_power, discharge_stop_soc, start_time, end_time, enabled=True)` Update a specific AC discharge time period for an SPH inverter (periods 1-3).
+
+`api.sph_read_ac_charge_times(device_sn, settings_data=None)` Read all AC charge time periods from an SPH inverter. Optionally pass settings_data to avoid redundant API calls.
+
+`api.sph_read_ac_discharge_times(device_sn, settings_data=None)` Read all AC discharge time periods from an SPH inverter. Optionally pass settings_data to avoid redundant API calls.
 
 ### Variables
 
@@ -341,11 +361,66 @@ For MIN/TLX systems, the public V1 API provides a more robust way to read and wr
     * `device_sn`: The device serial number
     * `settings_data`: Optional settings data to avoid redundant API calls
 
+## SPH Inverter Settings Using V1 API
+
+For SPH (hybrid inverter) systems, the public V1 API provides methods to read and write inverter settings. SPH inverters have different time period configurations compared to MIN inverters:
+
+* **Read Parameter**
+  * function: `api.sph_read_parameter`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `parameter_id`: Parameter ID to read (e.g., "discharge_power")
+    * `start_address`, `end_address`: Optional, for reading registers by address
+
+* **Write Parameter**
+  * function: `api.sph_write_parameter`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `parameter_id`: Parameter ID to write (e.g., "ac_charge")
+    * `parameter_values`: Value to set (single value, list, or dictionary)
+
+* **AC Charge Time Periods**
+  * function: `api.sph_write_ac_charge_time`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `period_id`: Period number (1-3)
+    * `charge_power`: Charging power percentage (0-100)
+    * `charge_stop_soc`: Stop charging at this SOC percentage (0-100)
+    * `start_time`: Datetime.time object for period start
+    * `end_time`: Datetime.time object for period end
+    * `mains_enabled`: Boolean to enable/disable grid charging (default: True)
+    * `enabled`: Boolean to enable/disable period (default: True)
+
+* **AC Discharge Time Periods**
+  * function: `api.sph_write_ac_discharge_time`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `period_id`: Period number (1-3)
+    * `discharge_power`: Discharge power percentage (0-100)
+    * `discharge_stop_soc`: Stop discharging at this SOC percentage (0-100)
+    * `start_time`: Datetime.time object for period start
+    * `end_time`: Datetime.time object for period end
+    * `enabled`: Boolean to enable/disable period (default: True)
+
+* **Read AC Charge Time Periods**
+  * function: `api.sph_read_ac_charge_times`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `settings_data`: Optional settings data to avoid redundant API calls
+
+* **Read AC Discharge Time Periods**
+  * function: `api.sph_read_ac_discharge_times`
+  * parameters:
+    * `device_sn`: The device serial number
+    * `settings_data`: Optional settings data to avoid redundant API calls
+
 ## Noah Settings
+
 The noah settings function allow you to change individual values on your noah system e.g. system default output power, battery management, operation mode and currency
 From what has been reverse engineered from the api, each setting has a `setting_type` and a set of `parameters` that are relevant to it.
 
 Known working settings & parameters are as follows (all parameter values are strings):
+
 * **Change "System Default Output Power"**
   * function: `api.update_noah_settings`
   * setting type: `default_power`
