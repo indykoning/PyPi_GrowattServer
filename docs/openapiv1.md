@@ -45,7 +45,7 @@ Methods for MIN devices (type 7).
 | `api.min_settings(device_sn)` | device_sn: String | Get all settings for a min inverter. |
 | `api.min_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` | device_sn: String, parameter_id: String, start_address: Int, end_address: Int | Read a specific setting for a min inverter. see: [details](./openapiv1/min_tlx_settings.md) |
 | `api.min_write_parameter(device_sn, parameter_id, parameter_values)` | device_sn: String, parameter_id: String, parameter_values: Dict/Array | Set parameters on a min inverter. Parameter values can be a single value, a list, or a dictionary. see: [details](./openapiv1/min_tlx_settings.md) |
-| `api.min_write_time_segment(device_sn, segment_id, batt_mode, start_time, end_time, enabled=True)` | device_sn: String, segment_id: Int, batt_mode: Int <0=load priority, 1=battery priority, 2=grid priority>, start_time: Time, end_time: Time, enabled: Bool | Update a specific time segment for a min inverter. see: [details](./openapiv1/min_tlx_settings.md) |
+| `api.min_write_time_segment(device_sn, segment_id, batt_mode, start_time, end_time, enabled=True)` | device_sn: String, segment_id: Int, batt_mode: Int <0=load priority, 1=battery priority, 2=grid priority>, start_time: datetime.time, end_time: datetime.time, enabled: Bool | Update a specific time segment for a min inverter. see: [details](./openapiv1/min_tlx_settings.md) |
 | `api.min_read_time_segments(device_sn, settings_data=None)` | device_sn: String, settings_data: Dict | Read all time segments from a MIN inverter. Optionally pass settings_data to avoid redundant API calls. see: [details](./openapiv1/min_tlx_settings.md) |
 
 #### SPH Methods
@@ -54,16 +54,15 @@ Methods for SPH devices (type 5).
 
 | Method | Arguments | Description |
 |:---|:---|:---|
-| `api.sph_detail(device_sn)` | device_sn: String | Get detailed data for an SPH hybrid inverter. |
+| `api.sph_detail(device_sn)` | device_sn: String | Get detailed data and settings for an SPH hybrid inverter. |
 | `api.sph_energy(device_sn)` | device_sn: String | Get current energy data for an SPH inverter, including power and energy values. |
 | `api.sph_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` | device_sn: String, start_date: Date, end_date: Date, timezone: String, page: Int, limit: Int | Get energy history data for an SPH inverter (7-day max range). |
-| `api.sph_settings(device_sn)` | device_sn: String | Get all settings for an SPH inverter. |
 | `api.sph_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` | device_sn: String, parameter_id: String, start_address: Int, end_address: Int | Read a specific setting for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
 | `api.sph_write_parameter(device_sn, parameter_id, parameter_values)` | device_sn: String, parameter_id: String, parameter_values: Dict/Array | Set parameters on an SPH inverter. Parameter values can be a single value, a list, or a dictionary. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_write_ac_charge_time(device_sn, period_id, charge_power, charge_stop_soc, start_time, end_time, mains_enabled=True, enabled=True)` | device_sn: String, period_id: Int (1-3), charge_power: Int (0-100), charge_stop_soc: Int (0-100), start_time: Time, end_time: Time, mains_enabled: Bool, enabled: Bool | Configure an AC charge time period for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_write_ac_discharge_time(device_sn, period_id, discharge_power, discharge_stop_soc, start_time, end_time, enabled=True)` | device_sn: String, period_id: Int (1-3), discharge_power: Int (0-100), discharge_stop_soc: Int (0-100), start_time: Time, end_time: Time, enabled: Bool | Configure an AC discharge time period for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_charge_times(device_sn, settings_data=None)` | device_sn: String, settings_data: Dict | Read all AC charge time periods from an SPH inverter. Optionally pass settings_data to avoid redundant API calls. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_discharge_times(device_sn, settings_data=None)` | device_sn: String, settings_data: Dict | Read all AC discharge time periods from an SPH inverter. Optionally pass settings_data to avoid redundant API calls. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_write_ac_charge_times(device_sn, charge_power, charge_stop_soc, mains_enabled, periods)` | device_sn: String, charge_power: Int (0-100), charge_stop_soc: Int (0-100), mains_enabled: Bool, periods: List of 3 dicts with start_time, end_time, enabled | Configure AC charge time periods for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_write_ac_discharge_times(device_sn, discharge_power, discharge_stop_soc, periods)` | device_sn: String, discharge_power: Int (0-100), discharge_stop_soc: Int (0-100), periods: List of 3 dicts with start_time, end_time, enabled | Configure AC discharge time periods for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_charge_times(device_sn, settings_data=None)` | device_sn: String, settings_data: Dict | Read all AC charge time periods from an SPH inverter. Optionally pass settings_data from sph_detail() to avoid redundant API calls. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_discharge_times(device_sn, settings_data=None)` | device_sn: String, settings_data: Dict | Read all AC discharge time periods from an SPH inverter. Optionally pass settings_data from sph_detail() to avoid redundant API calls. see: [details](./openapiv1/sph_settings.md) |
 
 Methods from [here](./shinephone.md#methods) should be available, but it's safer to rely on the functions described in this file where possible. There is no guarantee those methods will work, or remain stable through updates.
 

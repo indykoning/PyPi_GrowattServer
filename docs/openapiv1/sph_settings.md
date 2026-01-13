@@ -19,27 +19,27 @@ For SPH (hybrid inverter) systems, the public V1 API provides methods to read an
     * `parameter_values`: Value to set (single value, list, or dictionary)
 
 * **AC Charge Time Periods**
-  * function: `api.sph_write_ac_charge_time`
+  * function: `api.sph_write_ac_charge_times`
   * parameters:
     * `device_sn`: The device serial number
-    * `period_id`: Period number (1-3)
     * `charge_power`: Charging power percentage (0-100)
     * `charge_stop_soc`: Stop charging at this SOC percentage (0-100)
-    * `start_time`: Datetime.time object for period start
-    * `end_time`: Datetime.time object for period end
-    * `mains_enabled`: Boolean to enable/disable grid charging (default: True)
-    * `enabled`: Boolean to enable/disable period (default: True)
+    * `mains_enabled`: Boolean to enable/disable grid charging
+    * `periods`: List of 3 period dicts, each with:
+      * `start_time`: datetime.time object for period start
+      * `end_time`: datetime.time object for period end
+      * `enabled`: Boolean to enable/disable period
 
 * **AC Discharge Time Periods**
-  * function: `api.sph_write_ac_discharge_time`
+  * function: `api.sph_write_ac_discharge_times`
   * parameters:
     * `device_sn`: The device serial number
-    * `period_id`: Period number (1-3)
     * `discharge_power`: Discharge power percentage (0-100)
     * `discharge_stop_soc`: Stop discharging at this SOC percentage (0-100)
-    * `start_time`: Datetime.time object for period start
-    * `end_time`: Datetime.time object for period end
-    * `enabled`: Boolean to enable/disable period (default: True)
+    * `periods`: List of 3 period dicts, each with:
+      * `start_time`: datetime.time object for period start
+      * `end_time`: datetime.time object for period end
+      * `enabled`: Boolean to enable/disable period
 
 * **Read AC Charge Time Periods**
   * function: `api.sph_read_ac_charge_times`
