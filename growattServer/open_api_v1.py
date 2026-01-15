@@ -1068,80 +1068,135 @@ class OpenApiV1(GrowattApi):
 
         return periods
 
-    def sph_read_ac_charge_times(self, device_sn, settings_data=None):
+    def sph_read_ac_charge_times(self, device_sn=None, settings_data=None):
         """
-        Read AC charge time periods from an SPH inverter.
+        Read AC charge time periods and settings from an SPH inverter.
 
-        Retrieves all 3 AC charge time periods from an SPH inverter and
-        parses them into a structured format.
+        Retrieves all 3 AC charge time periods plus global charge settings
+        (power, stop SOC, mains enabled) from an SPH inverter.
 
         Note that this function uses sph_detail() internally to get the settings data.
         To avoid endpoint rate limit, you can pass the settings_data parameter
         with the data returned from sph_detail().
 
         Args:
-            device_sn (str): The device serial number of the inverter
+            device_sn (str, optional): The device serial number of the inverter.
+                Required if settings_data is not provided.
             settings_data (dict, optional): Settings data from sph_detail call to avoid repeated API calls.
+                If provided, device_sn is not required.
 
         Returns:
-            list: A list of dictionaries, each containing details for one time period:
-                - period_id (int): The period number (1-3)
-                - start_time (str): Start time in format "HH:MM"
-                - end_time (str): End time in format "HH:MM"
-                - enabled (bool): Whether the period is enabled
+            dict: A dictionary containing:
+                - charge_power (int): Charging power percentage (0-100)
+                - charge_stop_soc (int): Stop charging at this SOC percentage (0-100)
+                - mains_enabled (bool): Whether grid/mains charging is enabled
+                - periods (list): List of 3 period dicts, each with:
+                    - period_id (int): The period number (1-3)
+                    - start_time (str): Start time in format "HH:MM"
+                    - end_time (str): End time in format "HH:MM"
+                    - enabled (bool): Whether the period is enabled
 
         Example:
-            # Option 1: Make a single call
-            charge_times = api.sph_read_ac_charge_times("DEVICE_SERIAL_NUMBER")
+            # Option 1: Fetch settings automatically
+            charge_config = api.sph_read_ac_charge_times(device_sn="DEVICE_SERIAL_NUMBER")
+            print(f"Charge power: {charge_config['charge_power']}%")
+            print(f"Periods: {charge_config['periods']}")
 
-            # Option 2: Reuse existing settings data
+            # Option 2: Reuse existing settings data (no device_sn needed)
             settings_response = api.sph_detail("DEVICE_SERIAL_NUMBER")
-            charge_times = api.sph_read_ac_charge_times("DEVICE_SERIAL_NUMBER", settings_response)
+            charge_config = api.sph_read_ac_charge_times(settings_data=settings_response)
 
         Raises:
-            GrowattV1ApiError: If the API request fails
+            GrowattParameterError: If neither device_sn nor settings_data is provided.
+            GrowattV1ApiError: If the API request fails.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
         if settings_data is None:
+            if device_sn is None:
+                raise GrowattParameterError("Either device_sn or settings_data must be provided")
             settings_data = self.sph_detail(device_sn=device_sn)
 
-        return self._parse_time_periods(settings_data, "Charge")
+        # Extract global charge settings
+        charge_power = settings_data.get('chargePowerCommand', 0)
+        charge_stop_soc = settings_data.get('wchargeSOCLowLimit', 100)
+        mains_enabled_raw = settings_data.get('acChargeEnable', 0)
 
-    def sph_read_ac_discharge_times(self, device_sn, settings_data=None):
+        # Handle null/empty values
+        if charge_power == 'null' or charge_power is None or charge_power == '':
+            charge_power = 0
+        if charge_stop_soc == 'null' or charge_stop_soc is None or charge_stop_soc == '':
+            charge_stop_soc = 100
+        if mains_enabled_raw == 'null' or mains_enabled_raw is None or mains_enabled_raw == '':
+            mains_enabled = False
+        else:
+            mains_enabled = int(mains_enabled_raw) == 1
+
+        return {
+            'charge_power': int(charge_power),
+            'charge_stop_soc': int(charge_stop_soc),
+            'mains_enabled': mains_enabled,
+            'periods': self._parse_time_periods(settings_data, "Charge")
+        }
+
+    def sph_read_ac_discharge_times(self, device_sn=None, settings_data=None):
         """
-        Read AC discharge time periods from an SPH inverter.
+        Read AC discharge time periods and settings from an SPH inverter.
 
-        Retrieves all 3 AC discharge time periods from an SPH inverter and
-        parses them into a structured format.
+        Retrieves all 3 AC discharge time periods plus global discharge settings
+        (power, stop SOC) from an SPH inverter.
 
         Note that this function uses sph_detail() internally to get the settings data.
         To avoid endpoint rate limit, you can pass the settings_data parameter
         with the data returned from sph_detail().
 
         Args:
-            device_sn (str): The device serial number of the inverter
+            device_sn (str, optional): The device serial number of the inverter.
+                Required if settings_data is not provided.
             settings_data (dict, optional): Settings data from sph_detail call to avoid repeated API calls.
+                If provided, device_sn is not required.
 
         Returns:
-            list: A list of dictionaries, each containing details for one time period:
-                - period_id (int): The period number (1-3)
-                - start_time (str): Start time in format "HH:MM"
-                - end_time (str): End time in format "HH:MM"
-                - enabled (bool): Whether the period is enabled
+            dict: A dictionary containing:
+                - discharge_power (int): Discharging power percentage (0-100)
+                - discharge_stop_soc (int): Stop discharging at this SOC percentage (0-100)
+                - periods (list): List of 3 period dicts, each with:
+                    - period_id (int): The period number (1-3)
+                    - start_time (str): Start time in format "HH:MM"
+                    - end_time (str): End time in format "HH:MM"
+                    - enabled (bool): Whether the period is enabled
 
         Example:
-            # Option 1: Make a single call
-            discharge_times = api.sph_read_ac_discharge_times("DEVICE_SERIAL_NUMBER")
+            # Option 1: Fetch settings automatically
+            discharge_config = api.sph_read_ac_discharge_times(device_sn="DEVICE_SERIAL_NUMBER")
+            print(f"Discharge power: {discharge_config['discharge_power']}%")
+            print(f"Stop SOC: {discharge_config['discharge_stop_soc']}%")
 
-            # Option 2: Reuse existing settings data
+            # Option 2: Reuse existing settings data (no device_sn needed)
             settings_response = api.sph_detail("DEVICE_SERIAL_NUMBER")
-            discharge_times = api.sph_read_ac_discharge_times("DEVICE_SERIAL_NUMBER", settings_response)
+            discharge_config = api.sph_read_ac_discharge_times(settings_data=settings_response)
 
         Raises:
-            GrowattV1ApiError: If the API request fails
+            GrowattParameterError: If neither device_sn nor settings_data is provided.
+            GrowattV1ApiError: If the API request fails.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
         if settings_data is None:
+            if device_sn is None:
+                raise GrowattParameterError("Either device_sn or settings_data must be provided")
             settings_data = self.sph_detail(device_sn=device_sn)
 
-        return self._parse_time_periods(settings_data, "Discharge")
+        # Extract global discharge settings
+        discharge_power = settings_data.get('disChargePowerCommand', 0)
+        discharge_stop_soc = settings_data.get('wdisChargeSOCLowLimit', 10)
+
+        # Handle null/empty values
+        if discharge_power == 'null' or discharge_power is None or discharge_power == '':
+            discharge_power = 0
+        if discharge_stop_soc == 'null' or discharge_stop_soc is None or discharge_stop_soc == '':
+            discharge_stop_soc = 10
+
+        return {
+            'discharge_power': int(discharge_power),
+            'discharge_stop_soc': int(discharge_stop_soc),
+            'periods': self._parse_time_periods(settings_data, "Discharge")
+        }

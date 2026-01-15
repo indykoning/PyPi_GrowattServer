@@ -7,16 +7,17 @@ You can obtain an API token from the Growatt API documentation or developer port
 """
 
 import json
+import os
 
 import requests
 
 import growattServer
 
-# Get the API token from user input or environment variable
-# api_token = os.environ.get("GROWATT_API_TOKEN") or input("Enter your Growatt API token: ")
-
-# test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
-api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # noqa: S105
+# Get the API token from environment variable or use test token
+api_token = os.environ.get("GROWATT_API_TOKEN")
+if not api_token:
+    # test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
+    api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # noqa: S105
 
 try:
     # Initialize the API with token instead of using login
@@ -65,29 +66,24 @@ try:
                     sort_keys=True,
                 )
 
-            # Get details (includes settings data)
-            detail_data = api.sph_detail(
-                device_sn=inverter_sn,
+            # Read AC charge time periods (reuse inverter_data, no device_sn needed)
+            charge_config = api.sph_read_ac_charge_times(
+                settings_data=inverter_data,
             )
-            print("Saving detail data to settings_data.json")  # noqa: T201
-            with open("settings_data.json", "w") as f:
-                json.dump(detail_data, f, indent=4, sort_keys=True)
+            print("AC Charge Configuration:")  # noqa: T201
+            print(f"  Charge Power: {charge_config['charge_power']}%")  # noqa: T201
+            print(f"  Stop SOC: {charge_config['charge_stop_soc']}%")  # noqa: T201
+            print(f"  Mains Enabled: {charge_config['mains_enabled']}")  # noqa: T201
+            print(f"  Periods: {json.dumps(charge_config['periods'], indent=4)}")  # noqa: T201
 
-            # Read AC charge time periods
-            charge_times = api.sph_read_ac_charge_times(
-                device_sn=inverter_sn,
-                settings_data=detail_data,
+            # Read AC discharge time periods (reuse inverter_data, no device_sn needed)
+            discharge_config = api.sph_read_ac_discharge_times(
+                settings_data=inverter_data,
             )
-            print("AC Charge Time Periods:")  # noqa: T201
-            print(json.dumps(charge_times, indent=4))  # noqa: T201
-
-            # Read AC discharge time periods
-            discharge_times = api.sph_read_ac_discharge_times(
-                device_sn=inverter_sn,
-                settings_data=detail_data,
-            )
-            print("AC Discharge Time Periods:")  # noqa: T201
-            print(json.dumps(discharge_times, indent=4))  # noqa: T201
+            print("AC Discharge Configuration:")  # noqa: T201
+            print(f"  Discharge Power: {discharge_config['discharge_power']}%")  # noqa: T201
+            print(f"  Stop SOC: {discharge_config['discharge_stop_soc']}%")  # noqa: T201
+            print(f"  Periods: {json.dumps(discharge_config['periods'], indent=4)}")  # noqa: T201
 
             # Read discharge power
             discharge_power = api.sph_read_parameter(

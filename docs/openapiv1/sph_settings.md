@@ -44,11 +44,15 @@ For SPH (hybrid inverter) systems, the public V1 API provides methods to read an
 * **Read AC Charge Time Periods**
   * function: `api.sph_read_ac_charge_times`
   * parameters:
-    * `device_sn`: The device serial number
-    * `settings_data`: Optional settings data to avoid redundant API calls
+    * `device_sn`: The device serial number (optional if settings_data is provided)
+    * `settings_data`: Settings data from sph_detail() (optional if device_sn is provided)
+  * note: Either `device_sn` or `settings_data` must be provided
+  * returns: Dict with `charge_power`, `charge_stop_soc`, `mains_enabled`, and `periods` list
 
 * **Read AC Discharge Time Periods**
   * function: `api.sph_read_ac_discharge_times`
   * parameters:
-    * `device_sn`: The device serial number
-    * `settings_data`: Optional settings data to avoid redundant API calls
+    * `device_sn`: The device serial number (optional if settings_data is provided)
+    * `settings_data`: Settings data from sph_detail() (optional if device_sn is provided)
+  * note: Either `device_sn` or `settings_data` must be provided
+  * returns: Dict with `discharge_power`, `discharge_stop_soc`, and `periods` list
