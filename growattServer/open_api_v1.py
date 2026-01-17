@@ -676,6 +676,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129763571291058
         response = self.session.get(
             self._get_url('device/mix/mix_data_info'),
             params={
@@ -700,6 +701,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129764475556048
         response = self.session.post(
             url=self._get_url("device/mix/mix_last_data"),
             data={
@@ -742,6 +744,7 @@ class OpenApiV1(GrowattApi):
         if end_date - start_date > timedelta(days=7):
             raise GrowattParameterError("date interval must not exceed 7 days")
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129765461123058
         response = self.session.post(
             url=self._get_url('device/mix/mix_data'),
             data={
@@ -756,13 +759,13 @@ class OpenApiV1(GrowattApi):
 
         return self._process_response(response.json(), "getting SPH inverter energy history")
 
-    def sph_read_parameter(self, device_sn, parameter_id, start_address=None, end_address=None):
+    def sph_read_parameter(self, device_sn, parameter_id=None, start_address=None, end_address=None):
         """
         Read setting from SPH inverter.
 
         Args:
             device_sn (str): The ID of the SPH inverter.
-            parameter_id (str): Parameter ID to read. Don't use start_address and end_address if this is set.
+            parameter_id (str, optional): Parameter ID to read. Don't use start_address and end_address if this is set.
             start_address (int, optional): Register start address (for set_any_reg). Don't use parameter_id if this is set.
             end_address (int, optional): Register end address (for set_any_reg). Don't use parameter_id if this is set.
 
@@ -790,13 +793,14 @@ class OpenApiV1(GrowattApi):
             # address range
             parameter_id = "set_any_reg"
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129766954561259
         response = self.session.post(
             self._get_url('readMixParam'),
             data={
-                "mix_sn": device_sn,
-                "type": parameter_id,
-                "param1": start_address,
-                "param2": end_address
+                "device_sn": device_sn,
+                "paramId": parameter_id,
+                "startAddr": start_address,
+                "endAddr": end_address
             }
         )
 
@@ -822,8 +826,8 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
         """
 
-        # Initialize all parameters as empty strings
-        parameters = {i: "" for i in range(1, 20)}
+        # Initialize all parameters as empty strings (API uses param1-param18)
+        parameters = {i: "" for i in range(1, 19)}
 
         # Process parameter values based on type
         if parameter_values is not None:
@@ -833,26 +837,26 @@ class OpenApiV1(GrowattApi):
             elif isinstance(parameter_values, list):
                 # List of values go to sequential params
                 for i, value in enumerate(parameter_values, 1):
-                    if i <= 19:  # Only use up to 19 parameters
+                    if i <= 18:  # Only use up to 18 parameters
                         parameters[i] = str(value)
             elif isinstance(parameter_values, dict):
                 # Dict maps param positions to values
                 for pos, value in parameter_values.items():
                     pos = int(pos) if not isinstance(pos, int) else pos
-                    if 1 <= pos <= 19:  # Validate parameter positions
+                    if 1 <= pos <= 18:  # Validate parameter positions
                         parameters[pos] = str(value)
 
-        # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
+        # Create a data dictionary with ALL parameters explicitly included
         request_data = {
             "mix_sn": device_sn,
             "type": parameter_id
         }
 
-        # Add all 19 parameters to the request
-        for i in range(1, 20):
+        # Add all 18 parameters to the request
+        for i in range(1, 19):
             request_data[f"param{i}"] = str(parameters[i])
 
-        # Send the request
+        # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
             self._get_url('mixSet'),
             data=request_data
@@ -924,6 +928,7 @@ class OpenApiV1(GrowattApi):
             request_data[f"param{base + 3}"] = str(period["end_time"].minute)
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
             self._get_url('mixSet'),
             data=request_data
@@ -992,6 +997,7 @@ class OpenApiV1(GrowattApi):
             request_data[f"param{base + 3}"] = str(period["end_time"].minute)
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
+        # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
             self._get_url('mixSet'),
             data=request_data

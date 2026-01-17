@@ -6,6 +6,7 @@ such as hybrid inverter systems.
 You can obtain an API token from the Growatt API documentation or developer portal.
 """
 
+import datetime
 import json
 import os
 
@@ -37,14 +38,6 @@ try:
             inverter_sn = device["device_sn"]
             print(f"Processing SPH device: {inverter_sn}")  # noqa: T201
 
-            # Get device details
-            inverter_data = api.sph_detail(
-                device_sn=inverter_sn,
-            )
-            print("Saving inverter data to inverter_data.json")  # noqa: T201
-            with open("inverter_data.json", "w") as f:
-                json.dump(inverter_data, f, indent=4, sort_keys=True)
-
             # Get energy data
             energy_data = api.sph_energy(
                 device_sn=inverter_sn,
@@ -66,7 +59,23 @@ try:
                     sort_keys=True,
                 )
 
-            # Read AC charge time periods (reuse inverter_data, no device_sn needed)
+            # Get device details
+            inverter_data = api.sph_detail(
+                device_sn=inverter_sn,
+            )
+            print("Saving inverter data to inverter_data.json")  # noqa: T201
+            with open("inverter_data.json", "w") as f:
+                json.dump(inverter_data, f, indent=4, sort_keys=True)
+
+            # Read some settings directly from inverter_data (from sph_detail)
+            # See docs/openapiv1/sph_settings.md for all available fields
+            print("Device Settings:")  # noqa: T201
+            print(f"  Device status: {inverter_data.get('status', 'N/A')}")  # noqa: T201
+            print(f"  Battery type: {inverter_data.get('batteryType', 'N/A')}")  # noqa: T201
+            print(f"  EPS enabled: {inverter_data.get('epsFunEn', 'N/A')}")  # noqa: T201
+            print(f"  Export limit: {inverter_data.get('exportLimitPowerRate', 'N/A')}%")  # noqa: T201
+
+            # Read AC charge time periods using helper function and inverter_data to avoid rate limiting
             charge_config = api.sph_read_ac_charge_times(
                 settings_data=inverter_data,
             )
@@ -76,7 +85,7 @@ try:
             print(f"  Mains Enabled: {charge_config['mains_enabled']}")  # noqa: T201
             print(f"  Periods: {json.dumps(charge_config['periods'], indent=4)}")  # noqa: T201
 
-            # Read AC discharge time periods (reuse inverter_data, no device_sn needed)
+            # Read AC discharge time periods using helper function and inverter_data to avoid rate limiting
             discharge_config = api.sph_read_ac_discharge_times(
                 settings_data=inverter_data,
             )
@@ -85,21 +94,15 @@ try:
             print(f"  Stop SOC: {discharge_config['discharge_stop_soc']}%")  # noqa: T201
             print(f"  Periods: {json.dumps(discharge_config['periods'], indent=4)}")  # noqa: T201
 
-            # Read discharge power
-            discharge_power = api.sph_read_parameter(
-                device_sn=inverter_sn,
-                parameter_id="discharge_power",
-            )
-            print(f"Current discharge power: {discharge_power}%")  # noqa: T201
-
             # Write examples - Uncomment to test
 
-            # Set AC charge time periods: charge at 50% power to 95% SOC
+            # Example 1: Set AC charge time periods
+            # Charge at 50% power, stop at 95% SOC, grid charging enabled
             # api.sph_write_ac_charge_times(
             #     device_sn=inverter_sn,
-            #     charge_power=50,  # 50% charging power
-            #     charge_stop_soc=95,  # Stop at 95% SOC
-            #     mains_enabled=True,  # Enable grid charging
+            #     charge_power=50,
+            #     charge_stop_soc=95,
+            #     mains_enabled=True,
             #     periods=[
             #         {"start_time": datetime.time(0, 0), "end_time": datetime.time(6, 0), "enabled": True},
             #         {"start_time": datetime.time(0, 0), "end_time": datetime.time(0, 0), "enabled": False},
@@ -108,11 +111,12 @@ try:
             # )
             # print("AC charge periods updated successfully")
 
-            # Set AC discharge time periods: discharge at 100% power to 20% SOC
+            # Example 2: Set AC discharge time periods
+            # Discharge at 100% power, stop at 20% SOC
             # api.sph_write_ac_discharge_times(
             #     device_sn=inverter_sn,
-            #     discharge_power=100,  # 100% discharge power
-            #     discharge_stop_soc=20,  # Stop at 20% SOC
+            #     discharge_power=100,
+            #     discharge_stop_soc=20,
             #     periods=[
             #         {"start_time": datetime.time(17, 0), "end_time": datetime.time(22, 0), "enabled": True},
             #         {"start_time": datetime.time(0, 0), "end_time": datetime.time(0, 0), "enabled": False},
@@ -120,6 +124,22 @@ try:
             #     ]
             # )
             # print("AC discharge periods updated successfully")
+
+            # Example 3: Turn device on/off
+            # api.sph_write_parameter(inverter_sn, "pv_on_off", "1")  # Turn on
+            # api.sph_write_parameter(inverter_sn, "pv_on_off", "0")  # Turn off
+
+            # Example 4: Set grid voltage limits
+            # api.sph_write_parameter(inverter_sn, "pv_grid_voltage_high", "270")
+            # api.sph_write_parameter(inverter_sn, "pv_grid_voltage_low", "180")
+
+            # Example 5: Configure off-grid/EPS settings
+            # api.sph_write_parameter(inverter_sn, "mix_off_grid_enable", "1")  # Enable
+            # api.sph_write_parameter(inverter_sn, "mix_ac_discharge_frequency", "0")  # 50Hz
+            # api.sph_write_parameter(inverter_sn, "mix_ac_discharge_voltage", "0")  # 230V
+
+            # Example 6: Set anti-backflow (export limit)
+            # api.sph_write_parameter(inverter_sn, "backflow_setting", ["1", "50"])  # On, 50%
 
 except growattServer.GrowattV1ApiError as e:
     print(f"API Error: {e} (Code: {e.error_code}, Message: {e.error_msg})")  # noqa: T201

@@ -54,17 +54,26 @@ Methods for SPH devices (type 5).
 
 | Method | Arguments | Description |
 |:---|:---|:---|
-| `api.sph_detail(device_sn)` | device_sn: String | Get detailed data and settings for an SPH hybrid inverter. |
+| `api.sph_detail(device_sn)` | device_sn: String | Get detailed data and settings for an SPH hybrid inverter. see: [details](./openapiv1/sph_settings.md) |
 | `api.sph_energy(device_sn)` | device_sn: String | Get current energy data for an SPH inverter, including power and energy values. |
 | `api.sph_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` | device_sn: String, start_date: Date, end_date: Date, timezone: String, page: Int, limit: Int | Get energy history data for an SPH inverter (7-day max range). |
-| `api.sph_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` | device_sn: String, parameter_id: String, start_address: Int, end_address: Int | Read a specific setting for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_write_parameter(device_sn, parameter_id, parameter_values)` | device_sn: String, parameter_id: String, parameter_values: Dict/Array | Set parameters on an SPH inverter. Parameter values can be a single value, a list, or a dictionary. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_write_ac_charge_times(device_sn, charge_power, charge_stop_soc, mains_enabled, periods)` | device_sn: String, charge_power: Int (0-100), charge_stop_soc: Int (0-100), mains_enabled: Bool, periods: List of 3 dicts with start_time, end_time, enabled | Configure AC charge time periods for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_write_ac_discharge_times(device_sn, discharge_power, discharge_stop_soc, periods)` | device_sn: String, discharge_power: Int (0-100), discharge_stop_soc: Int (0-100), periods: List of 3 dicts with start_time, end_time, enabled | Configure AC discharge time periods for an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_charge_times(device_sn=None, settings_data=None)` | device_sn: String (optional if settings_data provided), settings_data: Dict | Read AC charge configuration including charge_power, charge_stop_soc, mains_enabled, and time periods. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_discharge_times(device_sn=None, settings_data=None)` | device_sn: String (optional if settings_data provided), settings_data: Dict | Read AC discharge configuration including discharge_power, discharge_stop_soc, and time periods. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_parameter(device_sn, parameter_id=None, start_address=None, end_address=None)` | device_sn: String, parameter_id: String (optional), start_address: Int (optional), end_address: Int (optional) | Read a specific parameter (only pv_on_off supported). see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_write_parameter(device_sn, parameter_id, parameter_values)` | device_sn: String, parameter_id: String, parameter_values: Dict/Array | Set parameters on an SPH inverter. see: [details](./openapiv1/sph_settings.md) |
 
-Methods from [here](./shinephone.md#methods) should be available, but it's safer to rely on the functions described in this file where possible. There is no guarantee those methods will work, or remain stable through updates.
+#### SPH Helper Methods
+
+Convenience methods that wrap the core SPH methods above for common use cases.
+
+| Method | Arguments | Description |
+|:---|:---|:---|
+| `api.sph_write_ac_charge_times(...)` | device_sn, charge_power, charge_stop_soc, mains_enabled, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_charge_time_period`. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_write_ac_discharge_times(...)` | device_sn, discharge_power, discharge_stop_soc, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_discharge_time_period`. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_charge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses charge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_discharge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses discharge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+
+#### Classic methods
+
+Methods from [classic API](./shinephone.md#methods) should be available, but it's safer to rely on the functions described in this section where possible. There is no guarantee that the classic API methods will work, or remain stable through updates.
 
 ### Variables
 
