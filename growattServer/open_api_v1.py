@@ -152,6 +152,41 @@ class OpenApiV1(GrowattApi):
 
         return self._process_response(response.json(), "getting plant energy overview")
 
+    def plant_power_overview(self, plant_id: int, day: str | date = None) -> dict:
+        """
+        Obtain power data of a certain power station.
+        Get the frequency once every 5 minutes
+        Args:
+            plant_id (int): Power Station ID
+            day (date): Date - defaults to today
+        Returns:
+            dict: A dictionary containing the plants power data.
+            .. code-block:: python
+                {
+                    'count': int,  # Total number of records
+                    'powers': list[dict],  # List of power data entries
+                    # Each entry in 'powers' is a dictionary with:
+                    #   'time': str,  # Time of the power reading
+                    #   'power': float | None  # Power value in Watts (can be None)
+                }
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+        API-Doc: https://www.showdoc.com.cn/262556420217021/1494062656174173
+        """
+        if day is None:
+            day = date.today()
+
+        response = self.session.get(
+            self._get_url('plant/power'),
+            params={
+                'plant_id': plant_id,
+                'date': day,
+            }
+        )
+
+        return self._process_response(response.json(), "getting plant power overview")
+
     def plant_energy_history(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
         """
         Retrieve plant energy data for multiple days/months/years.
