@@ -172,7 +172,7 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-            
+
         API-Doc: https://www.showdoc.com.cn/262556420217021/1494062656174173
         """
         if day is None:
