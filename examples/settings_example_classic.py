@@ -1,6 +1,7 @@
-import growattServer
 import getpass
 import pprint
+
+import growattServer
 
 """
 This script demonstrates how to interface with the configuration settings of a plant and its classic inverters.
@@ -17,22 +18,22 @@ user_pass = getpass.getpass("Enter password:")
 api = growattServer.GrowattApi(True, username)
 login_response = api.login(username, user_pass)
 
-plant_list = api.plant_list(login_response['user']['id'])
+plant_list = api.plant_list(login_response["user"]["id"])
 
 # Simple logic to just get the first inverter from the first plant
 # Expand this using a for-loop to perform for more systems
-plant = plant_list['data'][0]  # This is an array - we just take the first - would need a for-loop for more systems
-plant_id = plant['plantId']
-plant_name = plant['plantName']
+plant = plant_list["data"][0]  # This is an array - we just take the first - would need a for-loop for more systems
+plant_id = plant["plantId"]
+plant_name = plant["plantName"]
 plant_info = api.plant_info(plant_id)
 
 devices = api.device_list(plant_id)
 device = devices[0]  # This is an array - we just take the first - would need a for-loop for more systems
-device_sn = device['deviceSn']
-device_type = device['deviceType']
+device_sn = device["deviceSn"]
+device_type = device["deviceType"]
 
 # Turn inverter on
-print("Turning on inverter: %s" % (device_sn))
+print(f"Turning on inverter: {device_sn}")
 
 # Set up the default parameters
 default_parameters = {

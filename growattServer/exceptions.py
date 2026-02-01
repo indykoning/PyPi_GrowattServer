@@ -16,18 +16,18 @@ Common requests exceptions to handle:
 
 class GrowattError(Exception):
     """Base exception class for all Growatt API related errors."""
-    pass
+
 
 
 class GrowattParameterError(GrowattError):
     """Raised when invalid parameters are provided to API methods."""
-    pass
+
 
 
 class GrowattV1ApiError(GrowattError):
     """Raised when a Growatt V1 API request fails or returns an error."""
 
-    def __init__(self, message, error_code=None, error_msg=None):
+    def __init__(self, message, error_code=None, error_msg=None) -> None:
         super().__init__(message)
         self.error_code = error_code
         self.error_msg = error_msg
