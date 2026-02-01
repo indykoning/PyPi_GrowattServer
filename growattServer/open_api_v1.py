@@ -1,6 +1,8 @@
+"""OpenApi V1 extensions for Growatt API client."""
+
 import platform
 import warnings
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from enum import Enum
 
 from . import GrowattApi
@@ -25,6 +27,7 @@ class DeviceType(Enum):
 class OpenApiV1(GrowattApi):
     """
     Extended Growatt API client with V1 API support.
+
     This class extends the base GrowattApi class with methods for MIN and SPH devices using
     the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0.
     """
@@ -79,7 +82,7 @@ class OpenApiV1(GrowattApi):
         return response.get("data")
 
     def _get_url(self, page):
-        """Simple helper function to get the page URL for v1 API."""
+        """Return the page URL for the v1 API."""
         return self.api_url + page
 
     def plant_list(self):
@@ -157,10 +160,13 @@ class OpenApiV1(GrowattApi):
     def plant_power_overview(self, plant_id: int, day: str | date | None = None) -> dict:
         """
         Obtain power data of a certain power station.
+
         Get the frequency once every 5 minutes
+
         Args:
             plant_id (int): Power Station ID
             day (date): Date - defaults to today
+
         Returns:
             dict: A dictionary containing the plants power data.
             .. code-block:: python
@@ -180,7 +186,7 @@ class OpenApiV1(GrowattApi):
 
         """
         if day is None:
-            day = date.today()
+            day = datetime.now(UTC).date()
 
         response = self.session.get(
             self._get_url("plant/power"),
@@ -218,22 +224,25 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
+        max_day_interval = 7
+        max_year_interval = 20
+
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(UTC).date()
+            end_date = datetime.now(UTC).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
             end_date = start_date
 
         # Validate date ranges based on time_unit
-        if time_unit == "day" and (end_date - start_date).days > 7:
+        if time_unit == "day" and (end_date - start_date).days > max_day_interval:
             warnings.warn(
                 "Date interval must not exceed 7 days in 'day' mode.", RuntimeWarning, stacklevel=2)
         elif time_unit == "month" and (end_date.year - start_date.year > 1):
             warnings.warn(
                 "Start date must be within same or previous year in 'month' mode.", RuntimeWarning, stacklevel=2)
-        elif time_unit == "year" and (end_date.year - start_date.year > 20):
+        elif time_unit == "year" and (end_date.year - start_date.year > max_year_interval):
             warnings.warn(
                 "Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning, stacklevel=2)
 
@@ -376,8 +385,8 @@ class OpenApiV1(GrowattApi):
 
         """
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(timezone.utc).date()
+            end_date = datetime.now(timezone.utc).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -496,7 +505,8 @@ class OpenApiV1(GrowattApi):
 
         """
         # Initialize all parameters as empty strings
-        parameters = dict.fromkeys(range(1, 20), "")
+        max_min_params = 19
+        parameters = dict.fromkeys(range(1, max_min_params + 1), "")
 
         # Process parameter values based on type
         if parameter_values is not None:
@@ -506,13 +516,13 @@ class OpenApiV1(GrowattApi):
             elif isinstance(parameter_values, list):
                 # List of values go to sequential params
                 for i, value in enumerate(parameter_values, 1):
-                    if i <= 19:  # Only use up to 19 parameters
+                    if i <= max_min_params:  # Only use up to max_min_params parameters
                         parameters[i] = str(value)
             elif isinstance(parameter_values, dict):
                 # Dict maps param positions to values
-                for pos, value in parameter_values.items():
-                    pos = int(pos) if not isinstance(pos, int) else pos
-                    if 1 <= pos <= 19:  # Validate parameter positions
+                for pos_raw, value in parameter_values.items():
+                    pos = int(pos_raw) if not isinstance(pos_raw, int) else pos_raw
+                    if 1 <= pos <= max_min_params:  # Validate parameter positions
                         parameters[pos] = str(value)
 
         # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
@@ -521,8 +531,8 @@ class OpenApiV1(GrowattApi):
             "type": parameter_id
         }
 
-        # Add all 19 parameters to the request
-        for i in range(1, 20):
+        # Add all MIN parameters to the request
+        for i in range(1, max_min_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
         # Send the request
@@ -554,11 +564,17 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        if not 1 <= segment_id <= 9:
-            raise GrowattParameterError("segment_id must be between 1 and 9")
+        max_min_params = 19
+        max_min_segments = 9
+        max_batt_mode = 2
 
-        if not 0 <= batt_mode <= 2:
-            raise GrowattParameterError("batt_mode must be between 0 and 2")
+        if not 1 <= segment_id <= max_min_segments:
+            msg = f"segment_id must be between 1 and {max_min_segments}"
+            raise GrowattParameterError(msg)
+
+        if not 0 <= batt_mode <= max_batt_mode:
+            msg = f"batt_mode must be between 0 and {max_batt_mode}"
+            raise GrowattParameterError(msg)
 
         # Initialize ALL 19 parameters as empty strings, not just the ones we need
         all_params = {
@@ -575,7 +591,7 @@ class OpenApiV1(GrowattApi):
         all_params["param6"] = "1" if enabled else "0"
 
         # Add empty strings for all unused parameters
-        for i in range(7, 20):
+        for i in range(7, max_min_params + 1):
             all_params[f"param{i}"] = ""
 
         # Send the request
@@ -774,8 +790,8 @@ class OpenApiV1(GrowattApi):
 
         """
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(timezone.utc).date()
+            end_date = datetime.now(timezone.utc).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -868,8 +884,8 @@ class OpenApiV1(GrowattApi):
 
         """
         # Initialize all parameters as empty strings (API uses param1-param18)
-        maxParams = 18
-        parameters = dict.fromkeys(range(1, maxParams + 1), "")
+        max_sph_params = 18
+        parameters = dict.fromkeys(range(1, max_sph_params + 1), "")
 
         # Process parameter values based on type
         if parameter_values is not None:
@@ -879,13 +895,13 @@ class OpenApiV1(GrowattApi):
             elif isinstance(parameter_values, list):
                 # List of values go to sequential params
                 for i, value in enumerate(parameter_values, 1):
-                    if i <= maxParams:  # Only use up to 18 parameters
+                    if i <= max_sph_params:  # Only use up to max_sph_params parameters
                         parameters[i] = str(value)
             elif isinstance(parameter_values, dict):
                 # Dict maps param positions to values
-                for pos, value in parameter_values.items():
-                    pos = int(pos) if not isinstance(pos, int) else pos
-                    if 1 <= pos <= 18:  # Validate parameter positions
+                for pos_raw, value in parameter_values.items():
+                    pos = int(pos_raw) if not isinstance(pos_raw, int) else pos_raw
+                    if 1 <= pos <= max_sph_params:  # Validate parameter positions
                         parameters[pos] = str(value)
 
         # Create a data dictionary with ALL parameters explicitly included
@@ -894,8 +910,8 @@ class OpenApiV1(GrowattApi):
             "type": parameter_id
         }
 
-        # Add all 18 parameters to the request
-        for i in range(1, 19):
+        # Add all SPH parameters to the request
+        for i in range(1, max_sph_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760

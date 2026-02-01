@@ -18,6 +18,8 @@ ignore = [
     "TRY003", # Allow exception messages to be used directly
     "ERA001", # Commented out code is allowed for examples
     "T201", # Prints are allowed in examples
+    "PLR0913",
+    "FBT002",
 ]
 
 [lint.flake8-pytest-style]

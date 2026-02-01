@@ -27,7 +27,16 @@ class GrowattParameterError(GrowattError):
 class GrowattV1ApiError(GrowattError):
     """Raised when a Growatt V1 API request fails or returns an error."""
 
-    def __init__(self, message, error_code=None, error_msg=None) -> None:
+    def __init__(self, message: str, error_code: int | None = None, error_msg: str | None = None) -> None:
+        """
+        Initialize the GrowattV1ApiError.
+
+        Args:
+            message: Human readable error message.
+            error_code: Optional numeric error code returned by the API.
+            error_msg: Optional detailed error message from the API.
+
+        """
         super().__init__(message)
         self.error_code = error_code
         self.error_msg = error_msg
