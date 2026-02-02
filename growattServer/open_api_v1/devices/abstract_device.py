@@ -12,7 +12,7 @@ class ReadParamResponse(TypedDict):
     error_code: str
     error_msg: str
 
-class AbstactDevice:
+class AbstractDevice:
     """Abstract device type. Must not be used directly."""
 
     def __init__(self, api: OpenApiV1, device_sn: str) -> None:

@@ -1,18 +1,22 @@
-"""Min device file."""
+"""Min/TLX device file."""
 from datetime import datetime, timedelta
+from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
-from typing import Any
-from .abstract_device import AbstactDevice
+
+from .abstract_device import AbstractDevice
 
 
-class Min(AbstactDevice):
-    """Min device type."""
+class Min(AbstractDevice):
+    """Min/TLX device type."""
+
+    DEVICE_TYPE_ID = 7
 
     def detail(self) -> dict:
         """
         Get detailed data for a MIN inverter.
-        https://www.showdoc.com.cn/262556420217021/6129816412127075.
+
+        See the API doc: https://www.showdoc.com.cn/262556420217021/6129816412127075.
 
         Args:
             device_sn (str): The serial number of the MIN inverter.

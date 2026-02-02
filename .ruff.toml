@@ -23,6 +23,7 @@ ignore = [
     "T201", # Prints are allowed in examples
     "PLR0913",
     "FBT002",
+    "N999",
 ]
 
 [lint.flake8-pytest-style]
