@@ -9,7 +9,7 @@ long_description = Path("README.md").read_text(encoding="utf8")
 
 setuptools.setup(
     name="growattServer",
-    version="1.8.0",
+    version="1.9.0",
     author="IndyKoning",
     author_email="indykoningnl@gmail.com",
     description="A package to talk to growatt server",
