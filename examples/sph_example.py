@@ -6,7 +6,6 @@ such as hybrid inverter systems.
 You can obtain an API token from the Growatt API documentation or developer portal.
 """
 
-import datetime
 import json
 import os
 
@@ -26,23 +25,23 @@ try:
 
     # Plant info
     plants = api.plant_list()
-    print(f"Plants: Found {plants['count']} plants")  # noqa: T201
+    print(f"Plants: Found {plants['count']} plants")
     plant_id = plants["plants"][0]["plant_id"]
 
     # Devices
     devices = api.device_list(plant_id)
 
     for device in devices["devices"]:
-        print(device)  # noqa: T201
+        print(device)
         if device["type"] == growattServer.DeviceType.SPH.value:
             inverter_sn = device["device_sn"]
-            print(f"Processing SPH device: {inverter_sn}")  # noqa: T201
+            print(f"Processing SPH device: {inverter_sn}")
 
             # Get energy data
             energy_data = api.sph_energy(
                 device_sn=inverter_sn,
             )
-            print("Saving energy data to energy_data.json")  # noqa: T201
+            print("Saving energy data to energy_data.json")
             with open("energy_data.json", "w") as f:
                 json.dump(energy_data, f, indent=4, sort_keys=True)
 
@@ -50,7 +49,7 @@ try:
             energy_history_data = api.sph_energy_history(
                 device_sn=inverter_sn,
             )
-            print("Saving energy history data to energy_history.json")  # noqa: T201
+            print("Saving energy history data to energy_history.json")
             with open("energy_history.json", "w") as f:
                 json.dump(
                     energy_history_data.get("datas", []),
@@ -63,36 +62,36 @@ try:
             inverter_data = api.sph_detail(
                 device_sn=inverter_sn,
             )
-            print("Saving inverter data to inverter_data.json")  # noqa: T201
+            print("Saving inverter data to inverter_data.json")
             with open("inverter_data.json", "w") as f:
                 json.dump(inverter_data, f, indent=4, sort_keys=True)
 
             # Read some settings directly from inverter_data (from sph_detail)
             # See docs/openapiv1/sph_settings.md for all available fields
-            print("Device Settings:")  # noqa: T201
-            print(f"  Device status: {inverter_data.get('status', 'N/A')}")  # noqa: T201
-            print(f"  Battery type: {inverter_data.get('batteryType', 'N/A')}")  # noqa: T201
-            print(f"  EPS enabled: {inverter_data.get('epsFunEn', 'N/A')}")  # noqa: T201
-            print(f"  Export limit: {inverter_data.get('exportLimitPowerRate', 'N/A')}%")  # noqa: T201
+            print("Device Settings:")
+            print(f"  Device status: {inverter_data.get('status', 'N/A')}")
+            print(f"  Battery type: {inverter_data.get('batteryType', 'N/A')}")
+            print(f"  EPS enabled: {inverter_data.get('epsFunEn', 'N/A')}")
+            print(f"  Export limit: {inverter_data.get('exportLimitPowerRate', 'N/A')}%")
 
             # Read AC charge time periods using helper function and inverter_data to avoid rate limiting
             charge_config = api.sph_read_ac_charge_times(
                 settings_data=inverter_data,
             )
-            print("AC Charge Configuration:")  # noqa: T201
-            print(f"  Charge Power: {charge_config['charge_power']}%")  # noqa: T201
-            print(f"  Stop SOC: {charge_config['charge_stop_soc']}%")  # noqa: T201
-            print(f"  Mains Enabled: {charge_config['mains_enabled']}")  # noqa: T201
-            print(f"  Periods: {json.dumps(charge_config['periods'], indent=4)}")  # noqa: T201
+            print("AC Charge Configuration:")
+            print(f"  Charge Power: {charge_config['charge_power']}%")
+            print(f"  Stop SOC: {charge_config['charge_stop_soc']}%")
+            print(f"  Mains Enabled: {charge_config['mains_enabled']}")
+            print(f"  Periods: {json.dumps(charge_config['periods'], indent=4)}")
 
             # Read AC discharge time periods using helper function and inverter_data to avoid rate limiting
             discharge_config = api.sph_read_ac_discharge_times(
                 settings_data=inverter_data,
             )
-            print("AC Discharge Configuration:")  # noqa: T201
-            print(f"  Discharge Power: {discharge_config['discharge_power']}%")  # noqa: T201
-            print(f"  Stop SOC: {discharge_config['discharge_stop_soc']}%")  # noqa: T201
-            print(f"  Periods: {json.dumps(discharge_config['periods'], indent=4)}")  # noqa: T201
+            print("AC Discharge Configuration:")
+            print(f"  Discharge Power: {discharge_config['discharge_power']}%")
+            print(f"  Stop SOC: {discharge_config['discharge_stop_soc']}%")
+            print(f"  Periods: {json.dumps(discharge_config['periods'], indent=4)}")
 
             # Write examples - Uncomment to test
 
@@ -142,10 +141,10 @@ try:
             # api.sph_write_parameter(inverter_sn, "backflow_setting", ["1", "50"])  # On, 50%
 
 except growattServer.GrowattV1ApiError as e:
-    print(f"API Error: {e} (Code: {e.error_code}, Message: {e.error_msg})")  # noqa: T201
+    print(f"API Error: {e} (Code: {e.error_code}, Message: {e.error_msg})")
 except growattServer.GrowattParameterError as e:
-    print(f"Parameter Error: {e}")  # noqa: T201
+    print(f"Parameter Error: {e}")
 except requests.exceptions.RequestException as e:
-    print(f"Network Error: {e}")  # noqa: T201
+    print(f"Network Error: {e}")
 except Exception as e:  # noqa: BLE001
-    print(f"Unexpected error: {e}")  # noqa: T201
+    print(f"Unexpected error: {e}")

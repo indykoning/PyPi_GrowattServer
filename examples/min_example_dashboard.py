@@ -1,6 +1,8 @@
-import growattServer
 import json
+
 import requests
+
+import growattServer
 
 """
 Example script fetching key power and today+total energy metrics from a Growatt MID-30KTL3-XH (TLX) + APX battery hybrid system
@@ -19,20 +21,20 @@ try:
 
     # Get plant list using V1 API
     plants = api.plant_list()
-    plant_id = plants['plants'][0]['plant_id']
+    plant_id = plants["plants"][0]["plant_id"]
 
     # Get devices in plant
     devices = api.device_list(plant_id)
 
     # Iterate over all devices
     energy_data = None
-    for device in devices['devices']:
-        if device['type'] == 7:  # (MIN/TLX)
-            inverter_sn = device['device_sn']
+    for device in devices["devices"]:
+        if device["type"] == 7:  # (MIN/TLX)
+            inverter_sn = device["device_sn"]
 
             # Get energy data
             energy_data = api.min_energy(device_sn=inverter_sn)
-            with open('energy_data.json', 'w') as f:
+            with open("energy_data.json", "w") as f:
                 json.dump(energy_data, f, indent=4, sort_keys=True)
 
     # energy data does not contain epvToday for some reason, so we need to calculate it
@@ -54,18 +56,18 @@ try:
 
     # Output the dashboard
     print("\nGeneration overview             Today/Total(kWh)")
-    print(f'Solar production          {solar_production:>22}')
-    print(f' Solar production, PV1    {solar_production_pv1:>22}')
-    print(f' Solar production, PV2    {solar_production_pv2:>22}')
-    print(f'Energy Output             {energy_output:>22}')
-    print(f'System production         {system_production:>22}')
-    print(f'Self consumption          {self_consumption:>22}')
-    print(f'Load consumption          {load_consumption:>22}')
-    print(f'Battery Charged           {battery_charged:>22}')
-    print(f' Charged from grid        {battery_grid_charge:>22}')
-    print(f'Battery Discharged        {battery_discharged:>22}')
-    print(f'Import from grid          {imported_from_grid:>22}')
-    print(f'Export to grid            {exported_to_grid:>22}')
+    print(f"Solar production          {solar_production:>22}")
+    print(f" Solar production, PV1    {solar_production_pv1:>22}")
+    print(f" Solar production, PV2    {solar_production_pv2:>22}")
+    print(f"Energy Output             {energy_output:>22}")
+    print(f"System production         {system_production:>22}")
+    print(f"Self consumption          {self_consumption:>22}")
+    print(f"Load consumption          {load_consumption:>22}")
+    print(f"Battery Charged           {battery_charged:>22}")
+    print(f" Charged from grid        {battery_grid_charge:>22}")
+    print(f"Battery Discharged        {battery_discharged:>22}")
+    print(f"Import from grid          {imported_from_grid:>22}")
+    print(f"Export to grid            {exported_to_grid:>22}")
 
     print("\nPower overview                          (Watts)")
     print(f'AC Power                 {float(energy_data["pac"]):>22.1f}')

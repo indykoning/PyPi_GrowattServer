@@ -1,8 +1,11 @@
-import setuptools
-import os
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+"""Setup metadata for the growattServer package."""
+
+from pathlib import Path
+
+import setuptools
+
+long_description = Path("README.md").read_text(encoding="utf8")
 
 setuptools.setup(
     name="growattServer",

@@ -1,11 +1,13 @@
 
-import growattServer
 import getpass
+import sys
 
-# Example script fetching key power and today+total energy metrics from a Growatt MID-30KTL3-XH (TLX) + APX battery hybrid system 
+import growattServer
+
+# Example script fetching key power and today+total energy metrics from a Growatt MID-30KTL3-XH (TLX) + APX battery hybrid system
 #
-# There is a lot of overlap in what the various Growatt APIs returns. 
-# tlx_detail() contains the bulk of the needed data, but some info is missing and is fetched from 
+# There is a lot of overlap in what the various Growatt APIs returns.
+# tlx_detail() contains the bulk of the needed data, but some info is missing and is fetched from
 # tlx_system_status(), tlx_energy_overview() and tlx_battery_info_detailed() instead
 
 
@@ -16,16 +18,16 @@ username=input("Enter username:")
 user_pass=getpass.getpass("Enter password:")
 
 # Login, emulating the Growatt app
-user_agent = 'ShinePhone/8.1.17 (iPhone; iOS 15.6.1; Scale/2.00)'
+user_agent = "ShinePhone/8.1.17 (iPhone; iOS 15.6.1; Scale/2.00)"
 api = growattServer.GrowattApi(agent_identifier=user_agent)
 login_response = api.login(username, user_pass)
-if not login_response['success']:
+if not login_response["success"]:
     print(f"Failed to log in, msg: {login_response['msg']}, error: {login_response['error']}")
-    exit()
-    
+    sys.exit()
+
 # Get plant(s)
 plant_list = api.plant_list_two()
-plant_id = plant_list[0]['id']
+plant_id = plant_list[0]["id"]
 
 # Get devices in plant
 devices = api.device_list(plant_id)
@@ -33,11 +35,11 @@ devices = api.device_list(plant_id)
 # Iterate over all devices. Here we are interested in data from 'tlx' inverters and 'bat' devices
 batteries_info = []
 for device in devices:
-    if device['deviceType'] == 'tlx':
-        inverter_sn = device['deviceSn']
-        
+    if device["deviceType"] == "tlx":
+        inverter_sn = device["deviceSn"]
+
         # Inverter detail, contains the bulk of energy and power values
-        inverter_detail = api.tlx_detail(inverter_sn).get('data')
+        inverter_detail = api.tlx_detail(inverter_sn).get("data")
 
         # Energy overview is used to retrieve "epvToday" which is not present in tlx_detail() for some reason
         energy_overview = api.tlx_energy_overview(plant_id, inverter_sn)
@@ -45,34 +47,34 @@ for device in devices:
         # System status, contains power values, not available in inverter_detail()
         system_status = api.tlx_system_status(plant_id, inverter_sn)
 
-    if device['deviceType'] == 'bat':
-        batt_info = api.tlx_battery_info(device['deviceSn'])
-        if batt_info.get('lost'):
+    if device["deviceType"] == "bat":
+        batt_info = api.tlx_battery_info(device["deviceSn"])
+        if batt_info.get("lost"):
             # Disconnected batteries are listed with 'old' power/energy/SOC data
-            # Therefore we check it it's 'lost' and skip it in that case. 
+            # Therefore we check it it's 'lost' and skip it in that case.
             print("'Lost' battery found, skipping")
             continue
 
         # Battery info
-        batt_info = api.tlx_battery_info_detailed(plant_id, device['deviceSn']).get('data')
+        batt_info = api.tlx_battery_info_detailed(plant_id, device["deviceSn"]).get("data")
 
-        if float(batt_info['chargeOrDisPower']) > 0:
-            bdcChargePower =  float(batt_info['chargeOrDisPower'])
+        if float(batt_info["chargeOrDisPower"]) > 0:
+            bdcChargePower =  float(batt_info["chargeOrDisPower"])
             bdcDischargePower = 0
         else:
             bdcChargePower = 0
-            bdcDischargePower =  float(batt_info['chargeOrDisPower'])    
-            bdcDischargePower = -bdcDischargePower       
-                 
-        battery_data = {      
-            'serialNum': device['deviceSn'],
-            'bdcChargePower': bdcChargePower,
-            'bdcDischargePower': bdcDischargePower,
-            'dischargeTotal': batt_info['dischargeTotal'],
-            'soc': batt_info['soc']
+            bdcDischargePower =  float(batt_info["chargeOrDisPower"])
+            bdcDischargePower = -bdcDischargePower
+
+        battery_data = {
+            "serialNum": device["deviceSn"],
+            "bdcChargePower": bdcChargePower,
+            "bdcDischargePower": bdcDischargePower,
+            "dischargeTotal": batt_info["dischargeTotal"],
+            "soc": batt_info["soc"]
         }
         batteries_info.append(battery_data)
-        
+
 
 solar_production     = f'{float(energy_overview["epvToday"]):.1f}/{float(energy_overview["epvTotal"]):.1f}'
 solar_production_pv1 = f'{float(inverter_detail["epv1Today"]):.1f}/{float(inverter_detail["epv1Total"]):.1f}'
@@ -89,18 +91,18 @@ self_consumption     = f'{float(inverter_detail["eselfToday"]):.1f}/{float(inver
 battery_charged      = f'{float(inverter_detail["echargeToday"]):.1f}/{float(inverter_detail["echargeTotal"]):.1f}'
 
 print("\nGeneration overview             Today/Total(kWh)")
-print(f'Solar production          {solar_production:>22}')
-print(f' Solar production, PV1    {solar_production_pv1:>22}')
-print(f' Solar production, PV2    {solar_production_pv2:>22}')
-print(f'Energy Output             {energy_output:>22}')
-print(f'System production         {system_production:>22}')
-print(f'Self consumption          {self_consumption:>22}')
-print(f'Load consumption          {load_consumption:>22}')
-print(f'Battery Charged           {battery_charged:>22}')
-print(f' Charged from grid        {battery_grid_charge:>22}')
-print(f'Battery Discharged        {battery_discharged:>22}')
-print(f'Import from grid          {imported_from_grid:>22}')
-print(f'Export to grid            {exported_to_grid:>22}')
+print(f"Solar production          {solar_production:>22}")
+print(f" Solar production, PV1    {solar_production_pv1:>22}")
+print(f" Solar production, PV2    {solar_production_pv2:>22}")
+print(f"Energy Output             {energy_output:>22}")
+print(f"System production         {system_production:>22}")
+print(f"Self consumption          {self_consumption:>22}")
+print(f"Load consumption          {load_consumption:>22}")
+print(f"Battery Charged           {battery_charged:>22}")
+print(f" Charged from grid        {battery_grid_charge:>22}")
+print(f"Battery Discharged        {battery_discharged:>22}")
+print(f"Import from grid          {imported_from_grid:>22}")
+print(f"Export to grid            {exported_to_grid:>22}")
 
 print("\nPower overview                          (Watts)")
 print(f'AC Power                 {float(inverter_detail["pac"]):>22.1f}')

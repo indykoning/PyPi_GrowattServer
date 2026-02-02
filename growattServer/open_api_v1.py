@@ -1,8 +1,11 @@
-import warnings
-from datetime import date, timedelta
-from enum import Enum
-from . import GrowattApi
+"""OpenApi V1 extensions for Growatt API client."""
+
 import platform
+import warnings
+from datetime import UTC, date, datetime, timedelta
+from enum import Enum
+
+from . import GrowattApi
 from .exceptions import GrowattParameterError, GrowattV1ApiError
 
 
@@ -24,25 +27,26 @@ class DeviceType(Enum):
 class OpenApiV1(GrowattApi):
     """
     Extended Growatt API client with V1 API support.
+
     This class extends the base GrowattApi class with methods for MIN and SPH devices using
-    the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0
+    the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0.
     """
 
-    def _create_user_agent(self):
+    def _create_user_agent(self) -> str:
         python_version = platform.python_version()
         system = platform.system()
         release = platform.release()
         machine = platform.machine()
 
-        user_agent = f"Python/{python_version} ({system} {release}; {machine})"
-        return user_agent
+        return f"Python/{python_version} ({system} {release}; {machine})"
 
-    def __init__(self, token):
+    def __init__(self, token) -> None:
         """
         Initialize the Growatt API client with V1 API support.
 
         Args:
             token (str): API token for authentication (required for V1 API access).
+
         """
         # Initialize the base class
         super().__init__(agent_identifier=self._create_user_agent())
@@ -66,19 +70,19 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response
+
         """
-        if response.get('error_code', 1) != 0:
+        if response.get("error_code", 1) != 0:
+            msg = f"Error during {operation_name}"
             raise GrowattV1ApiError(
-                f"Error during {operation_name}",
-                error_code=response.get('error_code'),
-                error_msg=response.get('error_msg', 'Unknown error')
+                msg,
+                error_code=response.get("error_code"),
+                error_msg=response.get("error_msg", "Unknown error")
             )
-        return response.get('data')
+        return response.get("data")
 
     def _get_url(self, page):
-        """
-        Simple helper function to get the page URL for v1 API.
-        """
+        """Return the page URL for the v1 API."""
         return self.api_url + page
 
     def plant_list(self):
@@ -91,18 +95,19 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
         # Prepare request data
         request_data = {
-            'page': '',
-            'perpage': '',
-            'search_type': '',
-            'search_keyword': ''
+            "page": "",
+            "perpage": "",
+            "search_type": "",
+            "search_keyword": ""
         }
 
         # Make the request
         response = self.session.get(
-            url=self._get_url('plant/list'),
+            url=self._get_url("plant/list"),
             data=request_data
         )
 
@@ -121,11 +126,11 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         response = self.session.get(
-            self._get_url('plant/details'),
-            params={'plant_id': plant_id}
+            self._get_url("plant/details"),
+            params={"plant_id": plant_id}
         )
 
         return self._process_response(response.json(), "getting plant details")
@@ -143,22 +148,25 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         response = self.session.get(
-            self._get_url('plant/data'),
-            params={'plant_id': plant_id}
+            self._get_url("plant/data"),
+            params={"plant_id": plant_id}
         )
 
         return self._process_response(response.json(), "getting plant energy overview")
 
-    def plant_power_overview(self, plant_id: int, day: str | date = None) -> dict:
+    def plant_power_overview(self, plant_id: int, day: str | date | None = None) -> dict:
         """
         Obtain power data of a certain power station.
+
         Get the frequency once every 5 minutes
+
         Args:
             plant_id (int): Power Station ID
             day (date): Date - defaults to today
+
         Returns:
             dict: A dictionary containing the plants power data.
             .. code-block:: python
@@ -168,21 +176,23 @@ class OpenApiV1(GrowattApi):
                     # Each entry in 'powers' is a dictionary with:
                     #   'time': str,  # Time of the power reading
                     #   'power': float | None  # Power value in Watts (can be None)
-                }
+                }.
+
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         API-Doc: https://www.showdoc.com.cn/262556420217021/1494062656174173
+
         """
         if day is None:
-            day = date.today()
+            day = datetime.now(UTC).date()
 
         response = self.session.get(
-            self._get_url('plant/power'),
+            self._get_url("plant/power"),
             params={
-                'plant_id': plant_id,
-                'date': day,
+                "plant_id": plant_id,
+                "date": day,
             }
         )
 
@@ -212,36 +222,39 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If date parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
+        max_day_interval = 7
+        max_year_interval = 20
 
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(UTC).date()
+            end_date = datetime.now(UTC).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
             end_date = start_date
 
         # Validate date ranges based on time_unit
-        if time_unit == "day" and (end_date - start_date).days > 7:
+        if time_unit == "day" and (end_date - start_date).days > max_day_interval:
             warnings.warn(
-                "Date interval must not exceed 7 days in 'day' mode.", RuntimeWarning)
+                "Date interval must not exceed 7 days in 'day' mode.", RuntimeWarning, stacklevel=2)
         elif time_unit == "month" and (end_date.year - start_date.year > 1):
             warnings.warn(
-                "Start date must be within same or previous year in 'month' mode.", RuntimeWarning)
-        elif time_unit == "year" and (end_date.year - start_date.year > 20):
+                "Start date must be within same or previous year in 'month' mode.", RuntimeWarning, stacklevel=2)
+        elif time_unit == "year" and (end_date.year - start_date.year > max_year_interval):
             warnings.warn(
-                "Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning)
+                "Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning, stacklevel=2)
 
         response = self.session.get(
-            self._get_url('plant/energy'),
+            self._get_url("plant/energy"),
             params={
-                'plant_id': plant_id,
-                'start_date': start_date.strftime("%Y-%m-%d"),
-                'end_date': end_date.strftime("%Y-%m-%d"),
-                'time_unit': time_unit,
-                'page': page,
-                'perpage': perpage
+                "plant_id": plant_id,
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d"),
+                "time_unit": time_unit,
+                "page": page,
+                "perpage": perpage
             }
         )
 
@@ -290,6 +303,7 @@ class OpenApiV1(GrowattApi):
                 "error_code": 0,
                 "error_msg": ""
             }
+
         """
         response = self.session.get(
             url=self._get_url("device/list"),
@@ -314,12 +328,12 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         response = self.session.get(
-            self._get_url('device/tlx/tlx_data_info'),
+            self._get_url("device/tlx/tlx_data_info"),
             params={
-                'device_sn': device_sn
+                "device_sn": device_sn
             }
         )
 
@@ -338,8 +352,8 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         response = self.session.post(
             url=self._get_url("device/tlx/tlx_last_data"),
             data={
@@ -368,11 +382,11 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(timezone.utc).date()
+            end_date = datetime.now(timezone.utc).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -383,7 +397,7 @@ class OpenApiV1(GrowattApi):
             raise GrowattParameterError("date interval must not exceed 7 days")
 
         response = self.session.post(
-            url=self._get_url('device/tlx/tlx_data'),
+            url=self._get_url("device/tlx/tlx_data"),
             data={
                 "tlx_sn": device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -409,12 +423,12 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         response = self.session.get(
-            self._get_url('device/tlx/tlx_set_info'),
+            self._get_url("device/tlx/tlx_set_info"),
             params={
-                'device_sn': device_sn
+                "device_sn": device_sn
             }
         )
 
@@ -437,16 +451,16 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         if parameter_id is None and start_address is None:
             raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address")
-        elif parameter_id is not None and start_address is not None:
+        if parameter_id is not None and start_address is not None:
             raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address - not both."
             )
-        elif parameter_id is not None:
+        if parameter_id is not None:
             # named parameter
             start_address = 0
             end_address = 0
@@ -459,7 +473,7 @@ class OpenApiV1(GrowattApi):
                 end_address = start_address
 
         response = self.session.post(
-            self._get_url('readMinParam'),
+            self._get_url("readMinParam"),
             data={
                 "device_sn": device_sn,
                 "paramId": parameter_id,
@@ -488,10 +502,11 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         # Initialize all parameters as empty strings
-        parameters = {i: "" for i in range(1, 20)}
+        max_min_params = 19
+        parameters = dict.fromkeys(range(1, max_min_params + 1), "")
 
         # Process parameter values based on type
         if parameter_values is not None:
@@ -501,13 +516,13 @@ class OpenApiV1(GrowattApi):
             elif isinstance(parameter_values, list):
                 # List of values go to sequential params
                 for i, value in enumerate(parameter_values, 1):
-                    if i <= 19:  # Only use up to 19 parameters
+                    if i <= max_min_params:  # Only use up to max_min_params parameters
                         parameters[i] = str(value)
             elif isinstance(parameter_values, dict):
                 # Dict maps param positions to values
-                for pos, value in parameter_values.items():
-                    pos = int(pos) if not isinstance(pos, int) else pos
-                    if 1 <= pos <= 19:  # Validate parameter positions
+                for pos_raw, value in parameter_values.items():
+                    pos = int(pos_raw) if not isinstance(pos_raw, int) else pos_raw
+                    if 1 <= pos <= max_min_params:  # Validate parameter positions
                         parameters[pos] = str(value)
 
         # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
@@ -516,13 +531,13 @@ class OpenApiV1(GrowattApi):
             "type": parameter_id
         }
 
-        # Add all 19 parameters to the request
-        for i in range(1, 20):
+        # Add all MIN parameters to the request
+        for i in range(1, max_min_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
         # Send the request
         response = self.session.post(
-            self._get_url('tlxSet'),
+            self._get_url("tlxSet"),
             data=request_data
         )
 
@@ -547,13 +562,19 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
+        max_min_params = 19
+        max_min_segments = 9
+        max_batt_mode = 2
 
-        if not 1 <= segment_id <= 9:
-            raise GrowattParameterError("segment_id must be between 1 and 9")
+        if not 1 <= segment_id <= max_min_segments:
+            msg = f"segment_id must be between 1 and {max_min_segments}"
+            raise GrowattParameterError(msg)
 
-        if not 0 <= batt_mode <= 2:
-            raise GrowattParameterError("batt_mode must be between 0 and 2")
+        if not 0 <= batt_mode <= max_batt_mode:
+            msg = f"batt_mode must be between 0 and {max_batt_mode}"
+            raise GrowattParameterError(msg)
 
         # Initialize ALL 19 parameters as empty strings, not just the ones we need
         all_params = {
@@ -570,12 +591,12 @@ class OpenApiV1(GrowattApi):
         all_params["param6"] = "1" if enabled else "0"
 
         # Add empty strings for all unused parameters
-        for i in range(7, 20):
+        for i in range(7, max_min_params + 1):
             all_params[f"param{i}"] = ""
 
         # Send the request
         response = self.session.post(
-            self._get_url('tlxSet'),
+            self._get_url("tlxSet"),
             data=all_params
         )
 
@@ -617,8 +638,8 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API request fails
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         # Process the settings data
         if settings_data is None:
             # Fetch settings if not provided
@@ -636,13 +657,13 @@ class OpenApiV1(GrowattApi):
         # Process each time segment
         for i in range(1, 10):  # Segments 1-9
             # Get raw time values
-            start_time_raw = settings_data.get(f'forcedTimeStart{i}', "0:0")
-            end_time_raw = settings_data.get(f'forcedTimeStop{i}', "0:0")
+            start_time_raw = settings_data.get(f"forcedTimeStart{i}", "0:0")
+            end_time_raw = settings_data.get(f"forcedTimeStop{i}", "0:0")
 
             # Handle 'null' string values
-            if start_time_raw == 'null' or not start_time_raw:
+            if start_time_raw == "null" or not start_time_raw:
                 start_time_raw = "0:0"
-            if end_time_raw == 'null' or not end_time_raw:
+            if end_time_raw == "null" or not end_time_raw:
                 end_time_raw = "0:0"
 
             # Format times with leading zeros (HH:MM)
@@ -663,8 +684,8 @@ class OpenApiV1(GrowattApi):
                 end_time = "00:00"
 
             # Get the mode value safely
-            mode_raw = settings_data.get(f'time{i}Mode')
-            if mode_raw == 'null' or mode_raw is None:
+            mode_raw = settings_data.get(f"time{i}Mode")
+            if mode_raw == "null" or mode_raw is None:
                 batt_mode = None
             else:
                 try:
@@ -673,8 +694,8 @@ class OpenApiV1(GrowattApi):
                     batt_mode = None
 
             # Get the enabled status safely
-            enabled_raw = settings_data.get(f'forcedStopSwitch{i}', 0)
-            if enabled_raw == 'null' or enabled_raw is None:
+            enabled_raw = settings_data.get(f"forcedStopSwitch{i}", 0)
+            if enabled_raw == "null" or enabled_raw is None:
                 enabled = False
             else:
                 try:
@@ -683,12 +704,12 @@ class OpenApiV1(GrowattApi):
                     enabled = False
 
             segment = {
-                'segment_id': i,
-                'batt_mode': batt_mode,
-                'mode_name': mode_names.get(batt_mode, "Unknown"),
-                'start_time': start_time,
-                'end_time': end_time,
-                'enabled': enabled
+                "segment_id": i,
+                "batt_mode": batt_mode,
+                "mode_name": mode_names.get(batt_mode, "Unknown"),
+                "start_time": start_time,
+                "end_time": end_time,
+                "enabled": enabled
             }
 
             segments.append(segment)
@@ -710,13 +731,13 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         # API: https://www.showdoc.com.cn/262556420217021/6129763571291058
         response = self.session.get(
-            self._get_url('device/mix/mix_data_info'),
+            self._get_url("device/mix/mix_data_info"),
             params={
-                'device_sn': device_sn
+                "device_sn": device_sn
             }
         )
 
@@ -735,8 +756,8 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         # API: https://www.showdoc.com.cn/262556420217021/6129764475556048
         response = self.session.post(
             url=self._get_url("device/mix/mix_last_data"),
@@ -766,11 +787,11 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         if start_date is None and end_date is None:
-            start_date = date.today()
-            end_date = date.today()
+            start_date = datetime.now(timezone.utc).date()
+            end_date = datetime.now(timezone.utc).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -782,7 +803,7 @@ class OpenApiV1(GrowattApi):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129765461123058
         response = self.session.post(
-            url=self._get_url('device/mix/mix_data'),
+            url=self._get_url("device/mix/mix_data"),
             data={
                 "mix_sn": device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -812,16 +833,16 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         if parameter_id is None and start_address is None:
             raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address")
-        elif parameter_id is not None and start_address is not None:
+        if parameter_id is not None and start_address is not None:
             raise GrowattParameterError(
                 "specify either parameter_id or start_address/end_address - not both."
             )
-        elif parameter_id is not None:
+        if parameter_id is not None:
             # named parameter
             start_address = 0
             end_address = 0
@@ -831,7 +852,7 @@ class OpenApiV1(GrowattApi):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129766954561259
         response = self.session.post(
-            self._get_url('readMixParam'),
+            self._get_url("readMixParam"),
             data={
                 "device_sn": device_sn,
                 "paramId": parameter_id,
@@ -860,10 +881,11 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
-        """
 
+        """
         # Initialize all parameters as empty strings (API uses param1-param18)
-        parameters = {i: "" for i in range(1, 19)}
+        max_sph_params = 18
+        parameters = dict.fromkeys(range(1, max_sph_params + 1), "")
 
         # Process parameter values based on type
         if parameter_values is not None:
@@ -873,13 +895,13 @@ class OpenApiV1(GrowattApi):
             elif isinstance(parameter_values, list):
                 # List of values go to sequential params
                 for i, value in enumerate(parameter_values, 1):
-                    if i <= 18:  # Only use up to 18 parameters
+                    if i <= max_sph_params:  # Only use up to max_sph_params parameters
                         parameters[i] = str(value)
             elif isinstance(parameter_values, dict):
                 # Dict maps param positions to values
-                for pos, value in parameter_values.items():
-                    pos = int(pos) if not isinstance(pos, int) else pos
-                    if 1 <= pos <= 18:  # Validate parameter positions
+                for pos_raw, value in parameter_values.items():
+                    pos = int(pos_raw) if not isinstance(pos_raw, int) else pos_raw
+                    if 1 <= pos <= max_sph_params:  # Validate parameter positions
                         parameters[pos] = str(value)
 
         # Create a data dictionary with ALL parameters explicitly included
@@ -888,13 +910,13 @@ class OpenApiV1(GrowattApi):
             "type": parameter_id
         }
 
-        # Add all 18 parameters to the request
-        for i in range(1, 19):
+        # Add all SPH parameters to the request
+        for i in range(1, max_sph_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
-            self._get_url('mixSet'),
+            self._get_url("mixSet"),
             data=request_data
         )
 
@@ -936,14 +958,15 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
-        if not 0 <= charge_power <= 100:
+        if not 0 <= charge_power <= 100: # noqa: PLR2004
             raise GrowattParameterError("charge_power must be between 0 and 100")
 
-        if not 0 <= charge_stop_soc <= 100:
+        if not 0 <= charge_stop_soc <= 100: # noqa: PLR2004
             raise GrowattParameterError("charge_stop_soc must be between 0 and 100")
 
-        if len(periods) != 3:
+        if len(periods) != 3: # noqa: PLR2004
             raise GrowattParameterError("periods must contain exactly 3 period definitions")
 
         # Build request data
@@ -966,7 +989,7 @@ class OpenApiV1(GrowattApi):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
-            self._get_url('mixSet'),
+            self._get_url("mixSet"),
             data=request_data
         )
 
@@ -1006,14 +1029,15 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
-        if not 0 <= discharge_power <= 100:
+        if not 0 <= discharge_power <= 100: # noqa: PLR2004
             raise GrowattParameterError("discharge_power must be between 0 and 100")
 
-        if not 0 <= discharge_stop_soc <= 100:
+        if not 0 <= discharge_stop_soc <= 100: # noqa: PLR2004
             raise GrowattParameterError("discharge_stop_soc must be between 0 and 100")
 
-        if len(periods) != 3:
+        if len(periods) != 3: # noqa: PLR2004
             raise GrowattParameterError("periods must contain exactly 3 period definitions")
 
         # Build request data
@@ -1035,7 +1059,7 @@ class OpenApiV1(GrowattApi):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.session.post(
-            self._get_url('mixSet'),
+            self._get_url("mixSet"),
             data=request_data
         )
 
@@ -1057,20 +1081,21 @@ class OpenApiV1(GrowattApi):
                 - start_time (str): Start time in format "HH:MM"
                 - end_time (str): End time in format "HH:MM"
                 - enabled (bool): Whether the period is enabled
+
         """
         periods = []
 
         # Process each time period (1-3 for SPH)
         for i in range(1, 4):
             # Get raw time values
-            start_time_raw = settings_data.get(f'forced{time_type}TimeStart{i}', "0:0")
-            end_time_raw = settings_data.get(f'forced{time_type}TimeStop{i}', "0:0")
-            enabled_raw = settings_data.get(f'forced{time_type}StopSwitch{i}', 0)
+            start_time_raw = settings_data.get(f"forced{time_type}TimeStart{i}", "0:0")
+            end_time_raw = settings_data.get(f"forced{time_type}TimeStop{i}", "0:0")
+            enabled_raw = settings_data.get(f"forced{time_type}StopSwitch{i}", 0)
 
             # Handle 'null' string values
-            if start_time_raw == 'null' or not start_time_raw:
+            if start_time_raw == "null" or not start_time_raw:
                 start_time_raw = "0:0"
-            if end_time_raw == 'null' or not end_time_raw:
+            if end_time_raw == "null" or not end_time_raw:
                 end_time_raw = "0:0"
 
             # Format times with leading zeros (HH:MM)
@@ -1091,7 +1116,7 @@ class OpenApiV1(GrowattApi):
                 end_time = "00:00"
 
             # Get the enabled status
-            if enabled_raw == 'null' or enabled_raw is None:
+            if enabled_raw == "null" or enabled_raw is None:
                 enabled = False
             else:
                 try:
@@ -1100,10 +1125,10 @@ class OpenApiV1(GrowattApi):
                     enabled = False
 
             period = {
-                'period_id': i,
-                'start_time': start_time,
-                'end_time': end_time,
-                'enabled': enabled
+                "period_id": i,
+                "start_time": start_time,
+                "end_time": end_time,
+                "enabled": enabled
             }
 
             periods.append(period)
@@ -1152,6 +1177,7 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
         if settings_data is None:
             if device_sn is None:
@@ -1159,25 +1185,25 @@ class OpenApiV1(GrowattApi):
             settings_data = self.sph_detail(device_sn=device_sn)
 
         # Extract global charge settings
-        charge_power = settings_data.get('chargePowerCommand', 0)
-        charge_stop_soc = settings_data.get('wchargeSOCLowLimit', 100)
-        mains_enabled_raw = settings_data.get('acChargeEnable', 0)
+        charge_power = settings_data.get("chargePowerCommand", 0)
+        charge_stop_soc = settings_data.get("wchargeSOCLowLimit", 100)
+        mains_enabled_raw = settings_data.get("acChargeEnable", 0)
 
         # Handle null/empty values
-        if charge_power == 'null' or charge_power is None or charge_power == '':
+        if charge_power == "null" or charge_power is None or charge_power == "":
             charge_power = 0
-        if charge_stop_soc == 'null' or charge_stop_soc is None or charge_stop_soc == '':
+        if charge_stop_soc == "null" or charge_stop_soc is None or charge_stop_soc == "":
             charge_stop_soc = 100
-        if mains_enabled_raw == 'null' or mains_enabled_raw is None or mains_enabled_raw == '':
+        if mains_enabled_raw == "null" or mains_enabled_raw is None or mains_enabled_raw == "":
             mains_enabled = False
         else:
             mains_enabled = int(mains_enabled_raw) == 1
 
         return {
-            'charge_power': int(charge_power),
-            'charge_stop_soc': int(charge_stop_soc),
-            'mains_enabled': mains_enabled,
-            'periods': self._parse_time_periods(settings_data, "Charge")
+            "charge_power": int(charge_power),
+            "charge_stop_soc": int(charge_stop_soc),
+            "mains_enabled": mains_enabled,
+            "periods": self._parse_time_periods(settings_data, "Charge")
         }
 
     def sph_read_ac_discharge_times(self, device_sn=None, settings_data=None):
@@ -1221,6 +1247,7 @@ class OpenApiV1(GrowattApi):
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
         """
         if settings_data is None:
             if device_sn is None:
@@ -1228,17 +1255,17 @@ class OpenApiV1(GrowattApi):
             settings_data = self.sph_detail(device_sn=device_sn)
 
         # Extract global discharge settings
-        discharge_power = settings_data.get('disChargePowerCommand', 0)
-        discharge_stop_soc = settings_data.get('wdisChargeSOCLowLimit', 10)
+        discharge_power = settings_data.get("disChargePowerCommand", 0)
+        discharge_stop_soc = settings_data.get("wdisChargeSOCLowLimit", 10)
 
         # Handle null/empty values
-        if discharge_power == 'null' or discharge_power is None or discharge_power == '':
+        if discharge_power == "null" or discharge_power is None or discharge_power == "":
             discharge_power = 0
-        if discharge_stop_soc == 'null' or discharge_stop_soc is None or discharge_stop_soc == '':
+        if discharge_stop_soc == "null" or discharge_stop_soc is None or discharge_stop_soc == "":
             discharge_stop_soc = 10
 
         return {
-            'discharge_power': int(discharge_power),
-            'discharge_stop_soc': int(discharge_stop_soc),
-            'periods': self._parse_time_periods(settings_data, "Discharge")
+            "discharge_power": int(discharge_power),
+            "discharge_stop_soc": int(discharge_stop_soc),
+            "periods": self._parse_time_periods(settings_data, "Discharge")
         }
