@@ -6,7 +6,7 @@ from enum import Enum
 
 from growattServer.exceptions import GrowattV1ApiError
 
-from . import GrowattApi
+from growattServer import GrowattApi
 from .devices import AbstractDevice, Min, Sph
 
 
