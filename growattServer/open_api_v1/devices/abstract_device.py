@@ -1,8 +1,10 @@
 """Abstract device file for centralising shared device logic."""
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from growattServer.exceptions import GrowattParameterError
-from growattServer.open_api_v1 import OpenApiV1
+
+if TYPE_CHECKING:
+    from growattServer.open_api_v1 import OpenApiV1
 
 
 class ReadParamResponse(TypedDict):
@@ -15,7 +17,7 @@ class ReadParamResponse(TypedDict):
 class AbstractDevice:
     """Abstract device type. Must not be used directly."""
 
-    def __init__(self, api: OpenApiV1, device_sn: str) -> None:
+    def __init__(self, api: "OpenApiV1", device_sn: str) -> None:
         """
         Initialize the device with the bare minimum being the device_sn.
 
