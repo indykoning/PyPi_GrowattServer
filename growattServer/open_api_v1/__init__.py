@@ -4,9 +4,9 @@ import warnings
 from datetime import UTC, date, datetime
 from enum import Enum
 
+from growattServer import GrowattApi
 from growattServer.exceptions import GrowattV1ApiError
 
-from growattServer import GrowattApi
 from .devices import AbstractDevice, Min, Sph
 
 
