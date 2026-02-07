@@ -84,8 +84,8 @@ class Min(AbstractDevice):
 
         """
         if start_date is None and end_date is None:
-            start_date = datetime.now(timezone.utc).date()
-            end_date = datetime.now(timezone.utc).date()
+            start_date = datetime.now(datetime.UTC).date()
+            end_date = datetime.now(datetime.UTC).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
