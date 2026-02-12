@@ -28,13 +28,13 @@ class Sph(AbstractDevice):
         """
         # API: https://www.showdoc.com.cn/262556420217021/6129763571291058
         response = self.api.session.get(
-            self.get_url("device/mix/mix_data_info"),
+            self.api.get_url("device/mix/mix_data_info"),
             params={
                 "device_sn": self.device_sn
             }
         )
 
-        return self.process_response(response.json(), "getting SPH inverter details")
+        return self.api.process_response(response.json(), "getting SPH inverter details")
 
     def energy(self):
         """
@@ -53,13 +53,13 @@ class Sph(AbstractDevice):
         """
         # API: https://www.showdoc.com.cn/262556420217021/6129764475556048
         response = self.api.session.post(
-            url=self.get_url("device/mix/mix_last_data"),
+            url=self.api.get_url("device/mix/mix_last_data"),
             data={
                 "mix_sn": self.device_sn,
             },
         )
 
-        return self.process_response(response.json(), "getting SPH inverter energy data")
+        return self.api.process_response(response.json(), "getting SPH inverter energy data")
 
     def energy_history(self, start_date=None, end_date=None, timezone=None, page=None, limit=None):
         """
@@ -96,7 +96,7 @@ class Sph(AbstractDevice):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129765461123058
         response = self.api.session.post(
-            url=self.get_url("device/mix/mix_data"),
+            url=self.api.get_url("device/mix/mix_data"),
             data={
                 "mix_sn": self.device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -107,7 +107,7 @@ class Sph(AbstractDevice):
             }
         )
 
-        return self.process_response(response.json(), "getting SPH inverter energy history")
+        return self.api.process_response(response.json(), "getting SPH inverter energy history")
 
     def read_parameter(self, parameter_id=None, start_address=None, end_address=None):
         """
@@ -145,7 +145,7 @@ class Sph(AbstractDevice):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129766954561259
         response = self.api.session.post(
-            self.get_url("readMixParam"),
+            self.api.get_url("readMixParam"),
             data={
                 "device_sn": self.device_sn,
                 "paramId": parameter_id,
@@ -154,7 +154,7 @@ class Sph(AbstractDevice):
             }
         )
 
-        return self.process_response(response.json(), f"reading parameter {parameter_id}")
+        return self.api.process_response(response.json(), f"reading parameter {parameter_id}")
 
     def write_parameter(self, parameter_id, parameter_values=None):
         """
@@ -209,11 +209,11 @@ class Sph(AbstractDevice):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.api.session.post(
-            self.get_url("mixSet"),
+            self.api.get_url("mixSet"),
             data=request_data
         )
 
-        return self.process_response(response.json(), f"writing parameter {parameter_id}")
+        return self.api.process_response(response.json(), f"writing parameter {parameter_id}")
 
     def write_ac_charge_times(self, charge_power, charge_stop_soc, mains_enabled, periods):
         """
@@ -282,11 +282,11 @@ class Sph(AbstractDevice):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.api.session.post(
-            self.get_url("mixSet"),
+            self.api.get_url("mixSet"),
             data=request_data
         )
 
-        return self.process_response(response.json(), "writing AC charge time periods")
+        return self.api.process_response(response.json(), "writing AC charge time periods")
 
     def write_ac_discharge_times(self, discharge_power, discharge_stop_soc, periods):
         """
@@ -352,11 +352,11 @@ class Sph(AbstractDevice):
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
         response = self.api.session.post(
-            self.get_url("mixSet"),
+            self.api.get_url("mixSet"),
             data=request_data
         )
 
-        return self.process_response(response.json(), "writing AC discharge time periods")
+        return self.api.process_response(response.json(), "writing AC discharge time periods")
 
     def _parse_time_periods(self, settings_data, time_type):
         """
