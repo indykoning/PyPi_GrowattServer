@@ -76,6 +76,7 @@ try:
 
             # Read AC charge time periods using helper function and inverter_data to avoid rate limiting
             charge_config = api.sph_read_ac_charge_times(
+                device_sn=inverter_sn,
                 settings_data=inverter_data,
             )
             print("AC Charge Configuration:")
@@ -86,6 +87,7 @@ try:
 
             # Read AC discharge time periods using helper function and inverter_data to avoid rate limiting
             discharge_config = api.sph_read_ac_discharge_times(
+                device_sn=inverter_sn,
                 settings_data=inverter_data,
             )
             print("AC Discharge Configuration:")

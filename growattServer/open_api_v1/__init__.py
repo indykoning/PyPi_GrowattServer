@@ -320,9 +320,9 @@ class OpenApiV1(GrowattApi):
         """Get the device class by serial number and device_type id."""
         match device_type:
             case Sph.DEVICE_TYPE_ID:
-                return Sph(device_sn)
+                return Sph(self, device_sn)
             case Min.DEVICE_TYPE_ID:
-                return Min(device_sn)
+                return Min(self, device_sn)
             case _:
                 warnings.warn(f"Device for type id: {device_type} has not been implemented yet.", stacklevel=2)
                 return None
@@ -524,7 +524,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).detail()
+        return Sph(self, device_sn).detail()
 
     def sph_energy(self, device_sn):
         """
@@ -541,7 +541,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).energy()
+        return Sph(self, device_sn).energy()
 
     def sph_energy_history(self, device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None):
         """
@@ -564,7 +564,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).energy_history(start_date, end_date, timezone, page, limit)
+        return Sph(self, device_sn).energy_history(start_date, end_date, timezone, page, limit)
 
     def sph_read_parameter(self, device_sn, parameter_id=None, start_address=None, end_address=None):
         """
@@ -585,7 +585,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).read_parameter(parameter_id, start_address, end_address)
+        return Sph(self, device_sn).read_parameter(parameter_id, start_address, end_address)
 
     def sph_write_parameter(self, device_sn, parameter_id, parameter_values=None):
         """
@@ -607,7 +607,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).write_parameter(parameter_id, parameter_values)
+        return Sph(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def sph_write_ac_charge_times(self, device_sn, charge_power, charge_stop_soc, mains_enabled, periods):
         """
@@ -647,7 +647,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).write_ac_charge_times(charge_power, charge_stop_soc, mains_enabled, periods)
+        return Sph(self, device_sn).write_ac_charge_times(charge_power, charge_stop_soc, mains_enabled, periods)
 
     def sph_write_ac_discharge_times(self, device_sn, discharge_power, discharge_stop_soc, periods):
         """
@@ -685,7 +685,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).write_ac_discharge_times(discharge_power, discharge_stop_soc, periods)
+        return Sph(self, device_sn).write_ac_discharge_times(discharge_power, discharge_stop_soc, periods)
 
     def sph_read_ac_charge_times(self, device_sn, settings_data=None):
         """
@@ -729,7 +729,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).read_ac_charge_times(settings_data)
+        return Sph(self, device_sn).read_ac_charge_times(settings_data)
 
     def sph_read_ac_discharge_times(self, device_sn, settings_data=None):
         """
@@ -772,4 +772,4 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(device_sn).read_ac_discharge_times(device_sn, settings_data)
+        return Sph(self, device_sn).read_ac_discharge_times(device_sn, settings_data)

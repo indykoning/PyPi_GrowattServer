@@ -1,5 +1,5 @@
 """SPH/MIX device file."""
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from growattServer.exceptions import GrowattParameterError
 
@@ -27,7 +27,7 @@ class Sph(AbstractDevice):
 
         """
         # API: https://www.showdoc.com.cn/262556420217021/6129763571291058
-        response = self.session.get(
+        response = self.api.session.get(
             self.get_url("device/mix/mix_data_info"),
             params={
                 "device_sn": self.device_sn
@@ -52,7 +52,7 @@ class Sph(AbstractDevice):
 
         """
         # API: https://www.showdoc.com.cn/262556420217021/6129764475556048
-        response = self.session.post(
+        response = self.api.session.post(
             url=self.get_url("device/mix/mix_last_data"),
             data={
                 "mix_sn": self.device_sn,
@@ -83,8 +83,8 @@ class Sph(AbstractDevice):
 
         """
         if start_date is None and end_date is None:
-            start_date = datetime.now(datetime.UTC).date()
-            end_date = datetime.now(datetime.UTC).date()
+            start_date = datetime.now(UTC).date()
+            end_date = datetime.now(UTC).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -95,7 +95,7 @@ class Sph(AbstractDevice):
             raise GrowattParameterError("date interval must not exceed 7 days")
 
         # API: https://www.showdoc.com.cn/262556420217021/6129765461123058
-        response = self.session.post(
+        response = self.api.session.post(
             url=self.get_url("device/mix/mix_data"),
             data={
                 "mix_sn": self.device_sn,
@@ -144,7 +144,7 @@ class Sph(AbstractDevice):
             parameter_id = "set_any_reg"
 
         # API: https://www.showdoc.com.cn/262556420217021/6129766954561259
-        response = self.session.post(
+        response = self.api.session.post(
             self.get_url("readMixParam"),
             data={
                 "device_sn": self.device_sn,
@@ -208,7 +208,7 @@ class Sph(AbstractDevice):
             request_data[f"param{i}"] = str(parameters[i])
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
-        response = self.session.post(
+        response = self.api.session.post(
             self.get_url("mixSet"),
             data=request_data
         )
@@ -281,7 +281,7 @@ class Sph(AbstractDevice):
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
-        response = self.session.post(
+        response = self.api.session.post(
             self.get_url("mixSet"),
             data=request_data
         )
@@ -351,7 +351,7 @@ class Sph(AbstractDevice):
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
         # API: https://www.showdoc.com.cn/262556420217021/6129761750718760
-        response = self.session.post(
+        response = self.api.session.post(
             self.get_url("mixSet"),
             data=request_data
         )

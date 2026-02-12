@@ -1,5 +1,5 @@
 """Min/TLX device file."""
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
@@ -84,8 +84,8 @@ class Min(AbstractDevice):
 
         """
         if start_date is None and end_date is None:
-            start_date = datetime.now(datetime.UTC).date()
-            end_date = datetime.now(datetime.UTC).date()
+            start_date = datetime.now(UTC).date()
+            end_date = datetime.now(UTC).date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:

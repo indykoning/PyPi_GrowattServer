@@ -98,8 +98,8 @@ Convenience methods that wrap the core SPH methods above for common use cases.
 |:---|:---|:---|
 | `api.sph_write_ac_charge_times(...)` | device_sn, charge_power, charge_stop_soc, mains_enabled, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_charge_time_period`. see: [details](./openapiv1/sph_settings.md) |
 | `api.sph_write_ac_discharge_times(...)` | device_sn, discharge_power, discharge_stop_soc, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_discharge_time_period`. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_charge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses charge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_discharge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses discharge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_charge_times(...)` | device_sn, settings_data (optional) | Helper: parses charge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_discharge_times(...)` | device_sn, settings_data (optional) | Helper: parses discharge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
 
 #### Classic methods
 
