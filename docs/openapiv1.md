@@ -2,7 +2,7 @@
 
 This version of the API follows the newer [OpenAPI V1 API](https://www.showdoc.com.cn/262556420217021/0) Growatt has made available.
 
-It extends our ["Legacy" ShinePhone](./shinephone.md) so methods from [there](./shinephone.md#methods) should be available, but it's safer to rely on the functions described in this file where possible.
+It extends our ["Legacy" ShinePhone](./shinephone.md) so methods from [there](./shinephone.md#methods) should be available, but it's safer to rely on the methods described in this file where possible.
 
 ## Usage
 
@@ -32,6 +32,36 @@ Methods that work across all device types.
 | `api.plant_energy_overview(plant_id)` | plant_id: String | Get energy overview data for a plant. |
 | `api.plant_energy_history(plant_id, start_date, end_date, time_unit, page, perpage)` | plant_id: String, start_date: Date, end_date: Date, time_unit: String, page: Int, perpage: Int | Get historical energy data for a plant for multiple days/months/years. |
 | `api.device_list(plant_id)` | plant_id: String | Get a list of devices in specified plant. |
+
+#### Devices
+
+Devices offer a generic way to interact with your device using the V1 API without needing to provide your S/N every time. And can be used instead of the more specific device methods in the API class.
+
+```python
+import growattServer
+from growattServer.open_api_v1.devices import Sph, Min
+
+api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
+
+my_inverter = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(api, 'YOUR_DEVICE_SERIAL_NUMBER')
+my_inverter.detail()
+my_inverter.energy()
+my_inverter.energy_history()
+my_inverter.read_parameter()
+my_inverter.write_parameter()
+```
+
+| Method | Arguments | Description |
+|:---|:---|:---|
+| `device.energy()` | None | Get current energy data for any inverter, including power and energy values. |
+| `device.detail()` | None | Get detailed data for any inverter. |
+| `device.energy_history(start_date=None, end_date=None, timezone=None, page=None, limit=None)` | start_date: Date, end_date: Date, timezone: String, page: Int, limit: Int | Get energy history data for any inverter (7-day max range). |
+| `device.read_parameter(parameter_id, start_address=None, end_address=None)` | parameter_id: String, start_address: Int, end_address: Int | Read a specific setting for any inverter. |
+| `device.write_parameter(parameter_id, parameter_values)` | parameter_id: String, parameter_values: Dict/Array | Set parameters on any inverter. Parameter values can be a single value, a list, or a dictionary. |
+
+For more details see: [OpenApiV1 Devices](./openapiv1/devices.md)
+
+The remaining methods below all actually use these device methods.
 
 #### MIN Methods
 
@@ -68,12 +98,12 @@ Convenience methods that wrap the core SPH methods above for common use cases.
 |:---|:---|:---|
 | `api.sph_write_ac_charge_times(...)` | device_sn, charge_power, charge_stop_soc, mains_enabled, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_charge_time_period`. see: [details](./openapiv1/sph_settings.md) |
 | `api.sph_write_ac_discharge_times(...)` | device_sn, discharge_power, discharge_stop_soc, periods | Helper: wraps `sph_write_parameter()` with type `mix_ac_discharge_time_period`. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_charge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses charge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
-| `api.sph_read_ac_discharge_times(...)` | device_sn (optional), settings_data (optional) | Helper: parses discharge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_charge_times(...)` | device_sn, settings_data (optional) | Helper: parses charge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
+| `api.sph_read_ac_discharge_times(...)` | device_sn, settings_data (optional) | Helper: parses discharge config from `sph_detail()` response. see: [details](./openapiv1/sph_settings.md) |
 
 #### Classic methods
 
-Methods from [classic API](./shinephone.md#methods) should be available, but it's safer to rely on the functions described in this section where possible. There is no guarantee that the classic API methods will work, or remain stable through updates.
+Methods from [classic API](./shinephone.md#methods) should be available, but it's safer to rely on the methods described in this section where possible. There is no guarantee that the classic API methods will work, or remain stable through updates.
 
 ### Variables
 
