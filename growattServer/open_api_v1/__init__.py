@@ -772,4 +772,4 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).read_ac_discharge_times(device_sn, settings_data)
+        return Sph(self, device_sn).read_ac_discharge_times(settings_data)
