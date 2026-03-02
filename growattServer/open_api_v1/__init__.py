@@ -399,7 +399,7 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).settings(device_sn)
+        return Min(self, device_sn).settings()
 
     def min_read_parameter(self, device_sn, parameter_id, start_address=None, end_address=None):
         """
