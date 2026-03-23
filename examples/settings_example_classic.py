@@ -6,6 +6,7 @@ import growattServer
 """
 This script demonstrates how to interface with the configuration settings of a plant and its classic inverters.
 It uses the `update_classic_inverter_setting` function to apply settings to a classic inverter.
+It also demonstrates how to get the current inverter status using `classic_inverter_info`.
 """
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -31,6 +32,14 @@ devices = api.device_list(plant_id)
 device = devices[0]  # This is an array - we just take the first - would need a for-loop for more systems
 device_sn = device["deviceSn"]
 device_type = device["deviceType"]
+
+# Get inverter info (includes on/off status, firmware version, model, etc.)
+print(f"\nGetting info for inverter: {device_sn}")
+inverter_info = api.classic_inverter_info(device_sn)
+pp.pprint(inverter_info)
+
+on_off = inverter_info["onOff"]
+print(f"Inverter on/off status: {'on' if on_off == '1' else 'off'}")
 
 # Turn inverter on
 print(f"Turning on inverter: {device_sn}")

@@ -4,13 +4,15 @@
 
 import datetime
 import hashlib
+import json
+import re
 import secrets
 import warnings
 from enum import IntEnum
 
 import requests
 
-from .exceptions import GrowattV1ApiError
+from .exceptions import GrowattError, GrowattV1ApiError
 
 name = "growattServer"
 
@@ -1233,6 +1235,69 @@ class GrowattApi:
                                      data=settings_parameters)
 
         return response.json()
+
+    def classic_inverter_info(self, device_sn):
+        """
+        Get classic inverter information by scraping the inverter settings page.
+
+        The Growatt server does not provide a JSON API for classic inverter status,
+        so this method fetches the HTML settings page and extracts the inverter
+        data from an embedded JSON object in the JavaScript.
+
+        Args:
+            device_sn: The serial number of the inverter.
+
+        Returns:
+            dict: A dictionary containing the inverter information.
+                'innerVersion'
+                'timezone'
+                'isBig'
+                'voltageHighLimit' -- High voltage limit e.g. '263.0'
+                'wideVoltageEnable'
+                'reactiveRate'
+                'modelText'
+                'haveAfci'
+                'activeRate' -- Active power rate e.g. '100'
+                'lost'
+                'alias' -- Friendly name of the inverter
+                'datalogSn' -- Serial number of the datalogger
+                'sysTime' -- System time e.g. '2026-03-01 10:02:45'
+                'fwVersion' -- Firmware version e.g. 'AH1.0'
+                'model' -- Model number
+                'sn' -- Serial number of the inverter
+                'pvPfCmdMemoryState'
+                'onOff' -- Inverter on/off status ('0' = off, '1' = on)
+                'voltageLowLimit' -- Low voltage limit e.g. '186.0'
+                'plantId' -- The ID of the plant
+                'pfModel'
+                'workingFrequencyMin' -- Minimum working frequency e.g. '47.53'
+                'nominalPower' -- Nominal power in watts e.g. '3600'
+                'workingFrequencyMax' -- Maximum working frequency e.g. '51.5'
+                'pf' -- Power factor e.g. '1.0'
+                'location' -- Location string
+                'deviceModel' -- Device model name e.g. 'GROWATT 3000MTL-S'
+                'status' -- Inverter status code
+                'lastUpdateTime' -- Last data update time
+
+        Raises:
+            GrowattError: If the inverter data cannot be extracted from the response.
+
+        """
+        response = self.session.get(
+            self.get_url("commonDeviceSetC/setInverter"),
+            params={"type": "server", "invSn": device_sn},
+        )
+
+        match = re.search(r"inv=JSON\.parse\('(\{.*?\})'\)", response.text)
+        if not match:
+            msg = f"Could not find inverter data in response for device {device_sn}"
+            raise GrowattError(msg)
+
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError as err:
+            msg = f"Failed to parse inverter data JSON for device {device_sn}"
+            raise GrowattError(msg) from err
 
     def update_classic_inverter_setting(self, default_parameters, parameters):
         """
