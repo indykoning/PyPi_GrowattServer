@@ -1068,8 +1068,20 @@ class GrowattApi:
         Args:
             serial_number: Serial number of the inverter.
             setting_type: Type of setting to configure.
-            default_parameters: Default parameter mapping for the request.
-            parameters: Parameters to send (dict or list).
+                        default_parameters: Default parameter mapping for the request. This
+                                should contain the required keys for the specific endpoint
+                                (commonly keys like ``op``, ``serialNum`` and ``type``).
+                        parameters: Parameters to send. May be either a ``dict`` mapping
+                                parameter names to values, or a ``list`` of values. If a
+                                ``list`` is supplied it will be converted to a dictionary of
+                                the form ``{"param1": value1, "param2": value2, ...}``.
+
+                Notes:
+                        - The function merges ``default_parameters`` with the provided
+                            ``parameters`` and issues a POST request to ``newTcpsetAPI.do``.
+                        - For Mix/AC/other inverter types the caller may wrap this helper
+                            with specific defaults (see ``update_mix_inverter_setting`` and
+                            ``update_ac_inverter_setting``).
 
         Returns:
             dict: Server response JSON.
@@ -1304,8 +1316,73 @@ class GrowattApi:
         Apply classic inverter settings.
 
         Args:
-            default_parameters: Default parameters dict.
-            parameters: Parameters to send (dict or list).
+            default_parameters: Default parameters dict. For classic inverters
+                this commonly contains keys such as "action": "inverterSet"
+                and "serialNum": <device_sn> (see examples/settings_example_classic.py).
+            parameters: Parameters to send. Two common forms are accepted:
+                - dict: mapping of parameter names to values (e.g. {"param1": "..."}).
+                - list: positional values which will be converted to
+                  {"param1": v1, "param2": v2, ...}.
+
+        Example:
+            The classic inverter settings example uses a parameter structure
+            like::
+
+                default_parameters = {
+                    "action": "inverterSet",
+                    "serialNum": device_sn,
+                }
+
+                # Example A: toggle PV on/off
+                parameters = {
+                    "paramId": "pv_on_off",
+                    "command_1": "0001",  # 0001 to turn on, 0000 to turn off
+                    "command_2": "",
+                }
+
+                # Example B: set active PV power percentage
+                parameters = {
+                    "paramId": "pv_active_p_rate",
+                    "command_1": "100",  # percentage (0-100)
+                    "command_2": "",
+                }
+
+                # Example C: set reactive PV power percentage
+                parameters = {
+                    "paramId": "pv_reactive_p_rate",
+                    "command_1": "100",  # percentage (0-100)
+                    "command_2": "over", # "over" for Inductive, "under" for Capacitive
+                }
+
+                # Example D: set time
+                parameters = {
+                    "paramId": "pf_sys_year",
+                    "command_1": "2026-01-01 20:00:00",  # Time in "YYYY-MM-DD HH:MM:SS" format
+                    "command_2": "",
+                }
+
+                # Example E: set Powerfactor (PF)
+                parameters = {
+                    "paramId": "pv_power_factor",
+                    "command_1": "1.0",  # PF Value (-0.8 ~ -1/0.8 ~ 1)
+                    "command_2": "",
+                }
+
+                # Example F: Set Grid Voltage High
+                parameters = {
+                    "paramId": "pv_grid_voltage_high",
+                    "command_1": "263.0",  # Voltage in volts
+                    "command_2": "",
+                }
+
+                # Example G: Set Grid Voltage Low
+                parameters = {
+                    "paramId": "pv_grid_voltage_low",
+                    "command_1": "186.0",  # Voltage in volts
+                    "command_2": "",
+                }
+
+            This method will POST the merged parameters to "tcpSet.do".
 
         Returns:
             dict: Server JSON response.
