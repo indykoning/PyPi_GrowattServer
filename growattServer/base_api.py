@@ -1068,20 +1068,20 @@ class GrowattApi:
         Args:
             serial_number: Serial number of the inverter.
             setting_type: Type of setting to configure.
-                        default_parameters: Default parameter mapping for the request. This
-                                should contain the required keys for the specific endpoint
-                                (commonly keys like ``op``, ``serialNum`` and ``type``).
-                        parameters: Parameters to send. May be either a ``dict`` mapping
-                                parameter names to values, or a ``list`` of values. If a
-                                ``list`` is supplied it will be converted to a dictionary of
-                                the form ``{"param1": value1, "param2": value2, ...}``.
+            default_parameters: Default parameter mapping for the request. This
+                    should contain the required keys for the specific endpoint
+                    (commonly keys like ``op``, ``serialNum`` and ``type``).
+            parameters: Parameters to send. May be either a ``dict`` mapping
+                    parameter names to values, or a ``list`` of values. If a
+                    ``list`` is supplied it will be converted to a dictionary of
+                    the form ``{"param1": value1, "param2": value2, ...}``.
 
-                Notes:
-                        - The function merges ``default_parameters`` with the provided
-                            ``parameters`` and issues a POST request to ``newTcpsetAPI.do``.
-                        - For Mix/AC/other inverter types the caller may wrap this helper
-                            with specific defaults (see ``update_mix_inverter_setting`` and
-                            ``update_ac_inverter_setting``).
+        Notes:
+            - The function merges ``default_parameters`` with the provided
+                ``parameters`` and issues a POST request to ``newTcpsetAPI.do``.
+            - For Mix/AC/other inverter types the caller may wrap this helper
+                with specific defaults (see ``update_mix_inverter_setting`` and
+                ``update_ac_inverter_setting``).
 
         Returns:
             dict: Server response JSON.
