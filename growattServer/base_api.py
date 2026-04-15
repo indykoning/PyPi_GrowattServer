@@ -10,7 +10,7 @@ from enum import IntEnum
 
 import requests
 
-from .exceptions import GrowattV1ApiError
+from .exceptions import GrowattError
 
 name = "growattServer"
 
@@ -1169,7 +1169,7 @@ class GrowattApi:
 
         if not result.get("success", False):
             msg = f"Failed to update TLX inverter time segment: {result.get('msg', 'Unknown error')}"
-            raise GrowattV1ApiError(msg)
+            raise GrowattError(msg)
 
         return result
 
