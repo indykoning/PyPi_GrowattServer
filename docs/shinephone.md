@@ -64,6 +64,7 @@ Any methods that may be useful.
 | `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Dict/Array | Apply the provided parameters for the specified setting on the specified AC-coupled inverter. see: [details](./shinephone/inverter_settings.md) |
 | `api.update_noah_settings(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Dict/Array | Apply the provided parameters for the specified setting on the specified Noah device. see: [details](./shinephone/noah_settings.md) |
 | `api.update_classic_inverter_setting(default_parameters, parameters)` | default_parameters: Dict, parameters: Dict/Array | Applies settings for specified system based on serial number. This function is only going to work for classic inverters. |
+| `api.classic_inverter_info(device_sn)` | device_sn: String | Get classic inverter information (including on/off status) by scraping the inverter settings page. Returns a dict with fields like `onOff`, `deviceModel`, `status`, `fwVersion`, `sn`, `alias`, etc. Note: this works by parsing HTML, not a JSON API. |
 
 ### Variables
 
