@@ -1,4 +1,5 @@
 """Min/TLX device file."""
+
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -16,41 +17,43 @@ class Min(AbstractDevice):
         """
         Get detailed data for a MIN inverter.
 
-        See the API doc: https://www.showdoc.com.cn/262556420217021/6129816412127075.
-
-        Args:
-            device_sn (str): The serial number of the MIN inverter.
-
         Returns:
             dict: A dictionary containing the MIN inverter details.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129816412127075
 
         """
         response = self.api.session.get(
             self.api.get_url("device/tlx/tlx_data_info"),
-            params={
-                "device_sn": self.device_sn
-            }
+            params={"device_sn": self.device_sn},
         )
 
-        return self.api.process_response(response.json(), "getting MIN inverter details")
+        return self.api.process_response(
+            response.json(), "getting MIN inverter details"
+        )
 
     def energy(self) -> dict:
         """
         Get energy data for a MIN inverter.
 
-        Args:
-            device_sn (str): The serial number of the MIN inverter.
-
         Returns:
             dict: A dictionary containing the MIN inverter energy data.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Min does not exist
+                10003 - Device SN error
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129822090975531
 
         """
         response = self.api.session.post(
@@ -60,16 +63,20 @@ class Min(AbstractDevice):
             },
         )
 
-        return self.api.process_response(response.json(), "getting MIN inverter energy data")
+        return self.api.process_response(
+            response.json(), "getting MIN inverter energy data"
+        )
 
-    def energy_history(self, start_date=None, end_date=None, timezone=None, page=None, limit=None) -> dict:
+    def energy_history(
+        self, start_date=None, end_date=None, timezone=None, page=None, limit=None
+    ) -> dict:
         """
         Get MIN inverter data history.
 
         Args:
             device_sn (str): The ID of the MIN inverter.
-            start_date (date, optional): Start date. Defaults to today.
-            end_date (date, optional): End date. Defaults to today.
+            start_date (date, optional): Start date. Defaults to today in the local system timezone.
+            end_date (date, optional): End date. Defaults to today in the local system timezone.
             timezone (str, optional): Timezone ID.
             page (int, optional): Page number.
             limit (int, optional): Results per page.
@@ -79,13 +86,22 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Serial number is empty
+                10003 - Start date is wrong
+                10004 - Start date interval has exceeded seven days
+                10005 - Min does not exist
+                10011 - Permission is not satisfied
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129764475556048
 
         """
         if start_date is None and end_date is None:
-            start_date = datetime.now(UTC).date()
-            end_date = datetime.now(UTC).date()
+            start_date = datetime.now(tz=UTC).astimezone().date()
+            end_date = datetime.now(tz=UTC).astimezone().date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -104,17 +120,16 @@ class Min(AbstractDevice):
                 "timezone_id": timezone,
                 "page": page,
                 "perpage": limit,
-            }
+            },
         )
 
-        return self.api.process_response(response.json(), "getting MIN inverter energy history")
+        return self.api.process_response(
+            response.json(), "getting MIN inverter energy history"
+        )
 
     def settings(self) -> dict:
         """
         Get settings for a MIN inverter.
-
-        Args:
-            device_sn (str): The serial number of the MIN inverter.
 
         Returns:
             dict: A dictionary containing the MIN inverter settings.
@@ -123,22 +138,26 @@ class Min(AbstractDevice):
             GrowattV1ApiError: If the API returns an error response.
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
+        References:
+            https://www.showdoc.com.cn/262556420217021/8696815667375182
+
         """
         response = self.api.session.get(
             self.api.get_url("device/tlx/tlx_set_info"),
-            params={
-                "device_sn": self.device_sn
-            }
+            params={"device_sn": self.device_sn},
         )
 
-        return self.api.process_response(response.json(), "getting MIN inverter settings")
+        return self.api.process_response(
+            response.json(), "getting MIN inverter settings"
+        )
 
-    def read_parameter(self, parameter_id, start_address=None, end_address=None) -> dict:
+    def read_parameter(
+        self, parameter_id, start_address=None, end_address=None
+    ) -> dict:
         """
         Read setting from MIN inverter.
 
         Args:
-            device_sn (str): The ID of the TLX inverter.
             parameter_id (str): Parameter ID to read. Don't use start_address and end_address if this is set.
             start_address (int, optional): Register start address (for set_any_reg). Don't use parameter_id if this is set.
             end_address (int, optional): Register end address (for set_any_reg). Don't use parameter_id if this is set.
@@ -148,8 +167,20 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattParameterError: If parameters are invalid.
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - Reading failed
+                10002 - Device does not exist
+                10003 - Device offline
+                10004 - Collector serial number is empty
+                10005 - Collector offline
+                10006 - Collector type does not support reading Get function
+                10007 - The collector version does not support the reading function
+                10008 - The collector connects to the server error, please restart and try again
+                10009 - The read setting parameter type does not exist
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129828239577315
 
         """
         self.validate_read_parameter_input(parameter_id, start_address, end_address)
@@ -173,17 +204,18 @@ class Min(AbstractDevice):
                 "paramId": parameter_id,
                 "startAddr": start_address,
                 "endAddr": end_address,
-            }
+            },
         )
 
-        return self.api.process_response(response.json(), f"reading parameter {parameter_id}")
+        return self.api.process_response(
+            response.json(), f"reading parameter {parameter_id}"
+        )
 
     def write_parameter(self, parameter_id, parameter_values=None) -> dict:
         """
         Set parameters on a MIN inverter.
 
         Args:
-            device_sn (str): Serial number of the inverter
             parameter_id (str): Setting type to be configured
             parameter_values: Parameter values to be sent to the system.
                 Can be a single string (for param1 only),
@@ -194,8 +226,22 @@ class Min(AbstractDevice):
             dict: JSON response from the server
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Min server error
+                10003 - Min offline
+                10004 - Min serial number is empty
+                10005 - Collector offline
+                10006 - Setting parameter type does not exist
+                10007 - The parameter value is empty
+                10008 - The parameter value is not within the range
+                10009 - The date and time format is wrong
+                10012 - Min does not exist
+                10013 - The end time cannot be less than the start time
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129826876191828
 
         """
         # Initialize all parameters as empty strings
@@ -220,29 +266,26 @@ class Min(AbstractDevice):
                         parameters[pos] = str(value)
 
         # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
-        request_data = {
-            "tlx_sn": self.device_sn,
-            "type": parameter_id
-        }
+        request_data = {"tlx_sn": self.device_sn, "type": parameter_id}
 
         # Add all MIN parameters to the request
         for i in range(1, max_min_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
         # Send the request
-        response = self.api.session.post(
-            self.api.get_url("tlxSet"),
-            data=request_data
+        response = self.api.session.post(self.api.get_url("tlxSet"), data=request_data)
+
+        return self.api.process_response(
+            response.json(), f"writing parameter {parameter_id}"
         )
 
-        return self.api.process_response(response.json(), f"writing parameter {parameter_id}")
-
-    def write_time_segment(self, segment_id, batt_mode, start_time, end_time, enabled=True) -> dict:
+    def write_time_segment(
+        self, segment_id, batt_mode, start_time, end_time, enabled=True
+    ) -> dict:
         """
         Set a time segment for a MIN inverter.
 
         Args:
-            device_sn (str): The serial number of the inverter.
             segment_id (int): Time segment ID (1-9).
             batt_mode (int): 0=load priority, 1=battery priority, 2=grid priority.
             start_time (datetime.time): Start time for the segment.
@@ -254,8 +297,22 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattParameterError: If parameters are invalid.
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Min server error
+                10003 - Min offline
+                10004 - Min serial number is empty
+                10005 - Collector offline
+                10006 - Setting parameter type does not exist
+                10007 - The parameter value is empty
+                10008 - The parameter value is not within the range
+                10009 - The date and time format is wrong
+                10012 - Min does not exist
+                10013 - The end time cannot be less than the start time
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/6129826876191828
 
         """
         max_min_params = 19
@@ -271,10 +328,7 @@ class Min(AbstractDevice):
             raise GrowattParameterError(msg)
 
         # Initialize ALL 19 parameters as empty strings, not just the ones we need
-        all_params = {
-            "tlx_sn": self.device_sn,
-            "type": f"time_segment{segment_id}"
-        }
+        all_params = {"tlx_sn": self.device_sn, "type": f"time_segment{segment_id}"}
 
         # Add param1 through param19, setting the values we need
         all_params["param1"] = str(batt_mode)
@@ -289,12 +343,11 @@ class Min(AbstractDevice):
             all_params[f"param{i}"] = ""
 
         # Send the request
-        response = self.api.session.post(
-            self.api.get_url("tlxSet"),
-            data=all_params
-        )
+        response = self.api.session.post(self.api.get_url("tlxSet"), data=all_params)
 
-        return self.api.process_response(response.json(), f"writing time segment {segment_id}")
+        return self.api.process_response(
+            response.json(), f"writing time segment {segment_id}"
+        )
 
     def read_time_segments(self, settings_data=None) -> list[dict[str, Any]]:
         """
@@ -340,11 +393,7 @@ class Min(AbstractDevice):
             settings_data = self.settings()
 
         # Define mode names
-        mode_names = {
-            0: "Load First",
-            1: "Battery First",
-            2: "Grid First"
-        }
+        mode_names = {0: "Load First", 1: "Battery First", 2: "Grid First"}
 
         segments = []
 
@@ -403,7 +452,7 @@ class Min(AbstractDevice):
                 "mode_name": mode_names.get(batt_mode, "Unknown"),
                 "start_time": start_time,
                 "end_time": end_time,
-                "enabled": enabled
+                "enabled": enabled,
             }
 
             segments.append(segment)

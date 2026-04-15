@@ -1,4 +1,5 @@
 """OpenApi V1 extensions for Growatt API client."""
+
 import platform
 import warnings
 from datetime import UTC, date, datetime
@@ -17,7 +18,7 @@ class DeviceType(Enum):
     STORAGE = 2
     OTHER = 3
     MAX = 4
-    SPH = Sph.DEVICE_TYPE_ID # (MIX)
+    SPH = Sph.DEVICE_TYPE_ID  # (MIX)
     SPA = 6
     MIN = Min.DEVICE_TYPE_ID
     PCS = 8
@@ -77,8 +78,8 @@ class OpenApiV1(GrowattApi):
             msg = f"Error during {operation_name}"
             raise GrowattV1ApiError(
                 msg,
-                error_code=response.get("error_code"),
-                error_msg=response.get("error_msg", "Unknown error")
+                error_code=response["error_code"],
+                error_msg=response.get("error_msg", "Unknown error"),
             )
         return response.get("data")
 
@@ -94,8 +95,12 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing plants information with 'count' and 'plants' keys.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/1494058730404880
 
         """
         # Prepare request data
@@ -103,14 +108,11 @@ class OpenApiV1(GrowattApi):
             "page": "",
             "perpage": "",
             "search_type": "",
-            "search_keyword": ""
+            "search_keyword": "",
         }
 
         # Make the request
-        response = self.session.get(
-            url=self.get_url("plant/list"),
-            data=request_data
-        )
+        response = self.session.get(url=self.get_url("plant/list"), data=request_data)
 
         return self.process_response(response.json(), "getting plant list")
 
@@ -125,13 +127,19 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the plant details.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Power station does not exist
+                10003 - Power station ID is empty
+                10004 - User does not exist
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/1494060394238679
 
         """
         response = self.session.get(
-            self.get_url("plant/details"),
-            params={"plant_id": plant_id}
+            self.get_url("plant/details"), params={"plant_id": plant_id}
         )
 
         return self.process_response(response.json(), "getting plant details")
@@ -147,18 +155,25 @@ class OpenApiV1(GrowattApi):
             dict: A dictionary containing the plant energy overview.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Power station does not exist
+                10003 - Power station ID is empty
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/1494061093808613
 
         """
         response = self.session.get(
-            self.get_url("plant/data"),
-            params={"plant_id": plant_id}
+            self.get_url("plant/data"), params={"plant_id": plant_id}
         )
 
         return self.process_response(response.json(), "getting plant energy overview")
 
-    def plant_power_overview(self, plant_id: int, day: str | date | None = None) -> dict:
+    def plant_power_overview(
+        self, plant_id: int, day: str | date | None = None
+    ) -> dict:
         """
         Obtain power data of a certain power station.
 
@@ -166,7 +181,7 @@ class OpenApiV1(GrowattApi):
 
         Args:
             plant_id (int): Power Station ID
-            day (date): Date - defaults to today
+            day (date): Date - defaults to today in the local system timezone
 
         Returns:
             dict: A dictionary containing the plants power data.
@@ -180,33 +195,45 @@ class OpenApiV1(GrowattApi):
                 }.
 
         Raises:
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Power station does not exist
+                10003 - Power station ID is empty or time format is incorrect
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
-        API-Doc: https://www.showdoc.com.cn/262556420217021/1494062656174173
+        References:
+            https://www.showdoc.com.cn/262556420217021/1494062656174173
 
         """
         if day is None:
-            day = datetime.now(UTC).date()
+            day = datetime.now(tz=UTC).astimezone().date()
 
         response = self.session.get(
             self.get_url("plant/power"),
             params={
                 "plant_id": plant_id,
                 "date": day,
-            }
+            },
         )
 
         return self.process_response(response.json(), "getting plant power overview")
 
-    def plant_energy_history(self, plant_id, start_date=None, end_date=None, time_unit="day", page=None, perpage=None):
+    def plant_energy_history(
+        self,
+        plant_id,
+        start_date=None,
+        end_date=None,
+        time_unit="day",
+        page=None,
+        perpage=None,
+    ):
         """
         Retrieve plant energy data for multiple days/months/years.
 
         Args:
             plant_id (int): Power Station ID
-            start_date (date, optional): Start Date - defaults to today
-            end_date (date, optional): End Date - defaults to today
+            start_date (date, optional): Start Date - defaults to today in the local system timezone
+            end_date (date, optional): End Date - defaults to today in the local system timezone
             time_unit (str, optional): Time unit ('day', 'month', 'year') - defaults to 'day'
             page (int, optional): Page number - defaults to 1
             perpage (int, optional): Number of items per page - defaults to 20, max 100
@@ -221,16 +248,23 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattParameterError: If date parameters are invalid.
-            GrowattV1ApiError: If the API returns an error response.
+            GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
+                10001 - System error
+                10002 - Power station does not exist
+                10003 - Power station ID is empty
+                10004 - Time format is incorrect
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        References:
+            https://www.showdoc.com.cn/262556420217021/1494061730868556
 
         """
         max_day_interval = 7
         max_year_interval = 20
 
         if start_date is None and end_date is None:
-            start_date = datetime.now(UTC).date()
-            end_date = datetime.now(UTC).date()
+            start_date = datetime.now(tz=UTC).astimezone().date()
+            end_date = datetime.now(tz=UTC).astimezone().date()
         elif start_date is None:
             start_date = end_date
         elif end_date is None:
@@ -239,13 +273,24 @@ class OpenApiV1(GrowattApi):
         # Validate date ranges based on time_unit
         if time_unit == "day" and (end_date - start_date).days > max_day_interval:
             warnings.warn(
-                "Date interval must not exceed 7 days in 'day' mode.", RuntimeWarning, stacklevel=2)
+                "Date interval must not exceed 7 days in 'day' mode.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         elif time_unit == "month" and (end_date.year - start_date.year > 1):
             warnings.warn(
-                "Start date must be within same or previous year in 'month' mode.", RuntimeWarning, stacklevel=2)
-        elif time_unit == "year" and (end_date.year - start_date.year > max_year_interval):
+                "Start date must be within same or previous year in 'month' mode.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        elif time_unit == "year" and (
+            end_date.year - start_date.year > max_year_interval
+        ):
             warnings.warn(
-                "Date interval must not exceed 20 years in 'year' mode.", RuntimeWarning, stacklevel=2)
+                "Date interval must not exceed 20 years in 'year' mode.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         response = self.session.get(
             self.get_url("plant/energy"),
@@ -255,8 +300,8 @@ class OpenApiV1(GrowattApi):
                 "end_date": end_date.strftime("%Y-%m-%d"),
                 "time_unit": time_unit,
                 "page": page,
-                "perpage": perpage
-            }
+                "perpage": perpage,
+            },
         )
 
         return self.process_response(response.json(), "getting plant energy history")
@@ -316,7 +361,7 @@ class OpenApiV1(GrowattApi):
         )
         return self.process_response(response.json(), "getting device list")
 
-    def get_device(self, device_sn: str, device_type: int) -> AbstractDevice|None:
+    def get_device(self, device_sn: str, device_type: int) -> AbstractDevice | None:
         """Get the device class by serial number and device_type id."""
         match device_type:
             case Sph.DEVICE_TYPE_ID:
@@ -324,7 +369,10 @@ class OpenApiV1(GrowattApi):
             case Min.DEVICE_TYPE_ID:
                 return Min(self, device_sn)
             case _:
-                warnings.warn(f"Device for type id: {device_type} has not been implemented yet.", stacklevel=2)
+                warnings.warn(
+                    f"Device for type id: {device_type} has not been implemented yet.",
+                    stacklevel=2,
+                )
                 return None
 
     def min_detail(self, device_sn):
@@ -361,7 +409,15 @@ class OpenApiV1(GrowattApi):
         """
         return Min(self, device_sn).energy()
 
-    def min_energy_history(self, device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None):
+    def min_energy_history(
+        self,
+        device_sn,
+        start_date=None,
+        end_date=None,
+        timezone=None,
+        page=None,
+        limit=None,
+    ):
         """
         Get MIN inverter data history.
 
@@ -382,7 +438,9 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).energy_history(start_date, end_date, timezone, page, limit)
+        return Min(self, device_sn).energy_history(
+            start_date, end_date, timezone, page, limit
+        )
 
     def min_settings(self, device_sn):
         """
@@ -401,7 +459,9 @@ class OpenApiV1(GrowattApi):
         """
         return Min(self, device_sn).settings()
 
-    def min_read_parameter(self, device_sn, parameter_id, start_address=None, end_address=None):
+    def min_read_parameter(
+        self, device_sn, parameter_id, start_address=None, end_address=None
+    ):
         """
         Read setting from MIN inverter.
 
@@ -420,7 +480,9 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).read_parameter(parameter_id, start_address, end_address)
+        return Min(self, device_sn).read_parameter(
+            parameter_id, start_address, end_address
+        )
 
     def min_write_parameter(self, device_sn, parameter_id, parameter_values=None):
         """
@@ -444,7 +506,9 @@ class OpenApiV1(GrowattApi):
         """
         return Min(self, device_sn).write_parameter(parameter_id, parameter_values)
 
-    def min_write_time_segment(self, device_sn, segment_id, batt_mode, start_time, end_time, enabled=True):
+    def min_write_time_segment(
+        self, device_sn, segment_id, batt_mode, start_time, end_time, enabled=True
+    ):
         """
         Set a time segment for a MIN inverter.
 
@@ -465,7 +529,9 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).write_time_segment(segment_id, batt_mode, start_time, end_time, enabled)
+        return Min(self, device_sn).write_time_segment(
+            segment_id, batt_mode, start_time, end_time, enabled
+        )
 
     def min_read_time_segments(self, device_sn, settings_data=None):
         """
@@ -543,7 +609,15 @@ class OpenApiV1(GrowattApi):
         """
         return Sph(self, device_sn).energy()
 
-    def sph_energy_history(self, device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None):
+    def sph_energy_history(
+        self,
+        device_sn,
+        start_date=None,
+        end_date=None,
+        timezone=None,
+        page=None,
+        limit=None,
+    ):
         """
         Get SPH inverter data history.
 
@@ -564,9 +638,13 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).energy_history(start_date, end_date, timezone, page, limit)
+        return Sph(self, device_sn).energy_history(
+            start_date, end_date, timezone, page, limit
+        )
 
-    def sph_read_parameter(self, device_sn, parameter_id=None, start_address=None, end_address=None):
+    def sph_read_parameter(
+        self, device_sn, parameter_id=None, start_address=None, end_address=None
+    ):
         """
         Read setting from SPH inverter.
 
@@ -585,7 +663,9 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).read_parameter(parameter_id, start_address, end_address)
+        return Sph(self, device_sn).read_parameter(
+            parameter_id, start_address, end_address
+        )
 
     def sph_write_parameter(self, device_sn, parameter_id, parameter_values=None):
         """
@@ -609,7 +689,9 @@ class OpenApiV1(GrowattApi):
         """
         return Sph(self, device_sn).write_parameter(parameter_id, parameter_values)
 
-    def sph_write_ac_charge_times(self, device_sn, charge_power, charge_stop_soc, mains_enabled, periods):
+    def sph_write_ac_charge_times(
+        self, device_sn, charge_power, charge_stop_soc, mains_enabled, periods
+    ):
         """
         Set AC charge time periods for an SPH inverter.
 
@@ -647,9 +729,13 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).write_ac_charge_times(charge_power, charge_stop_soc, mains_enabled, periods)
+        return Sph(self, device_sn).write_ac_charge_times(
+            charge_power, charge_stop_soc, mains_enabled, periods
+        )
 
-    def sph_write_ac_discharge_times(self, device_sn, discharge_power, discharge_stop_soc, periods):
+    def sph_write_ac_discharge_times(
+        self, device_sn, discharge_power, discharge_stop_soc, periods
+    ):
         """
         Set AC discharge time periods for an SPH inverter.
 
@@ -685,7 +771,9 @@ class OpenApiV1(GrowattApi):
             requests.exceptions.RequestException: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).write_ac_discharge_times(discharge_power, discharge_stop_soc, periods)
+        return Sph(self, device_sn).write_ac_discharge_times(
+            discharge_power, discharge_stop_soc, periods
+        )
 
     def sph_read_ac_charge_times(self, device_sn, settings_data=None):
         """
