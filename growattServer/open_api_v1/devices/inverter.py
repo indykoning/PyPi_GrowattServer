@@ -234,7 +234,7 @@ class Inverter(AbstractDevice):
         # IMPORTANT: Create a data dictionary with ALL parameters explicitly included
         request_data = {
             "device_sn": self.device_sn,
-            "type": parameter_id
+            "paramId": parameter_id
         }
 
         # Add all Inverter parameters to the request
