@@ -8,13 +8,13 @@ from enum import Enum
 from growattServer import GrowattApi
 from growattServer.exceptions import GrowattV1ApiError
 
-from .devices import AbstractDevice, Min, Sph
+from .devices import AbstractDevice, Inverter, Min, Sph
 
 
 class DeviceType(Enum):
     """Enumeration of Growatt device types."""
 
-    INVERTER = 1
+    INVERTER = Inverter.DEVICE_TYPE_ID
     STORAGE = 2
     OTHER = 3
     MAX = 4
@@ -364,6 +364,8 @@ class OpenApiV1(GrowattApi):
     def get_device(self, device_sn: str, device_type: int) -> AbstractDevice | None:
         """Get the device class by serial number and device_type id."""
         match device_type:
+            case Inverter.DEVICE_TYPE_ID:
+                return Inverter(self, device_sn)
             case Sph.DEVICE_TYPE_ID:
                 return Sph(self, device_sn)
             case Min.DEVICE_TYPE_ID:
@@ -374,6 +376,120 @@ class OpenApiV1(GrowattApi):
                     stacklevel=2,
                 )
                 return None
+
+    def inverter_detail(self, device_sn):
+        """
+        Get detailed data for a classic inverter.
+
+        Args:
+            device_sn (str): The serial number of the classic inverter.
+
+        Returns:
+            dict: A dictionary containing the classic inverter details.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        """
+        return Inverter(self, device_sn).detail()
+
+    def inverter_energy(self, device_sn):
+        """
+        Get energy data for a classic inverter.
+
+        Args:
+            device_sn (str): The serial number of the classic inverter.
+
+        Returns:
+            dict: A dictionary containing the classic inverter energy data.
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        """
+        return Inverter(self, device_sn).energy()
+
+    def inverter_energy_history(
+        self,
+        device_sn,
+        start_date=None,
+        end_date=None,
+        timezone=None,
+        page=None,
+        limit=None,
+    ):
+        """
+        Get classic inverter data history.
+
+        Args:
+            device_sn (str): The ID of the classic inverter.
+            start_date (date, optional): Start date. Defaults to today.
+            end_date (date, optional): End date. Defaults to today.
+            timezone (str, optional): Timezone ID.
+            page (int, optional): Page number.
+            limit (int, optional): Results per page.
+
+        Returns:
+            dict: A dictionary containing the classic inverter history data.
+
+        Raises:
+            GrowattParameterError: If date interval is invalid (exceeds 7 days).
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        """
+        return Inverter(self, device_sn).energy_history(
+            start_date, end_date, timezone, page, limit
+        )
+
+    def inverter_read_parameter(
+        self, device_sn, parameter_id, start_address=None, end_address=None
+    ):
+        """
+        Read setting from classic inverter.
+
+        Args:
+            device_sn (str): The ID of the TLX inverter.
+            parameter_id (str): Parameter ID to read. Don't use start_address and end_address if this is set.
+            start_address (int, optional): Register start address (for set_any_reg). Don't use parameter_id if this is set.
+            end_address (int, optional): Register end address (for set_any_reg). Don't use parameter_id if this is set.
+
+        Returns:
+            dict: A dictionary containing the setting value.
+
+        Raises:
+            GrowattParameterError: If parameters are invalid.
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        """
+        return Inverter(self, device_sn).read_parameter(
+            parameter_id, start_address, end_address
+        )
+
+    def inverter_write_parameter(self, device_sn, parameter_id, parameter_values=None):
+        """
+        Set parameters on a classic inverter.
+
+        Args:
+            device_sn (str): Serial number of the inverter
+            parameter_id (str): Setting type to be configured
+            parameter_values: Parameter values to be sent to the system.
+                Can be a single string (for param1 only),
+                a list of strings (for sequential params),
+                or a dictionary mapping param positions to values
+
+        Returns:
+            dict: JSON response from the server
+
+        Raises:
+            GrowattV1ApiError: If the API returns an error response.
+            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+
+        """
+        return Inverter(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def min_detail(self, device_sn):
         """

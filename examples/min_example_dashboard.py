@@ -1,4 +1,5 @@
 import json
+import os
 
 import requests
 
@@ -9,11 +10,11 @@ Example script fetching key power and today+total energy metrics from a Growatt 
 using the V1 API with token-based authentication.
 """
 
-# Get the API token from user input or environment variable
-# api_token = os.environ.get("GROWATT_API_TOKEN") or input("Enter your Growatt API token: ")
-
-# test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
-api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # gitleaks:allow
+# Get the API token from environment variable or use test token
+api_token = os.environ.get("GROWATT_API_TOKEN")
+if not api_token:
+    # test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
+    api_token = "6eb6f069523055a339d71e5b1f6c88cc"  # noqa: S105
 
 try:
     # Initialize the API with token
@@ -29,7 +30,7 @@ try:
     # Iterate over all devices
     energy_data = None
     for device in devices["devices"]:
-        if device["type"] == 7:  # (MIN/TLX)
+        if device["type"] == growattServer.DeviceType.MIN.value:
             inverter_sn = device["device_sn"]
 
             # Get energy data
