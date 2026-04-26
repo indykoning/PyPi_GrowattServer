@@ -1402,3 +1402,53 @@ class GrowattApi:
                                      params=settings_parameters)
 
         return response.json()
+
+    def set_classic_inverter_active_power_rate(self, serial_number, power_rate):
+        """
+        Set the active power rate (output power limit) for a classic inverter.
+
+        Args:
+            serial_number: Inverter serial number.
+            power_rate: Active power rate as percentage (0-100).
+
+        Returns:
+            dict: Server JSON response.
+
+        """
+        default_parameters = {
+            "action": "inverterSet",
+            "serialNum": serial_number,
+        }
+
+        parameters = {
+            "paramId": "pv_active_p_rate",
+            "command_1": str(power_rate),
+            "command_2": "",
+        }
+
+        return self.update_classic_inverter_setting(default_parameters, parameters)
+
+    def set_classic_inverter_on_off(self, serial_number, enabled):
+        """
+        Turn a classic inverter on or off.
+
+        Args:
+            serial_number: Inverter serial number.
+            enabled: True to turn on, False to turn off.
+
+        Returns:
+            dict: Server JSON response.
+
+        """
+        default_parameters = {
+            "action": "inverterSet",
+            "serialNum": serial_number,
+        }
+
+        parameters = {
+            "paramId": "pv_on_off",
+            "command_1": "0001" if enabled else "0000",
+            "command_2": "",
+        }
+
+        return self.update_classic_inverter_setting(default_parameters, parameters)
