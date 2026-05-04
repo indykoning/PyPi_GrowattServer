@@ -51,6 +51,10 @@ Any methods that may be useful.
 | `api.mix_totals(mix_id, plant_id)` | mix_id: String, plant_id: String | Get daily and overall total information for the Mix system (duplicates some of the information from `mix_info`). |
 | `api.mix_system_status(mix_id, plant_id)` | mix_id: String, plant_id: String | Get instantaneous values for Mix system, e.g., current import/export, generation, charging rates, etc. |
 | `api.mix_detail(mix_id, plant_id, timespan, date)` | mix_id: String, plant_id: String, timespan: Int <0=hour, 1=day, 2=month>, date: String | Get detailed values for a timespan. The API call also returns totals data for the same values in this time window. |
+| `api.sph_system_status(plant_id, sph_sn)` | plant_id: String, sph_sn: String | Get real-time values for an SPH/SPM hybrid inverter (SOC, vBat, ppv, per-string PV, pCharge1/pDisCharge1, pacToGrid/pacToUser, pLocalLoad, vAc1, fAc, status). Requires `api.server_url` to point at the regional host (see Variables). |
+| `api.sph_energy_overview(plant_id, sph_sn)` | plant_id: String, sph_sn: String | Get daily and lifetime energy totals for an SPH inverter (eChargeToday/Total, eDisChargeToday/Total, epvToday/Total, elocalLoadToday/Total, eToGridToday/Total). |
+| `api.sph_energy_prod_and_cons(plant_id, sph_sn, date, chart_type)` | plant_id: String, sph_sn: String, date: Date (optional), chart_type: Int <0=day, 1=month, 2=year, 3=total> | Get production and consumption chart series plus aggregate totals for the period. Returns `chartData` arrays (pacToGrid, ppv, pself, elocalLoad, pacToUser) at 5-min / daily / monthly / yearly resolution depending on `chart_type`. |
+| `api.sph_settings(sph_sn)` | sph_sn: String | Get the full SPH settings bean — every adjustable parameter and its current value. Use this to discover supported `setting_type` keys for `update_sph_inverter_setting`. |
 | `api.storage_detail(storage_id)` | storage_id: String | Get detailed data on storage (battery). |
 | `api.storage_params(storage_id)` | storage_id: String | Get extensive information on storage (more info, more convoluted). |
 | `api.storage_energy_overview(plant_id, storage_id)` | plant_id: String, storage_id: String | Get the information you see in the "Generation overview". |
@@ -61,6 +65,7 @@ Any methods that may be useful.
 | `api.update_tlx_inverter_setting(serial_number, setting_type, parameter)` | serial_number: String, setting_type: String, parameter: Any | Apply the provided parameter for the specified setting on the specified tlx inverter. see: [details](./shinephone/inverter_settings.md) |
 | `api.update_tlx_inverter_time_segment(serial_number, segment_id, batt_mode, start_time, end_time, enabled)` | serial_number: String, segment_id: Int, batt_mode: String, start_time: String, end_time: String, enabled: Bool | Update one of the 9 time segments with the specified battery mode (load, battery, grid first). see: [details](./shinephone/inverter_settings.md) |
 | `api.update_mix_inverter_setting(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Dict/Array | Apply the provided parameters for the specified setting on the specified Mix inverter. see: [details](./shinephone/inverter_settings.md) |
+| `api.update_sph_inverter_setting(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Any/List/Dict | Write a setting on an SPH inverter via `newTcpsetAPI.do?op=sphSet`. A scalar value is wrapped as `{"param1": value}`; a list maps to `{"param1": v1, "param2": v2, ...}`. Use `sph_settings()` to discover supported `setting_type` keys. |
 | `api.update_ac_inverter_setting(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Dict/Array | Apply the provided parameters for the specified setting on the specified AC-coupled inverter. see: [details](./shinephone/inverter_settings.md) |
 | `api.update_noah_settings(serial_number, setting_type, parameters)` | serial_number: String, setting_type: String, parameters: Dict/Array | Apply the provided parameters for the specified setting on the specified Noah device. see: [details](./shinephone/noah_settings.md) |
 | `api.update_classic_inverter_setting(default_parameters, parameters)` | default_parameters: Dict, parameters: Dict/Array | Applies settings for specified system based on serial number. This function is only going to work for classic inverters. |
@@ -77,6 +82,17 @@ You may need a different URL depending on where your account is registered:
 'https://openapi-cn.growatt.com/' (Chinese server)
 'https://openapi-us.growatt.com/' (North American server)
 'https://openapi.growatt.com/' (Other regional server: e.g. Europe)
+
+The SPH-specific methods (`sph_system_status`, `sph_energy_overview`,
+`sph_energy_prod_and_cons`, `sph_settings`, `update_sph_inverter_setting`)
+require a *regional* mobile host instead — these endpoints are not served
+by `openapi.growatt.com`. Set `api.server_url` to the host matching your
+account region:
+
+'https://server-cn-api.growatt.com/' (Chinese server)
+'https://server-us-api.growatt.com/' (North American server)
+'https://server-au-api.growatt.com/' (Australia / Oceania)
+'https://server-api.growatt.com/' (Other regional server: e.g. Europe)
 
 ## Initialisation
 
