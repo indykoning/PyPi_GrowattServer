@@ -13,6 +13,8 @@ Common requests exceptions to handle:
 - requests.exceptions.RequestException: The base exception for all requests exceptions
 """
 
+from __future__ import annotations
+
 from enum import IntEnum
 
 
