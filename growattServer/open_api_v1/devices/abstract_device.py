@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from growattServer.exceptions import GrowattParameterError
 
 if TYPE_CHECKING:
     from growattServer.open_api_v1 import OpenApiV1
+
+
+type ParameterValue = str | float | bool | list[Any] | dict[str, Any]
 
 
 class ReadParamResponse(TypedDict):

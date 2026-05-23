@@ -11,7 +11,7 @@ from typing import Any
 from growattServer import GrowattApi
 from growattServer.exceptions import GrowattV1ApiError
 
-from .devices import AbstractDevice, Min, Sph
+from .devices import AbstractDevice, Min, ParameterValue, Sph
 
 
 class DeviceType(Enum):
@@ -487,7 +487,7 @@ class OpenApiV1(GrowattApi):
             parameter_id, start_address, end_address
         )
 
-    def min_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: str | float | bool | list[Any] | dict[str, Any] | None = None) -> dict[str, Any]:
+    def min_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on a MIN inverter.
 
@@ -670,7 +670,7 @@ class OpenApiV1(GrowattApi):
             parameter_id, start_address, end_address
         )
 
-    def sph_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: str | float | bool | list[Any] | dict[str, Any] | None = None) -> dict[str, Any]:
+    def sph_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on an SPH inverter.
 

@@ -7,7 +7,7 @@ from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
 
-from .abstract_device import AbstractDevice
+from .abstract_device import AbstractDevice, ParameterValue
 
 
 class Sph(AbstractDevice):
@@ -189,7 +189,7 @@ class Sph(AbstractDevice):
             response.json(), f"reading parameter {parameter_id}"
         )
 
-    def write_parameter(self, parameter_id: str, parameter_values: str | float | bool | list[Any] | dict[str, Any] | None = None) -> dict[str, Any]:
+    def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on an SPH inverter.
 
