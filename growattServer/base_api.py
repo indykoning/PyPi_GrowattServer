@@ -87,7 +87,7 @@ class GrowattApi:
             # local timezone, not UTC. Default to system-local time so
             # callers in non-UTC zones don't get yesterday's data near
             # midnight.
-            date = datetime.datetime.now()
+            date = datetime.datetime.now()  # noqa: DTZ005
 
         date_str = ""
         if timespan == Timespan.month:
@@ -326,11 +326,11 @@ class GrowattApi:
         """
         if date is None:
             # Plant local timezone, not UTC — see note in __get_date_string.
-            date = datetime.datetime.now()
+            date = datetime.datetime.now()  # noqa: DTZ005
         if hasattr(date, "strftime"):
             if chart_type == 1:
                 date_str = date.strftime("%Y-%m")
-            elif chart_type == 2:
+            elif chart_type == 2:  # noqa: PLR2004
                 date_str = date.strftime("%Y")
             else:
                 date_str = date.strftime("%Y-%m-%d")
