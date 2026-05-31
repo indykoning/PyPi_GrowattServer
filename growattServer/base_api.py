@@ -83,7 +83,11 @@ class GrowattApi:
             raise ValueError("timespan must be a Timespan enum value")
 
         if date is None:
-            date = datetime.datetime.now(datetime.UTC)
+            # The Growatt API interprets the date string in the plant's
+            # local timezone, not UTC. Default to system-local time so
+            # callers in non-UTC zones don't get yesterday's data near
+            # midnight.
+            date = datetime.datetime.now()  # noqa: DTZ005
 
         date_str = ""
         if timespan == Timespan.month:
@@ -174,6 +178,176 @@ class GrowattApi:
                 "userLevel": data["user"]["rightlevel"]
             })
         return data
+
+    def sph_system_status(self, plant_id, sph_sn):
+        """
+        Get real-time SPH device status via the regional mobile API.
+
+        This is the unified mobile API path used by the ShinePhone app.
+        Set `api.server_url` to your regional host (e.g.
+        `https://server-au-api.growatt.com/`) and call `login()` first.
+        The session cookie set by login authenticates the call.
+
+        Returns instantaneous battery/PV/grid/load values, including:
+            SOC, vBat, ppv, ppv1/2/3, vpv1/2/3, pDisCharge1, pCharge1,
+            vAc1, fAc, pacToGrid, pacToUser, pLocalLoad, pex, status,
+            sysStatus, lost, deviceType, pMax, epvToday, epvTotal.
+
+        Args:
+            plant_id (str): The plant ID.
+            sph_sn (str): The SPH device serial number.
+
+        Returns:
+            dict: The `obj` payload.
+
+        """
+        response = self.session.post(
+            self.get_url("newTwoSphAPI.do"),
+            params={"op": "getSystemStatus"},
+            data={"plantid": str(plant_id), "sphSn": sph_sn},
+        )
+        return response.json().get("obj", {})
+
+    def sph_energy_overview(self, plant_id, sph_sn):
+        """
+        Get cumulative SPH device energy stats via the regional mobile API.
+
+        Returns:
+            dict: With fields eChargeToday/Total, eDisChargeToday/Total,
+                epvToday/Total, elocalLoadToday/Total, eToGridToday/Total.
+
+        """
+        response = self.session.post(
+            self.get_url("newTwoSphAPI.do"),
+            params={"op": "getEnergyOverview"},
+            data={"plantid": str(plant_id), "sphSn": sph_sn},
+        )
+        return response.json().get("obj", {})
+
+    def sph_settings(self, sph_sn, language=1):
+        """
+        Read the full SPH settings bean.
+
+        Returns every adjustable parameter the device exposes (system work
+        mode, AC charge enable, charge/discharge schedules, battery
+        priority, export power limit, etc.) along with their current
+        values. Use this both as a settings snapshot and to discover the
+        valid `setting_type` keys for `update_sph_inverter_setting()`.
+
+        Args:
+            sph_sn (str): The SPH device serial number.
+            language (int): UI language code; 1 = English.
+
+        Returns:
+            dict: The `obj` payload — a flat dict of setting names to
+                current values.
+
+        """
+        response = self.session.post(
+            self.get_url("newTwoSphAPI.do"),
+            params={"op": "getSphSetBean"},
+            data={"lan": str(language), "sphSn": sph_sn},
+        )
+        return response.json().get("obj", {})
+
+    def update_sph_inverter_setting(self, serial_number, setting_type,
+                                    parameters, language=1):
+        """
+        Write a setting to an SPH inverter.
+
+        Hits ``newTcpsetAPI.do?op=sphSet`` with the setting body in
+        ``application/x-www-form-urlencoded`` form (matching the wire
+        format used by ShinePhone). Common ``setting_type`` values:
+            - ``sys_work_mode`` — system work mode (param1=1 = On Grid /
+              sell power on this device).
+        Use :meth:`sph_settings` to discover all supported types and
+        their current values.
+
+        Args:
+            serial_number (str): SPH inverter serial number.
+            setting_type (str): The setting name (e.g. ``sys_work_mode``).
+            parameters (dict | list | Any): Parameters to send. A list is
+                converted to ``{"param1": v1, "param2": v2, ...}``; a
+                scalar is wrapped as ``{"param1": value}``.
+            language (int): UI language code; 1 = English.
+
+        Returns:
+            dict: Server response JSON.
+
+        """
+        if isinstance(parameters, list):
+            params_dict = {f"param{i}": v
+                           for i, v in enumerate(parameters, start=1)}
+        elif isinstance(parameters, dict):
+            params_dict = parameters
+        else:
+            params_dict = {"param1": parameters}
+
+        body = {
+            "lan": str(language),
+            "serialNum": serial_number,
+            "type": setting_type,
+            **params_dict,
+        }
+        response = self.session.post(
+            self.get_url("newTcpsetAPI.do"),
+            params={"op": "sphSet"},
+            data=body,
+        )
+        return response.json()
+
+    def sph_energy_prod_and_cons(self, plant_id, sph_sn, date=None,
+                                 chart_type=0, language=1):
+        """
+        Get the SPH per-period production-and-consumption chart series.
+
+        Returns time-series data for PV, grid in/out, load, and battery
+        for `date` at the resolution implied by `chart_type`.
+
+        Args:
+            plant_id (str): The plant ID.
+            sph_sn (str): The SPH device serial number.
+            date (str | datetime.date, optional): Date to query
+                (YYYY-MM-DD for day, YYYY-MM for month, YYYY for year).
+                Defaults to today.
+            chart_type (int): 0 = day (288 5-min samples),
+                1 = month (31 daily samples),
+                2 = year (12 monthly samples),
+                3 = total (5 yearly samples — lifetime).
+            language (int): UI language code; 1 = English. Required by
+                the server but tolerant of most values.
+
+        Returns:
+            dict: The `obj` payload — `chartData` (per-bucket arrays for
+                pacToGrid, ppv, pself, elocalLoad, pacToUser) plus
+                aggregates: etouser, eCharge, eAcCharge, eChargeToday1,
+                eChargeToday2, elocalLoad.
+
+        """
+        if date is None:
+            # Plant local timezone, not UTC — see note in __get_date_string.
+            date = datetime.datetime.now()  # noqa: DTZ005
+        if hasattr(date, "strftime"):
+            if chart_type == 1:
+                date_str = date.strftime("%Y-%m")
+            elif chart_type == 2:  # noqa: PLR2004
+                date_str = date.strftime("%Y")
+            else:
+                date_str = date.strftime("%Y-%m-%d")
+        else:
+            date_str = str(date)
+        response = self.session.post(
+            self.get_url("newTwoSphAPI.do"),
+            params={"op": "getEnergyProdAndConsData"},
+            data={
+                "dateStr": date_str,
+                "language": str(language),
+                "plantid": str(plant_id),
+                "sphSn": sph_sn,
+                "type": str(chart_type),
+            },
+        )
+        return response.json().get("obj", {})
 
     def plant_list(self, user_id):
         """
