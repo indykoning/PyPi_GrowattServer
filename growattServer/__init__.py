@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """growattServer package exports."""
 
+from __future__ import annotations
+
 from .base_api import GrowattApi, Timespan, hash_password
 from .exceptions import (
     GrowattError,

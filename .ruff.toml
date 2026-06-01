@@ -22,6 +22,7 @@ ignore = [
     "ERA001", # Commented out code is allowed for examples
     "T201", # Prints are allowed in examples
     "PLR0913",
+    "FBT001", # Boolean positional args are part of the existing public API
     "FBT002",
     "N999",
 ]

@@ -1,10 +1,13 @@
 """SPH/MIX device file."""
 
-from datetime import UTC, datetime, timedelta
+from __future__ import annotations
+
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
 
-from .abstract_device import AbstractDevice
+from .abstract_device import AbstractDevice, ParameterValue
 
 
 class Sph(AbstractDevice):
@@ -12,7 +15,7 @@ class Sph(AbstractDevice):
 
     DEVICE_TYPE_ID = 5
 
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         """
         Get detailed data for an SPH inverter.
 
@@ -37,7 +40,7 @@ class Sph(AbstractDevice):
             response.json(), "getting SPH inverter details"
         )
 
-    def energy(self):
+    def energy(self) -> dict[str, Any]:
         """
         Get energy data for an SPH inverter.
 
@@ -67,8 +70,8 @@ class Sph(AbstractDevice):
         )
 
     def energy_history(
-        self, start_date=None, end_date=None, timezone=None, page=None, limit=None
-    ):
+        self, start_date: date | None = None, end_date: date | None = None, timezone: str | None = None, page: int | None = None, limit: int | None = None
+    ) -> dict[str, Any]:
         """
         Get SPH inverter data history.
 
@@ -125,7 +128,7 @@ class Sph(AbstractDevice):
             response.json(), "getting SPH inverter energy history"
         )
 
-    def read_parameter(self, parameter_id=None, start_address=None, end_address=None):
+    def read_parameter(self, parameter_id: str | None = None, start_address: int | None = None, end_address: int | None = None) -> dict[str, Any]:
         """
         Read setting from SPH inverter.
 
@@ -186,7 +189,7 @@ class Sph(AbstractDevice):
             response.json(), f"reading parameter {parameter_id}"
         )
 
-    def write_parameter(self, parameter_id, parameter_values=None):
+    def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on an SPH inverter.
 
@@ -254,8 +257,8 @@ class Sph(AbstractDevice):
         )
 
     def write_ac_charge_times(
-        self, charge_power, charge_stop_soc, mains_enabled, periods
-    ):
+        self, charge_power: int, charge_stop_soc: int, mains_enabled: bool, periods: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Set AC charge time periods for an SPH inverter.
 
@@ -342,7 +345,7 @@ class Sph(AbstractDevice):
             response.json(), "writing AC charge time periods"
         )
 
-    def write_ac_discharge_times(self, discharge_power, discharge_stop_soc, periods):
+    def write_ac_discharge_times(self, discharge_power: int, discharge_stop_soc: int, periods: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Set AC discharge time periods for an SPH inverter.
 
@@ -426,7 +429,7 @@ class Sph(AbstractDevice):
             response.json(), "writing AC discharge time periods"
         )
 
-    def _parse_time_periods(self, settings_data, time_type):
+    def _parse_time_periods(self, settings_data: dict[str, Any], time_type: str) -> list[dict[str, Any]]:
         """
         Parse time periods from settings data.
 
@@ -496,7 +499,7 @@ class Sph(AbstractDevice):
 
         return periods
 
-    def read_ac_charge_times(self, settings_data=None):
+    def read_ac_charge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Read AC charge time periods and settings from an SPH inverter.
 
@@ -571,7 +574,7 @@ class Sph(AbstractDevice):
             "periods": self._parse_time_periods(settings_data, "Charge"),
         }
 
-    def read_ac_discharge_times(self, settings_data=None):
+    def read_ac_discharge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Read AC discharge time periods and settings from an SPH inverter.
 

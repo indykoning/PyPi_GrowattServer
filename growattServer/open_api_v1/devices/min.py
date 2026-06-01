@@ -1,11 +1,13 @@
 """Min/TLX device file."""
 
-from datetime import UTC, datetime, timedelta
+from __future__ import annotations
+
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
 
-from .abstract_device import AbstractDevice
+from .abstract_device import AbstractDevice, ParameterValue
 
 
 class Min(AbstractDevice):
@@ -13,7 +15,7 @@ class Min(AbstractDevice):
 
     DEVICE_TYPE_ID = 7
 
-    def detail(self) -> dict:
+    def detail(self) -> dict[str, Any]:
         """
         Get detailed data for a MIN inverter.
 
@@ -38,7 +40,7 @@ class Min(AbstractDevice):
             response.json(), "getting MIN inverter details"
         )
 
-    def energy(self) -> dict:
+    def energy(self) -> dict[str, Any]:
         """
         Get energy data for a MIN inverter.
 
@@ -68,8 +70,8 @@ class Min(AbstractDevice):
         )
 
     def energy_history(
-        self, start_date=None, end_date=None, timezone=None, page=None, limit=None
-    ) -> dict:
+        self, start_date: date | None = None, end_date: date | None = None, timezone: str | None = None, page: int | None = None, limit: int | None = None
+    ) -> dict[str, Any]:
         """
         Get MIN inverter data history.
 
@@ -127,7 +129,7 @@ class Min(AbstractDevice):
             response.json(), "getting MIN inverter energy history"
         )
 
-    def settings(self) -> dict:
+    def settings(self) -> dict[str, Any]:
         """
         Get settings for a MIN inverter.
 
@@ -152,8 +154,8 @@ class Min(AbstractDevice):
         )
 
     def read_parameter(
-        self, parameter_id, start_address=None, end_address=None
-    ) -> dict:
+        self, parameter_id: str, start_address: int | None = None, end_address: int | None = None
+    ) -> dict[str, Any]:
         """
         Read setting from MIN inverter.
 
@@ -211,7 +213,7 @@ class Min(AbstractDevice):
             response.json(), f"reading parameter {parameter_id}"
         )
 
-    def write_parameter(self, parameter_id, parameter_values=None) -> dict:
+    def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on a MIN inverter.
 
@@ -280,8 +282,8 @@ class Min(AbstractDevice):
         )
 
     def write_time_segment(
-        self, segment_id, batt_mode, start_time, end_time, enabled=True
-    ) -> dict:
+        self, segment_id: int, batt_mode: int, start_time: time, end_time: time, enabled: bool = True
+    ) -> dict[str, Any]:
         """
         Set a time segment for a MIN inverter.
 
@@ -349,7 +351,7 @@ class Min(AbstractDevice):
             response.json(), f"writing time segment {segment_id}"
         )
 
-    def read_time_segments(self, settings_data=None) -> list[dict[str, Any]]:
+    def read_time_segments(self, settings_data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
         Read Time-of-Use (TOU) settings from a Growatt MIN/TLX inverter.
 

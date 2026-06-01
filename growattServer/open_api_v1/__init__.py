@@ -1,14 +1,17 @@
 """OpenApi V1 extensions for Growatt API client."""
 
+from __future__ import annotations
+
 import platform
 import warnings
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from enum import Enum
+from typing import Any
 
 from growattServer import GrowattApi
 from growattServer.exceptions import GrowattV1ApiError
 
-from .devices import AbstractDevice, Min, Sph
+from .devices import AbstractDevice, Min, ParameterValue, Sph
 
 
 class DeviceType(Enum):
@@ -42,7 +45,7 @@ class OpenApiV1(GrowattApi):
 
         return f"Python/{python_version} ({system} {release}; {machine})"
 
-    def __init__(self, token) -> None:
+    def __init__(self, token: str) -> None:
         """
         Initialize the Growatt API client with V1 API support.
 
@@ -59,7 +62,7 @@ class OpenApiV1(GrowattApi):
         # Set up authentication for V1 API using the provided token
         self.session.headers.update({"token": token})
 
-    def process_response(self, response, operation_name="API operation"):
+    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> dict[str, Any]:
         """
         Process API response and handle errors.
 
@@ -83,11 +86,11 @@ class OpenApiV1(GrowattApi):
             )
         return response.get("data")
 
-    def get_url(self, page):
+    def get_url(self, page: str) -> str:
         """Return the page URL for the v1 API."""
         return self.api_url + page
 
-    def plant_list(self):
+    def plant_list(self) -> dict[str, Any]:
         """
         Get a list of all plants with detailed information.
 
@@ -116,7 +119,7 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant list")
 
-    def plant_details(self, plant_id):
+    def plant_details(self, plant_id: int) -> dict[str, Any]:
         """
         Get basic information about a power station.
 
@@ -144,7 +147,7 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant details")
 
-    def plant_energy_overview(self, plant_id):
+    def plant_energy_overview(self, plant_id: int) -> dict[str, Any]:
         """
         Get an overview of a plant's energy data.
 
@@ -220,13 +223,13 @@ class OpenApiV1(GrowattApi):
 
     def plant_energy_history(
         self,
-        plant_id,
-        start_date=None,
-        end_date=None,
-        time_unit="day",
-        page=None,
-        perpage=None,
-    ):
+        plant_id: int,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        time_unit: str = "day",
+        page: int | None = None,
+        perpage: int | None = None,
+    ) -> dict[str, Any]:
         """
         Retrieve plant energy data for multiple days/months/years.
 
@@ -306,7 +309,7 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant energy history")
 
-    def device_list(self, plant_id):
+    def device_list(self, plant_id: int) -> dict[str, Any]:
         """
         Get devices associated with plant.
 
@@ -375,7 +378,7 @@ class OpenApiV1(GrowattApi):
                 )
                 return None
 
-    def min_detail(self, device_sn):
+    def min_detail(self, device_sn: str) -> dict[str, Any]:
         """
         Get detailed data for a MIN inverter.
 
@@ -392,7 +395,7 @@ class OpenApiV1(GrowattApi):
         """
         return Min(self, device_sn).detail()
 
-    def min_energy(self, device_sn):
+    def min_energy(self, device_sn: str) -> dict[str, Any]:
         """
         Get energy data for a MIN inverter.
 
@@ -411,13 +414,13 @@ class OpenApiV1(GrowattApi):
 
     def min_energy_history(
         self,
-        device_sn,
-        start_date=None,
-        end_date=None,
-        timezone=None,
-        page=None,
-        limit=None,
-    ):
+        device_sn: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        timezone: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """
         Get MIN inverter data history.
 
@@ -442,7 +445,7 @@ class OpenApiV1(GrowattApi):
             start_date, end_date, timezone, page, limit
         )
 
-    def min_settings(self, device_sn):
+    def min_settings(self, device_sn: str) -> dict[str, Any]:
         """
         Get settings for a MIN inverter.
 
@@ -460,8 +463,8 @@ class OpenApiV1(GrowattApi):
         return Min(self, device_sn).settings()
 
     def min_read_parameter(
-        self, device_sn, parameter_id, start_address=None, end_address=None
-    ):
+        self, device_sn: str, parameter_id: str, start_address: int | None = None, end_address: int | None = None
+    ) -> dict[str, Any]:
         """
         Read setting from MIN inverter.
 
@@ -484,7 +487,7 @@ class OpenApiV1(GrowattApi):
             parameter_id, start_address, end_address
         )
 
-    def min_write_parameter(self, device_sn, parameter_id, parameter_values=None):
+    def min_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on a MIN inverter.
 
@@ -507,8 +510,8 @@ class OpenApiV1(GrowattApi):
         return Min(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def min_write_time_segment(
-        self, device_sn, segment_id, batt_mode, start_time, end_time, enabled=True
-    ):
+        self, device_sn: str, segment_id: int, batt_mode: int, start_time: time, end_time: time, enabled: bool = True
+    ) -> dict[str, Any]:
         """
         Set a time segment for a MIN inverter.
 
@@ -533,7 +536,7 @@ class OpenApiV1(GrowattApi):
             segment_id, batt_mode, start_time, end_time, enabled
         )
 
-    def min_read_time_segments(self, device_sn, settings_data=None):
+    def min_read_time_segments(self, device_sn: str, settings_data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
         Read Time-of-Use (TOU) settings from a Growatt MIN/TLX inverter.
 
@@ -575,7 +578,7 @@ class OpenApiV1(GrowattApi):
 
     # SPH Device Methods (Device Type 5)
 
-    def sph_detail(self, device_sn):
+    def sph_detail(self, device_sn: str) -> dict[str, Any]:
         """
         Get detailed data for an SPH inverter.
 
@@ -592,7 +595,7 @@ class OpenApiV1(GrowattApi):
         """
         return Sph(self, device_sn).detail()
 
-    def sph_energy(self, device_sn):
+    def sph_energy(self, device_sn: str) -> dict[str, Any]:
         """
         Get energy data for an SPH inverter.
 
@@ -611,13 +614,13 @@ class OpenApiV1(GrowattApi):
 
     def sph_energy_history(
         self,
-        device_sn,
-        start_date=None,
-        end_date=None,
-        timezone=None,
-        page=None,
-        limit=None,
-    ):
+        device_sn: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        timezone: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """
         Get SPH inverter data history.
 
@@ -643,8 +646,8 @@ class OpenApiV1(GrowattApi):
         )
 
     def sph_read_parameter(
-        self, device_sn, parameter_id=None, start_address=None, end_address=None
-    ):
+        self, device_sn: str, parameter_id: str | None = None, start_address: int | None = None, end_address: int | None = None
+    ) -> dict[str, Any]:
         """
         Read setting from SPH inverter.
 
@@ -667,7 +670,7 @@ class OpenApiV1(GrowattApi):
             parameter_id, start_address, end_address
         )
 
-    def sph_write_parameter(self, device_sn, parameter_id, parameter_values=None):
+    def sph_write_parameter(self, device_sn: str, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on an SPH inverter.
 
@@ -690,8 +693,8 @@ class OpenApiV1(GrowattApi):
         return Sph(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def sph_write_ac_charge_times(
-        self, device_sn, charge_power, charge_stop_soc, mains_enabled, periods
-    ):
+        self, device_sn: str, charge_power: int, charge_stop_soc: int, mains_enabled: bool, periods: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Set AC charge time periods for an SPH inverter.
 
@@ -734,8 +737,8 @@ class OpenApiV1(GrowattApi):
         )
 
     def sph_write_ac_discharge_times(
-        self, device_sn, discharge_power, discharge_stop_soc, periods
-    ):
+        self, device_sn: str, discharge_power: int, discharge_stop_soc: int, periods: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Set AC discharge time periods for an SPH inverter.
 
@@ -775,7 +778,7 @@ class OpenApiV1(GrowattApi):
             discharge_power, discharge_stop_soc, periods
         )
 
-    def sph_read_ac_charge_times(self, device_sn, settings_data=None):
+    def sph_read_ac_charge_times(self, device_sn: str, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Read AC charge time periods and settings from an SPH inverter.
 
@@ -819,7 +822,7 @@ class OpenApiV1(GrowattApi):
         """
         return Sph(self, device_sn).read_ac_charge_times(settings_data)
 
-    def sph_read_ac_discharge_times(self, device_sn, settings_data=None):
+    def sph_read_ac_discharge_times(self, device_sn: str, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Read AC discharge time periods and settings from an SPH inverter.
 

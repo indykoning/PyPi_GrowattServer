@@ -1,10 +1,16 @@
 """Abstract device file for centralising shared device logic."""
-from typing import TYPE_CHECKING, TypedDict
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from growattServer.exceptions import GrowattParameterError
 
 if TYPE_CHECKING:
     from growattServer.open_api_v1 import OpenApiV1
+
+
+type ParameterValue = str | float | bool | list[Any] | dict[str, Any]
 
 
 class ReadParamResponse(TypedDict):
@@ -17,7 +23,7 @@ class ReadParamResponse(TypedDict):
 class AbstractDevice:
     """Abstract device type. Must not be used directly."""
 
-    def __init__(self, api: "OpenApiV1", device_sn: str) -> None:
+    def __init__(self, api: OpenApiV1, device_sn: str) -> None:
         """
         Initialize the device with the bare minimum being the device_sn.
 
@@ -29,7 +35,7 @@ class AbstractDevice:
         self.api = api
         self.device_sn = device_sn
 
-    def validate_read_parameter_input(self, parameter_id: str | None, start_address: int | None, end_address: int | None): # noqa: ARG002
+    def validate_read_parameter_input(self, parameter_id: str | None, start_address: int | None, end_address: int | None) -> None: # noqa: ARG002
         """
         Validate read parameter input and throws an error if it is invalid.
 
