@@ -6,15 +6,37 @@ It extends our ["Legacy" ShinePhone](./shinephone.md) so methods from [there](./
 
 ## Usage
 
-The public v1 API requires token-based authentication
+The public v1 API requires token-based authentication.
+
+### Sync
 
 ```python
 import growattServer
 
 api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
-# Get a list of growatt plants.
-plants = api.plant_list_v1()
+plants = api.plant_list()
 print(plants)
+```
+
+### Async
+
+```python
+import asyncio
+import growattServer
+
+async def main():
+    async with growattServer.AsyncOpenApiV1(token="YOUR_API_TOKEN") as api:
+        plants = await api.plant_list()
+        print(plants)
+
+asyncio.run(main())
+```
+
+You can also pass an existing `httpx.AsyncClient` session:
+
+```python
+async with growattServer.AsyncOpenApiV1(token="YOUR_API_TOKEN", session=my_httpx_client) as api:
+    plants = await api.plant_list()
 ```
 
 ## Methods and Variables
@@ -38,6 +60,7 @@ Methods that work across all device types.
 Devices offer a generic way to interact with your device using the V1 API without needing to provide your S/N every time. And can be used instead of the more specific device methods in the API class.
 
 ```python
+# Sync
 import growattServer
 from growattServer.open_api_v1.devices import Sph, Min
 
@@ -46,9 +69,17 @@ api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
 my_inverter = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(api, 'YOUR_DEVICE_SERIAL_NUMBER')
 my_inverter.detail()
 my_inverter.energy()
-my_inverter.energy_history()
-my_inverter.read_parameter()
-my_inverter.write_parameter()
+```
+
+```python
+# Async
+import growattServer
+from growattServer.open_api_v1.devices import AsyncSph, AsyncMin
+
+async with growattServer.AsyncOpenApiV1(token="YOUR_API_TOKEN") as api:
+    my_inverter = AsyncSph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or AsyncMin(...)
+    await my_inverter.detail()
+    await my_inverter.energy()
 ```
 
 | Method | Arguments | Description |

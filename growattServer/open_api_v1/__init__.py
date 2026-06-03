@@ -29,13 +29,19 @@ class DeviceType(Enum):
     PBD = 10
 
 
-class OpenApiV1(GrowattApi):
+class _OpenApiV1Base:
     """
-    Extended Growatt API client with V1 API support.
+    Shared V1 API methods for sync and async implementations.
 
-    This class extends the base GrowattApi class with methods for MIN and SPH devices using
-    the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0.
+    Methods here are defined as regular ``def`` (not ``async def``).
+    They work transparently with both sync and async subclasses because
+    they return the result of ``self.v1_request(...)`` or a device method
+    — both of which produce a coroutine in async context that the caller
+    can ``await``.
     """
+
+    _min_class = Min
+    _sph_class = Sph
 
     def _create_user_agent(self) -> str:
         python_version = platform.python_version()
@@ -45,24 +51,7 @@ class OpenApiV1(GrowattApi):
 
         return f"Python/{python_version} ({system} {release}; {machine})"
 
-    def __init__(self, token: str) -> None:
-        """
-        Initialize the Growatt API client with V1 API support.
-
-        Args:
-            token (str): API token for authentication (required for V1 API access).
-
-        """
-        # Initialize the base class
-        super().__init__(agent_identifier=self._create_user_agent())
-
-        # Add V1 API specific properties
-        self.api_url = f"{self.server_url}v1/"
-
-        # Set up authentication for V1 API using the provided token
-        self.session.headers.update({"token": token})
-
-    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> Any:
+    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> dict[str, Any]:
         """
         Process API response and handle errors.
 
@@ -90,7 +79,9 @@ class OpenApiV1(GrowattApi):
         """Return the page URL for the v1 API."""
         return self.api_url + page
 
-    def plant_list(self) -> dict[str, Any]:  # type: ignore[override]
+    # Plant Methods
+
+    def plant_list(self) -> dict[str, Any]:
         """
         Get a list of all plants with detailed information.
 
@@ -100,24 +91,17 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494058730404880
 
         """
-        # Prepare request data
-        request_data = {
-            "page": "",
-            "perpage": "",
-            "search_type": "",
-            "search_keyword": "",
-        }
-
-        # Make the request
-        response = self.session.get(url=self.get_url("plant/list"), data=request_data)
-
-        return self.process_response(response.json(), "getting plant list")
+        return self.v1_request(
+            "GET", "plant/list",
+            data={"page": "", "perpage": "", "search_type": "", "search_keyword": ""},
+            operation_name="getting plant list",
+        )
 
     def plant_details(self, plant_id: int) -> dict[str, Any]:
         """
@@ -135,17 +119,17 @@ class OpenApiV1(GrowattApi):
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
                 10004 - User does not exist
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494060394238679
 
         """
-        response = self.session.get(
-            self.get_url("plant/details"), params={"plant_id": plant_id}
+        return self.v1_request(
+            "GET", "plant/details",
+            params={"plant_id": plant_id},
+            operation_name="getting plant details",
         )
-
-        return self.process_response(response.json(), "getting plant details")
 
     def plant_energy_overview(self, plant_id: int) -> dict[str, Any]:
         """
@@ -162,17 +146,17 @@ class OpenApiV1(GrowattApi):
                 10001 - System error
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494061093808613
 
         """
-        response = self.session.get(
-            self.get_url("plant/data"), params={"plant_id": plant_id}
+        return self.v1_request(
+            "GET", "plant/data",
+            params={"plant_id": plant_id},
+            operation_name="getting plant energy overview",
         )
-
-        return self.process_response(response.json(), "getting plant energy overview")
 
     def plant_power_overview(
         self, plant_id: int, day: str | date | None = None
@@ -202,7 +186,7 @@ class OpenApiV1(GrowattApi):
                 10001 - System error
                 10002 - Power station does not exist
                 10003 - Power station ID is empty or time format is incorrect
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494062656174173
@@ -211,16 +195,11 @@ class OpenApiV1(GrowattApi):
         if day is None:
             day = datetime.now(tz=UTC).astimezone().date()
 
-        params: dict[str, str | int] = {
-            "plant_id": plant_id,
-            "date": str(day),
-        }
-        response = self.session.get(
-            self.get_url("plant/power"),
-            params=params,
+        return self.v1_request(
+            "GET", "plant/power",
+            params={"plant_id": plant_id, "date": day},
+            operation_name="getting plant power overview",
         )
-
-        return self.process_response(response.json(), "getting plant power overview")
 
     def plant_energy_history(
         self,
@@ -257,7 +236,7 @@ class OpenApiV1(GrowattApi):
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
                 10004 - Time format is incorrect
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494061730868556
@@ -294,8 +273,8 @@ class OpenApiV1(GrowattApi):
                 stacklevel=2,
             )
 
-        response = self.session.get(
-            self.get_url("plant/energy"),
+        return self.v1_request(
+            "GET", "plant/energy",
             params={
                 "plant_id": plant_id,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -304,11 +283,10 @@ class OpenApiV1(GrowattApi):
                 "page": page,
                 "perpage": perpage,
             },
+            operation_name="getting plant energy history",
         )
 
-        return self.process_response(response.json(), "getting plant energy history")
-
-    def device_list(self, plant_id: int) -> dict[str, Any]:  # type: ignore[override]
+    def device_list(self, plant_id: int) -> dict[str, Any]:
         """
         Get devices associated with plant.
 
@@ -353,30 +331,25 @@ class OpenApiV1(GrowattApi):
             }
 
         """
-        params: dict[str, str | int] = {
-            "plant_id": plant_id,
-            "page": "",
-            "perpage": "",
-        }
-        response = self.session.get(
-            url=self.get_url("device/list"),
-            params=params,
+        return self.v1_request(
+            "GET", "device/list",
+            params={"plant_id": plant_id, "page": "", "perpage": ""},
+            operation_name="getting device list",
         )
-        return self.process_response(response.json(), "getting device list")
 
     def get_device(self, device_sn: str, device_type: int) -> AbstractDevice | None:
         """Get the device class by serial number and device_type id."""
-        match device_type:
-            case Sph.DEVICE_TYPE_ID:
-                return Sph(self, device_sn)
-            case Min.DEVICE_TYPE_ID:
-                return Min(self, device_sn)
-            case _:
-                warnings.warn(
-                    f"Device for type id: {device_type} has not been implemented yet.",
-                    stacklevel=2,
-                )
-                return None
+        if device_type == self._sph_class.DEVICE_TYPE_ID:
+            return self._sph_class(self, device_sn)
+        if device_type == self._min_class.DEVICE_TYPE_ID:
+            return self._min_class(self, device_sn)
+        warnings.warn(
+            f"Device for type id: {device_type} has not been implemented yet.",
+            stacklevel=2,
+        )
+        return None
+
+    # MIN Device Methods (Device Type 7)
 
     def min_detail(self, device_sn: str) -> dict[str, Any]:
         """
@@ -390,10 +363,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).detail()
+        return self._min_class(self, device_sn).detail()
 
     def min_energy(self, device_sn: str) -> dict[str, Any]:
         """
@@ -407,10 +380,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).energy()
+        return self._min_class(self, device_sn).energy()
 
     def min_energy_history(
         self,
@@ -438,10 +411,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).energy_history(
+        return self._min_class(self, device_sn).energy_history(
             start_date, end_date, timezone, page, limit
         )
 
@@ -457,10 +430,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).settings()
+        return self._min_class(self, device_sn).settings()
 
     def min_read_parameter(
         self, device_sn: str, parameter_id: str, start_address: int | None = None, end_address: int | None = None
@@ -480,10 +453,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).read_parameter(
+        return self._min_class(self, device_sn).read_parameter(
             parameter_id, start_address, end_address
         )
 
@@ -504,10 +477,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).write_parameter(parameter_id, parameter_values)
+        return self._min_class(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def min_write_time_segment(
         self, device_sn: str, segment_id: int, batt_mode: int, start_time: time, end_time: time, enabled: bool = True
@@ -529,10 +502,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).write_time_segment(
+        return self._min_class(self, device_sn).write_time_segment(
             segment_id, batt_mode, start_time, end_time, enabled
         )
 
@@ -571,10 +544,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API request fails
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Min(self, device_sn).read_time_segments(settings_data)
+        return self._min_class(self, device_sn).read_time_segments(settings_data)
 
     # SPH Device Methods (Device Type 5)
 
@@ -590,10 +563,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).detail()
+        return self._sph_class(self, device_sn).detail()
 
     def sph_energy(self, device_sn: str) -> dict[str, Any]:
         """
@@ -607,10 +580,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).energy()
+        return self._sph_class(self, device_sn).energy()
 
     def sph_energy_history(
         self,
@@ -638,10 +611,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).energy_history(
+        return self._sph_class(self, device_sn).energy_history(
             start_date, end_date, timezone, page, limit
         )
 
@@ -663,10 +636,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).read_parameter(
+        return self._sph_class(self, device_sn).read_parameter(
             parameter_id, start_address, end_address
         )
 
@@ -687,10 +660,10 @@ class OpenApiV1(GrowattApi):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).write_parameter(parameter_id, parameter_values)
+        return self._sph_class(self, device_sn).write_parameter(parameter_id, parameter_values)
 
     def sph_write_ac_charge_times(
         self, device_sn: str, charge_power: int, charge_stop_soc: int, mains_enabled: bool, periods: list[dict[str, Any]]
@@ -729,10 +702,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).write_ac_charge_times(
+        return self._sph_class(self, device_sn).write_ac_charge_times(
             charge_power, charge_stop_soc, mains_enabled, periods
         )
 
@@ -771,10 +744,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).write_ac_discharge_times(
+        return self._sph_class(self, device_sn).write_ac_discharge_times(
             discharge_power, discharge_stop_soc, periods
         )
 
@@ -817,10 +790,10 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).read_ac_charge_times(settings_data)
+        return self._sph_class(self, device_sn).read_ac_charge_times(settings_data)
 
     def sph_read_ac_discharge_times(self, device_sn: str, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """
@@ -860,7 +833,33 @@ class OpenApiV1(GrowattApi):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            httpx.HTTPError: If there is an issue with the HTTP request.
 
         """
-        return Sph(self, device_sn).read_ac_discharge_times(settings_data)
+        return self._sph_class(self, device_sn).read_ac_discharge_times(settings_data)
+
+
+class OpenApiV1(_OpenApiV1Base, GrowattApi):
+    """
+    Extended Growatt API client with V1 API support.
+
+    This class extends the base GrowattApi class with methods for MIN and SPH devices using
+    the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0.
+    """
+
+    def __init__(self, token: str) -> None:
+        """
+        Initialize the Growatt API client with V1 API support.
+
+        Args:
+            token (str): API token for authentication (required for V1 API access).
+
+        """
+        super().__init__(agent_identifier=self._create_user_agent())
+        self.api_url = f"{self.server_url}v1/"
+        self.session.headers.update({"token": token})
+
+    def v1_request(self, method: str, endpoint: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, operation_name: str = "API operation") -> dict[str, Any]:
+        """Make a V1 API request and process the response."""
+        response = self.session.request(method, self.get_url(endpoint), params=params, data=data)
+        return self.process_response(response.json(), operation_name)

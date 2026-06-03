@@ -2,15 +2,15 @@
 Exception classes and error code constants for the growattServer library.
 
 Note that in addition to these custom exceptions, methods may also raise exceptions
-from the underlying requests library (requests.exceptions.RequestException and its
-subclasses) when network or HTTP errors occur. These are not wrapped and are passed
-through directly to the caller.
+from the underlying httpx library (httpx.HTTPError and its subclasses) when network
+or HTTP errors occur. These are not wrapped and are passed through directly to the
+caller.
 
-Common requests exceptions to handle:
-- requests.exceptions.HTTPError: For HTTP error responses (4XX, 5XX)
-- requests.exceptions.ConnectionError: For network connection issues
-- requests.exceptions.Timeout: For request timeouts
-- requests.exceptions.RequestException: The base exception for all requests exceptions
+Common httpx exceptions to handle:
+- httpx.HTTPStatusError: For HTTP error responses (4XX, 5XX)
+- httpx.ConnectError: For network connection issues
+- httpx.TimeoutException: For request timeouts
+- httpx.HTTPError: The base exception for all httpx request exceptions
 """
 
 from __future__ import annotations
