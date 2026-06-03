@@ -1,7 +1,5 @@
 """Async Growatt API client using httpx."""
 
-# ruff: noqa: S324
-
 from __future__ import annotations
 
 import datetime

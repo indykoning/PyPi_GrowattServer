@@ -9,11 +9,12 @@ from .sph import Sph  # noqa: F401
 def __getattr__(name: str):
     """Lazy imports for async device classes (requires httpx)."""
     if name == "AsyncMin":
-        from .async_min import AsyncMin
+        from .async_min import AsyncMin  # noqa: PLC0415
 
         return AsyncMin
     if name == "AsyncSph":
-        from .async_sph import AsyncSph
+        from .async_sph import AsyncSph  # noqa: PLC0415
 
         return AsyncSph
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
