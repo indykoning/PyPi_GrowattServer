@@ -76,7 +76,7 @@ class GrowattApi:
             _ = kwargs
             response.raise_for_status()
 
-        self.session.hooks = {"response": _raise_for_status}
+        self.session.hooks = {"response": [_raise_for_status]}
 
         headers = {"User-Agent": self.agent_identifier}
         self.session.headers.update(headers)
@@ -266,12 +266,13 @@ class GrowattApi:
 
         """
         date_str = self.__get_date_string(date=date)
-        response = self.session.get(self.get_url("newInverterAPI.do"), params={
+        params: dict[str, str | int] = {
             "op": "getInverterData",
             "id": inverter_id,
             "type": 1,
-            "date": date_str
-        })
+            "date": date_str,
+        }
+        response = self.session.get(self.get_url("newInverterAPI.do"), params=params)
 
         return response.json()
 
@@ -412,12 +413,13 @@ class GrowattApi:
 
         """
         date_str = self.__get_date_string(date=date)
-        response = self.session.get(self.get_url("newTlxApi.do"), params={
+        params: dict[str, str | int] = {
             "op": "getTlxData",
             "id": tlx_id,
             "type": 1,
-            "date": date_str
-        })
+            "date": date_str,
+        }
+        response = self.session.get(self.get_url("newTlxApi.do"), params=params)
 
         return response.json()
 
@@ -753,10 +755,10 @@ class GrowattApi:
             dict: A dictionary of settings.
 
         """
-        default_params = {
+        default_params: dict[str, str | int] = {
             "op": "getMixSetParams",
             "serialNum": serial_number,
-            "kind": 0
+            "kind": 0,
         }
         response = self.session.get(self.get_url("newMixApi.do"), params=default_params)
         return response.json()
@@ -870,10 +872,12 @@ class GrowattApi:
 
     def __get_all_devices(self, plant_id: str) -> dict[str, Any]:
         """Get basic plant information with device list."""
-        response = self.session.get(self.get_url("newTwoPlantAPI.do"),
-                                    params={"op": "getAllDeviceList",
-                                            "plantId": plant_id,
-                                            "language": 1})
+        params: dict[str, str | int] = {
+            "op": "getAllDeviceList",
+            "plantId": plant_id,
+            "language": 1,
+        }
+        response = self.session.get(self.get_url("newTwoPlantAPI.do"), params=params)
 
         return response.json().get("deviceList", {})
 
@@ -889,12 +893,13 @@ class GrowattApi:
 
     def plant_info(self, plant_id: str) -> dict[str, Any]:
         """Get basic plant information with device list."""
-        response = self.session.get(self.get_url("newTwoPlantAPI.do"), params={
+        params: dict[str, str | int] = {
             "op": "getAllDeviceListTwo",
             "plantId": plant_id,
             "pageNum": 1,
-            "pageSize": 1
-        })
+            "pageSize": 1,
+        }
+        response = self.session.get(self.get_url("newTwoPlantAPI.do"), params=params)
 
         return response.json()
 
@@ -1093,18 +1098,19 @@ class GrowattApi:
         # Ensure declared but unused args are referenced to satisfy linters
         _ = serial_number
         _ = setting_type
-        settings_parameters = parameters
 
         # If we've been passed an array then convert it into a dictionary
         if isinstance(parameters, list):
-            settings_parameters = {}
+            settings_parameters: dict[str, Any] = {}
             for index, param in enumerate(parameters, start=1):
                 settings_parameters["param" + str(index)] = param
+        else:
+            settings_parameters = parameters
 
-        settings_parameters = {**default_parameters, **settings_parameters}
+        merged = {**default_parameters, **settings_parameters}
 
         response = self.session.post(self.get_url("newTcpsetAPI.do"),
-                                     params=settings_parameters)
+                                     params=merged)
 
         return response.json()
 
@@ -1234,20 +1240,21 @@ class GrowattApi:
         """
         default_parameters = {
             "serialNum": serial_number,
-            "type": setting_type
+            "type": setting_type,
         }
-        settings_parameters = parameters
 
         # If we've been passed an array then convert it into a dictionary
         if isinstance(parameters, list):
-            settings_parameters = {}
+            settings_parameters: dict[str, Any] = {}
             for index, param in enumerate(parameters, start=1):
                 settings_parameters["param" + str(index)] = param
+        else:
+            settings_parameters = parameters
 
-        settings_parameters = {**default_parameters, **settings_parameters}
+        merged = {**default_parameters, **settings_parameters}
 
         response = self.session.post(self.get_url("noahDeviceApi/noah/set"),
-                                     data=settings_parameters)
+                                     data=merged)
 
         return response.json()
 
@@ -1391,13 +1398,13 @@ class GrowattApi:
             dict: Server JSON response.
 
         """
-        settings_parameters = parameters
-
         # If we've been passed an array then convert it into a dictionary
         if isinstance(parameters, list):
-            settings_parameters = {}
+            settings_parameters: dict[str, Any] = {}
             for index, param in enumerate(parameters, start=1):
                 settings_parameters["param" + str(index)] = param
+        else:
+            settings_parameters = parameters
 
         settings_parameters = {**default_parameters, **settings_parameters}
 

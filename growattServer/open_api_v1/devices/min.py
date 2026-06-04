@@ -101,12 +101,10 @@ class Min(AbstractDevice):
             https://www.showdoc.com.cn/262556420217021/6129764475556048
 
         """
-        if start_date is None and end_date is None:
-            start_date = datetime.now(tz=UTC).astimezone().date()
-            end_date = datetime.now(tz=UTC).astimezone().date()
-        elif start_date is None:
-            start_date = end_date
-        elif end_date is None:
+        today = datetime.now(tz=UTC).astimezone().date()
+        if start_date is None:
+            start_date = end_date if end_date is not None else today
+        if end_date is None:
             end_date = start_date
 
         # check interval validity
@@ -451,7 +449,7 @@ class Min(AbstractDevice):
             segment = {
                 "segment_id": i,
                 "batt_mode": batt_mode,
-                "mode_name": mode_names.get(batt_mode, "Unknown"),
+                "mode_name": mode_names.get(batt_mode, "Unknown") if batt_mode is not None else "Unknown",
                 "start_time": start_time,
                 "end_time": end_time,
                 "enabled": enabled,

@@ -62,7 +62,7 @@ class OpenApiV1(GrowattApi):
         # Set up authentication for V1 API using the provided token
         self.session.headers.update({"token": token})
 
-    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> dict[str, Any]:
+    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> Any:
         """
         Process API response and handle errors.
 
@@ -90,7 +90,7 @@ class OpenApiV1(GrowattApi):
         """Return the page URL for the v1 API."""
         return self.api_url + page
 
-    def plant_list(self) -> dict[str, Any]:
+    def plant_list(self) -> dict[str, Any]:  # type: ignore[override]
         """
         Get a list of all plants with detailed information.
 
@@ -211,12 +211,13 @@ class OpenApiV1(GrowattApi):
         if day is None:
             day = datetime.now(tz=UTC).astimezone().date()
 
+        params: dict[str, str | int] = {
+            "plant_id": plant_id,
+            "date": str(day),
+        }
         response = self.session.get(
             self.get_url("plant/power"),
-            params={
-                "plant_id": plant_id,
-                "date": day,
-            },
+            params=params,
         )
 
         return self.process_response(response.json(), "getting plant power overview")
@@ -265,12 +266,10 @@ class OpenApiV1(GrowattApi):
         max_day_interval = 7
         max_year_interval = 20
 
-        if start_date is None and end_date is None:
-            start_date = datetime.now(tz=UTC).astimezone().date()
-            end_date = datetime.now(tz=UTC).astimezone().date()
-        elif start_date is None:
-            start_date = end_date
-        elif end_date is None:
+        today = datetime.now(tz=UTC).astimezone().date()
+        if start_date is None:
+            start_date = end_date if end_date is not None else today
+        if end_date is None:
             end_date = start_date
 
         # Validate date ranges based on time_unit
@@ -309,7 +308,7 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant energy history")
 
-    def device_list(self, plant_id: int) -> dict[str, Any]:
+    def device_list(self, plant_id: int) -> dict[str, Any]:  # type: ignore[override]
         """
         Get devices associated with plant.
 
@@ -354,13 +353,14 @@ class OpenApiV1(GrowattApi):
             }
 
         """
+        params: dict[str, str | int] = {
+            "plant_id": plant_id,
+            "page": "",
+            "perpage": "",
+        }
         response = self.session.get(
             url=self.get_url("device/list"),
-            params={
-                "plant_id": plant_id,
-                "page": "",
-                "perpage": "",
-            },
+            params=params,
         )
         return self.process_response(response.json(), "getting device list")
 
