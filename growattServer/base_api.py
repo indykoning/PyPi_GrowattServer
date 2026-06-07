@@ -18,7 +18,13 @@ if TYPE_CHECKING:
 
 import httpx
 
-from .exceptions import GrowattError
+from .exceptions import (
+    GrowattApiConnectionError,
+    GrowattApiError,
+    GrowattApiStatusError,
+    GrowattApiTimeoutError,
+    GrowattError,
+)
 
 name = "growattServer"
 
@@ -1148,6 +1154,56 @@ class _GrowattApiBase:
             params=settings_parameters,
         )
 
+    def set_classic_inverter_active_power_rate(self, serial_number, power_rate):
+        """
+        Set the active power rate (output power limit) for a classic inverter.
+
+        Args:
+            serial_number: Inverter serial number.
+            power_rate: Active power rate as percentage (0-100).
+
+        Returns:
+            dict: Server JSON response.
+
+        """
+        default_parameters = {
+            "action": "inverterSet",
+            "serialNum": serial_number,
+        }
+
+        parameters = {
+            "paramId": "pv_active_p_rate",
+            "command_1": str(power_rate),
+            "command_2": "",
+        }
+
+        return self.update_classic_inverter_setting(default_parameters, parameters)
+
+    def set_classic_inverter_on_off(self, serial_number, enabled):
+        """
+        Turn a classic inverter on or off.
+
+        Args:
+            serial_number: Inverter serial number.
+            enabled: True to turn on, False to turn off.
+
+        Returns:
+            dict: Server JSON response.
+
+        """
+        default_parameters = {
+            "action": "inverterSet",
+            "serialNum": serial_number,
+        }
+
+        parameters = {
+            "paramId": "pv_on_off",
+            "command_1": "0001" if enabled else "0000",
+            "command_2": "",
+        }
+
+        return self.update_classic_inverter_setting(default_parameters, parameters)
+
     @staticmethod
     def _parse_classic_inverter_html(html, device_sn) -> dict:
         """Extract inverter data JSON from the settings page HTML."""
@@ -1247,7 +1303,20 @@ class GrowattApi(_GrowattApiBase):
             kwargs["data"] = data
         if follow_redirects is not None:
             kwargs["follow_redirects"] = follow_redirects
-        response = self.session.request(method, url, **kwargs)
+        try:
+            response = self.session.request(method, url, **kwargs)
+        except httpx.TimeoutException as exc:
+            msg = f"Request to {url} timed out"
+            raise GrowattApiTimeoutError(msg) from exc
+        except httpx.ConnectError as exc:
+            msg = f"Failed to connect to {url}"
+            raise GrowattApiConnectionError(msg) from exc
+        except httpx.HTTPStatusError as exc:
+            msg = f"HTTP {exc.response.status_code} error for {url}"
+            raise GrowattApiStatusError(msg, exc.response.status_code) from exc
+        except httpx.HTTPError as exc:
+            msg = f"HTTP error during request to {url}: {exc}"
+            raise GrowattApiError(msg) from exc
         result = response.text if text else response.json()
         return extract(result) if extract is not None else result
 

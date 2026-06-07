@@ -27,4 +27,7 @@ setuptools.setup(
     install_requires=[
         "httpx",
     ],
+    extras_require={
+        "compat": ["requests"],
+    },
 )

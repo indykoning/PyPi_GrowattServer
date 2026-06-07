@@ -6,6 +6,10 @@ from __future__ import annotations
 from .async_base_api import AsyncGrowattApi
 from .base_api import GrowattApi, Timespan, hash_password
 from .exceptions import (
+    GrowattApiConnectionError,
+    GrowattApiError,
+    GrowattApiStatusError,
+    GrowattApiTimeoutError,
     GrowattError,
     GrowattParameterError,
     GrowattV1ApiError,
@@ -22,6 +26,10 @@ __all__ = [
     "AsyncOpenApiV1",
     "DeviceType",
     "GrowattApi",
+    "GrowattApiConnectionError",
+    "GrowattApiError",
+    "GrowattApiStatusError",
+    "GrowattApiTimeoutError",
     "GrowattError",
     "GrowattParameterError",
     "GrowattV1ApiError",

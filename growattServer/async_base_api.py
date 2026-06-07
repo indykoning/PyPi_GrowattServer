@@ -10,6 +10,12 @@ if TYPE_CHECKING:
 import httpx
 
 from .base_api import _GrowattApiBase, hash_password
+from .exceptions import (
+    GrowattApiConnectionError,
+    GrowattApiError,
+    GrowattApiStatusError,
+    GrowattApiTimeoutError,
+)
 
 
 async def _async_raise_for_status(response):
@@ -58,7 +64,20 @@ class AsyncGrowattApi(_GrowattApiBase):
             kwargs["data"] = data
         if follow_redirects is not None:
             kwargs["follow_redirects"] = follow_redirects
-        response = await self.session.request(method, url, **kwargs)
+        try:
+            response = await self.session.request(method, url, **kwargs)
+        except httpx.TimeoutException as exc:
+            msg = f"Request to {url} timed out"
+            raise GrowattApiTimeoutError(msg) from exc
+        except httpx.ConnectError as exc:
+            msg = f"Failed to connect to {url}"
+            raise GrowattApiConnectionError(msg) from exc
+        except httpx.HTTPStatusError as exc:
+            msg = f"HTTP {exc.response.status_code} error for {url}"
+            raise GrowattApiStatusError(msg, exc.response.status_code) from exc
+        except httpx.HTTPError as exc:
+            msg = f"HTTP error during request to {url}: {exc}"
+            raise GrowattApiError(msg) from exc
         result = response.text if text else response.json()
         return extract(result) if extract is not None else result
 
