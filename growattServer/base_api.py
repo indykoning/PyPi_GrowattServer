@@ -178,7 +178,7 @@ class GrowattApi:
             })
         return data
 
-    def plant_list(self, user_id: str) -> list[dict[str, Any]]:
+    def plant_list(self, user_id: str) -> dict[str, Any]:
         """
         Get a list of plants connected to this account.
 
@@ -186,7 +186,7 @@ class GrowattApi:
             user_id (str): The ID of the user.
 
         Returns:
-            list: A list of plants connected to the account.
+            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
 
         Raises:
             Exception: If the request to the server fails.
