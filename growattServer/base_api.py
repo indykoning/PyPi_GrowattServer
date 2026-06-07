@@ -100,7 +100,7 @@ class _GrowattApiBase:
         """Return the page URL."""
         return self.server_url + page
 
-    def plant_list(self, user_id: str) -> list[dict[str, Any]]:
+    def plant_list(self, user_id: str) -> dict[str, Any]:
         """
         Get a list of plants connected to this account.
 
@@ -108,7 +108,7 @@ class _GrowattApiBase:
             user_id (str): The ID of the user.
 
         Returns:
-            list: A list of plants connected to the account.
+            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
 
         Raises:
             Exception: If the request to the server fails.
@@ -745,12 +745,12 @@ class _GrowattApiBase:
             "This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning, stacklevel=2)
         return self.device_list(plant_id)
 
-    def _get_all_devices(self, plant_id: str) -> dict[str, Any]:
+    def _get_all_devices(self, plant_id: str) -> list[dict[str, Any]]:
         """Get basic plant information with device list."""
         return self._request(
             "GET", self.get_url("newTwoPlantAPI.do"),
             params={"op": "getAllDeviceList", "plantId": plant_id, "language": 1},
-            extract=lambda r: r.get("deviceList", {}),
+            extract=lambda r: r.get("deviceList", []),
         )
 
     def plant_info(self, plant_id: str) -> dict[str, Any]:
@@ -917,7 +917,7 @@ class _GrowattApiBase:
 
         return self._request(
             "POST", self.get_url("newTcpsetAPI.do"),
-            params=settings_parameters,
+            params=merged,
         )
 
     def update_mix_inverter_setting(self, serial_number: str, setting_type: str, parameters: dict[str, Any] | list[Any]) -> dict[str, Any]:
@@ -1059,7 +1059,7 @@ class _GrowattApiBase:
 
         return self._request(
             "POST", self.get_url("noahDeviceApi/noah/set"),
-            data=settings_parameters,
+            data=merged,
         )
 
     def update_classic_inverter_setting(self, default_parameters: dict[str, Any], parameters: dict[str, Any] | list[Any]) -> dict[str, Any]:

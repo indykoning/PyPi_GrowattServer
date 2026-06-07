@@ -25,7 +25,7 @@ class Min(AbstractDevice):
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129816412127075
@@ -49,7 +49,7 @@ class Min(AbstractDevice):
                 10001 - System error
                 10002 - Min does not exist
                 10003 - Device SN error
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129822090975531
@@ -87,7 +87,7 @@ class Min(AbstractDevice):
                 10004 - Start date interval has exceeded seven days
                 10005 - Min does not exist
                 10011 - Permission is not satisfied
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129764475556048
@@ -125,7 +125,7 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/8696815667375182
@@ -163,7 +163,7 @@ class Min(AbstractDevice):
                 10007 - The collector version does not support the reading function
                 10008 - The collector connects to the server error, please restart and try again
                 10009 - The read setting parameter type does not exist
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129828239577315
@@ -221,7 +221,7 @@ class Min(AbstractDevice):
                 10009 - The date and time format is wrong
                 10012 - Min does not exist
                 10013 - The end time cannot be less than the start time
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129826876191828
@@ -291,7 +291,7 @@ class Min(AbstractDevice):
                 10009 - The date and time format is wrong
                 10012 - Min does not exist
                 10013 - The end time cannot be less than the start time
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129826876191828
@@ -365,7 +365,7 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattV1ApiError: If the API request fails
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:

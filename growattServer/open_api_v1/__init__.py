@@ -8,8 +8,16 @@ from datetime import UTC, date, datetime, time
 from enum import Enum
 from typing import Any
 
+import httpx
+
 from growattServer import GrowattApi
-from growattServer.exceptions import GrowattV1ApiError
+from growattServer.exceptions import (
+    GrowattApiConnectionError,
+    GrowattApiError,
+    GrowattApiStatusError,
+    GrowattApiTimeoutError,
+    GrowattV1ApiError,
+)
 
 from .devices import AbstractDevice, Min, ParameterValue, Sph
 
@@ -91,7 +99,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494058730404880
@@ -119,7 +127,7 @@ class _OpenApiV1Base:
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
                 10004 - User does not exist
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494060394238679
@@ -146,7 +154,7 @@ class _OpenApiV1Base:
                 10001 - System error
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494061093808613
@@ -186,7 +194,7 @@ class _OpenApiV1Base:
                 10001 - System error
                 10002 - Power station does not exist
                 10003 - Power station ID is empty or time format is incorrect
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494062656174173
@@ -197,7 +205,7 @@ class _OpenApiV1Base:
 
         return self.v1_request(
             "GET", "plant/power",
-            params={"plant_id": plant_id, "date": day},
+            params={"plant_id": plant_id, "date": str(day)},
             operation_name="getting plant power overview",
         )
 
@@ -236,7 +244,7 @@ class _OpenApiV1Base:
                 10002 - Power station does not exist
                 10003 - Power station ID is empty
                 10004 - Time format is incorrect
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/1494061730868556
@@ -363,7 +371,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).detail()
@@ -380,7 +388,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).energy()
@@ -411,7 +419,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).energy_history(
@@ -430,7 +438,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).settings()
@@ -453,7 +461,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).read_parameter(
@@ -477,7 +485,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).write_parameter(parameter_id, parameter_values)
@@ -502,7 +510,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).write_time_segment(
@@ -544,7 +552,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API request fails
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._min_class(self, device_sn).read_time_segments(settings_data)
@@ -563,7 +571,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).detail()
@@ -580,7 +588,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).energy()
@@ -611,7 +619,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If date interval is invalid (exceeds 7 days).
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).energy_history(
@@ -636,7 +644,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).read_parameter(
@@ -660,7 +668,7 @@ class _OpenApiV1Base:
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).write_parameter(parameter_id, parameter_values)
@@ -702,7 +710,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).write_ac_charge_times(
@@ -744,7 +752,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If parameters are invalid.
             GrowattV1ApiError: If the API returns an error response.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).write_ac_discharge_times(
@@ -790,7 +798,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).read_ac_charge_times(settings_data)
@@ -833,7 +841,7 @@ class _OpenApiV1Base:
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         return self._sph_class(self, device_sn).read_ac_discharge_times(settings_data)
@@ -861,5 +869,19 @@ class OpenApiV1(_OpenApiV1Base, GrowattApi):
 
     def v1_request(self, method: str, endpoint: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, operation_name: str = "API operation") -> dict[str, Any]:
         """Make a V1 API request and process the response."""
-        response = self.session.request(method, self.get_url(endpoint), params=params, data=data)
+        url = self.get_url(endpoint)
+        try:
+            response = self.session.request(method, url, params=params, data=data)
+        except httpx.TimeoutException as exc:
+            msg = f"Request to {url} timed out"
+            raise GrowattApiTimeoutError(msg) from exc
+        except httpx.ConnectError as exc:
+            msg = f"Failed to connect to {url}"
+            raise GrowattApiConnectionError(msg) from exc
+        except httpx.HTTPStatusError as exc:
+            msg = f"HTTP {exc.response.status_code} error for {url}"
+            raise GrowattApiStatusError(msg, exc.response.status_code) from exc
+        except httpx.HTTPError as exc:
+            msg = f"HTTP error during request to {url}: {exc}"
+            raise GrowattApiError(msg) from exc
         return self.process_response(response.json(), operation_name)

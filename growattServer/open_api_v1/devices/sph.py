@@ -25,7 +25,7 @@ class Sph(AbstractDevice):
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129763571291058
@@ -49,7 +49,7 @@ class Sph(AbstractDevice):
                 10001 - System error
                 10002 - Mix does not exist
                 10003 - Device SN error
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129764475556048
@@ -86,7 +86,7 @@ class Sph(AbstractDevice):
                 10003 - Date format error
                 10004 - Date interval exceeds seven days
                 10005 - Mix does not exist
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129765461123058
@@ -139,7 +139,7 @@ class Sph(AbstractDevice):
                 10007 - The collector version does not support the reading function
                 10008 - The collector connects to the server error, please restart and try again
                 10009 - The read setting parameter type does not exist
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129766954561259
@@ -200,7 +200,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -288,7 +288,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -373,7 +373,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -522,7 +522,7 @@ class Sph(AbstractDevice):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:
@@ -597,7 +597,7 @@ class Sph(AbstractDevice):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:

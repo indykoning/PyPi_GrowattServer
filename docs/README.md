@@ -20,7 +20,7 @@ Please refer to the docs for [OpenAPI V1](./openapiv1.md) for it's usage and ava
 
 This version replaces the `requests` library with `httpx` for both sync and async HTTP.
 If your code catches `requests.exceptions.RequestException`, update it to catch
-`httpx.HTTPError` instead. See the [exceptions module](../growattServer/exceptions.py)
+`growattServer.GrowattApiError` instead. See the [exceptions module](../growattServer/exceptions.py)
 for details on exception handling.
 
 ### Sync/Async Support

@@ -57,7 +57,7 @@ class AsyncSph(Sph):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:
@@ -102,7 +102,7 @@ class AsyncSph(Sph):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:

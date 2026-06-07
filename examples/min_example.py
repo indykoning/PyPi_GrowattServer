@@ -1,7 +1,5 @@
 import json
 
-import httpx
-
 import growattServer
 
 """
@@ -88,7 +86,7 @@ except growattServer.GrowattV1ApiError as e:
     print(f"API Error: {e} (Code: {e.error_code}, Message: {e.error_msg})")
 except growattServer.GrowattParameterError as e:
     print(f"Parameter Error: {e}")
-except httpx.HTTPError as e:
+except growattServer.GrowattApiError as e:
     print(f"Network Error: {e}")
 except Exception as e:
     print(f"Unexpected error: {e}")

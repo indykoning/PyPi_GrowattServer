@@ -10,8 +10,6 @@ You can obtain an API token from the Growatt API documentation or developer port
 import asyncio
 import json
 
-import httpx
-
 import growattServer
 
 # test token from official API docs https://www.showdoc.com.cn/262556420217021/1494053950115877
@@ -54,7 +52,7 @@ async def main():
         print(f"API Error: {e} (Code: {e.error_code}, Message: {e.error_msg})")
     except growattServer.GrowattParameterError as e:
         print(f"Parameter Error: {e}")
-    except httpx.HTTPError as e:
+    except growattServer.GrowattApiError as e:
         print(f"Network Error: {e}")
 
 

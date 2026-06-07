@@ -53,7 +53,7 @@ class AsyncMin(Min):
 
         Raises:
             GrowattV1ApiError: If the API request fails
-            httpx.HTTPError: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:
