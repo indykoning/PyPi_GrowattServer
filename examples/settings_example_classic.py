@@ -70,19 +70,22 @@ pp.pprint(inverter_info)
 on_off = inverter_info["onOff"]
 print(f"Inverter on/off status: {'on' if on_off == '1' else 'off'}")
 
-# Turn inverter on
+# Turn inverter on using the convenience method
 print(f"Turning on inverter: {device_sn}")
+response = api.set_classic_inverter_on_off(device_sn, enabled=True)
+print(response)
 
-# Set up the default parameters
-default_parameters = {
-    "action": "inverterSet",
-    "serialNum": device_sn,
-}
+# Turn inverter off
+print(f"Turning off inverter: {device_sn}")
+response = api.set_classic_inverter_on_off(device_sn, enabled=False)
+print(response)
 
-parameters = {
-    "paramId": "pv_on_off",
-    "command_1": "0001", # 0001 to turn on, 0000 to turn off
-    "command_2": "",  # Empty string for command_2 as not used
-}
-response = api.update_classic_inverter_setting(default_parameters, parameters)
+# Set active power rate to 50% (limits output power to 50% of rated capacity)
+print(f"Setting active power rate to 50% for inverter: {device_sn}")
+response = api.set_classic_inverter_active_power_rate(device_sn, power_rate=50)
+print(response)
+
+# Set active power rate back to 100% (full power output)
+print(f"Setting active power rate to 100% for inverter: {device_sn}")
+response = api.set_classic_inverter_active_power_rate(device_sn, power_rate=100)
 print(response)
