@@ -868,14 +868,14 @@ class GrowattApi:
             "This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning, stacklevel=2)
         return self.device_list(plant_id)
 
-    def __get_all_devices(self, plant_id: str) -> dict[str, Any]:
+    def __get_all_devices(self, plant_id: str) -> list[dict[str, Any]]:
         """Get basic plant information with device list."""
         response = self.session.get(self.get_url("newTwoPlantAPI.do"),
                                     params={"op": "getAllDeviceList",
                                             "plantId": plant_id,
                                             "language": 1})
 
-        return response.json().get("deviceList", {})
+        return response.json().get("deviceList", [])
 
     def device_list(self, plant_id: str) -> list[dict[str, Any]]:
         """Get a list of all devices connected to plant."""
