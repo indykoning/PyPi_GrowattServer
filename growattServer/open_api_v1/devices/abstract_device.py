@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, Any, TypedDict
 from growattServer.exceptions import GrowattParameterError
 
 if TYPE_CHECKING:
-    from growattServer.open_api_v1 import OpenApiV1
-    from growattServer.open_api_v1.async_open_api_v1 import AsyncOpenApiV1
+    from growattServer.open_api_v1 import _OpenApiV1Base
 
 
 type ParameterValue = str | float | bool | list[Any] | dict[str, Any]
@@ -24,7 +23,9 @@ class ReadParamResponse(TypedDict):
 class AbstractDevice:
     """Abstract device type. Must not be used directly."""
 
-    def __init__(self, api: OpenApiV1 | AsyncOpenApiV1, device_sn: str) -> None:
+    api: _OpenApiV1Base
+
+    def __init__(self, api: _OpenApiV1Base, device_sn: str) -> None:
         """
         Initialize the device with the bare minimum being the device_sn.
 

@@ -18,7 +18,23 @@ class AsyncMin(Min):
     Only methods that chain async calls need explicit overrides.
     """
 
-    async def read_time_segments(self, settings_data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    async def detail(self) -> dict[str, Any]:  # type: ignore[override]
+        """Get detailed data for a MIN inverter (async)."""
+        return await self.api.v1_request(
+            "GET", "device/tlx/tlx_data_info",
+            params={"device_sn": self.device_sn},
+            operation_name="getting MIN inverter details",
+        )
+
+    async def settings(self) -> dict[str, Any]:  # type: ignore[override]
+        """Get settings for a MIN inverter (async)."""
+        return await self.api.v1_request(
+            "GET", "device/tlx/tlx_set_info",
+            params={"device_sn": self.device_sn},
+            operation_name="getting MIN inverter settings",
+        )
+
+    async def read_time_segments(self, settings_data: dict[str, Any] | None = None) -> list[dict[str, Any]]:  # type: ignore[override]
         """
         Read Time-of-Use (TOU) settings from a Growatt MIN/TLX inverter.
 

@@ -116,6 +116,7 @@ class AsyncSph(Sph):
 
 | Layer | Class | Method | Reason |
 |:------|:------|:-------|:-------|
+| Base API | `AsyncGrowattApi` | `plant_list` | Different signature from V1 `plant_list()` |
 | Base API | `AsyncGrowattApi` | `login` | Post-processes response dict |
 | Base API | `AsyncGrowattApi` | `device_list` | Chains `plant_info()` then `_get_all_devices()` |
 | Base API | `AsyncGrowattApi` | `update_plant_settings` | Conditionally calls `plant_settings()` |
@@ -124,6 +125,19 @@ class AsyncSph(Sph):
 | Device | `AsyncSph` | `read_ac_discharge_times` | Conditionally calls `self.detail()` |
 
 All other methods (~60) are shared via base classes with zero duplication.
+
+## Type Safety
+
+The passthrough pattern means that at runtime, a regular `def` method returns a
+coroutine object (not `dict`). To give type checkers correct information, each
+async module has a corresponding `.pyi` stub file that redeclares all inherited
+methods as `async def`:
+
+- `async_base_api.pyi` — stubs for `AsyncGrowattApi`
+- `open_api_v1/async_open_api_v1.pyi` — stubs for `AsyncOpenApiV1`
+
+The package includes a `py.typed` marker (PEP 561) so that mypy, pyright, and
+other type checkers automatically pick up these stubs.
 
 ## Usage
 

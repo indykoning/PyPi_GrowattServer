@@ -18,7 +18,15 @@ class AsyncSph(Sph):
     Only methods that chain async calls need explicit overrides.
     """
 
-    async def read_ac_charge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def detail(self) -> dict[str, Any]:  # type: ignore[override]
+        """Get detailed data for an SPH inverter (async)."""
+        return await self.api.v1_request(
+            "GET", "device/mix/mix_data_info",
+            params={"device_sn": self.device_sn},
+            operation_name="getting SPH inverter details",
+        )
+
+    async def read_ac_charge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:  # type: ignore[override]
         """
         Read AC charge time periods and settings from an SPH inverter.
 
@@ -64,7 +72,7 @@ class AsyncSph(Sph):
             settings_data = await self.detail()
         return self._parse_ac_charge_settings(settings_data)
 
-    async def read_ac_discharge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def read_ac_discharge_times(self, settings_data: dict[str, Any] | None = None) -> dict[str, Any]:  # type: ignore[override]
         """
         Read AC discharge time periods and settings from an SPH inverter.
 

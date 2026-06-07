@@ -17,10 +17,8 @@ major release.
 
 from __future__ import annotations
 
-import logging
+import warnings
 from enum import IntEnum
-
-_logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Deprecation compatibility: if ``requests`` is installed, GrowattApiError
@@ -96,13 +94,15 @@ class GrowattApiError(*_api_error_bases):  # type: ignore[misc]
         super().__init__(*args, **kwargs)
         if _has_requests and not GrowattApiError._deprecation_warned:
             GrowattApiError._deprecation_warned = True
-            _logger.warning(
+            warnings.warn(
                 "growattServer now raises GrowattApiError instead of "
                 "requests.RequestException for HTTP/network errors. "
                 "GrowattApiError currently inherits from RequestException "
                 "for backwards compatibility, but this will be removed in a "
                 "future major release. Please update your exception handlers "
-                "to catch growattServer.GrowattApiError instead."
+                "to catch growattServer.GrowattApiError instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
 
 

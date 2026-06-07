@@ -10,8 +10,9 @@ import json
 import re
 import secrets
 import warnings
+from collections.abc import Callable
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     from typing import Self
@@ -25,6 +26,8 @@ from .exceptions import (
     GrowattApiTimeoutError,
     GrowattError,
 )
+
+_T = TypeVar("_T")
 
 name = "growattServer"
 
@@ -55,8 +58,7 @@ class Timespan(IntEnum):
     month = 2
 
 
-def _raise_for_status(response):
-    response.raise_for_status()
+DEFAULT_TIMEOUT = 30.0  # seconds
 
 
 class _GrowattApiBase:
@@ -81,6 +83,14 @@ class _GrowattApiBase:
             random_number = "".join(str(secrets.randbelow(10)) for _ in range(5))
             self.agent_identifier += " - " + random_number
 
+    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], Any] | None = None, text: bool = False) -> Any:
+        """Make an HTTP request. Implemented by subclasses."""
+        raise NotImplementedError
+
+    def device_list(self, plant_id: str) -> Any:
+        """Get device list. Implemented by subclasses."""
+        raise NotImplementedError
+
     def _get_date_string(self, timespan: Timespan | None = None, date: datetime.datetime | None = None) -> str:
         if timespan is not None and not isinstance(timespan, Timespan):
             raise ValueError("timespan must be a Timespan enum value")
@@ -99,27 +109,6 @@ class _GrowattApiBase:
     def get_url(self, page: str) -> str:
         """Return the page URL."""
         return self.server_url + page
-
-    def plant_list(self, user_id: str) -> dict[str, Any]:
-        """
-        Get a list of plants connected to this account.
-
-        Args:
-            user_id (str): The ID of the user.
-
-        Returns:
-            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
-
-        Raises:
-            Exception: If the request to the server fails.
-
-        """
-        return self._request(
-            "GET", self.get_url("PlantListAPI.do"),
-            params={"userId": user_id},
-            follow_redirects=False,
-            extract=lambda r: r.get("back", []),
-        )
 
     def plant_detail(self, plant_id: str, timespan: Timespan, date: datetime.datetime | None = None) -> dict[str, Any]:
         """
@@ -1276,13 +1265,14 @@ class _GrowattApiBase:
 class GrowattApi(_GrowattApiBase):
     """Base client for Growatt API endpoints."""
 
-    def __init__(self, add_random_user_id: bool = False, agent_identifier: str | None = None) -> None:
+    def __init__(self, add_random_user_id: bool = False, agent_identifier: str | None = None, timeout: float | None = DEFAULT_TIMEOUT) -> None:
         """
         Initialize the Growatt API client.
 
         Args:
             add_random_user_id: Append a short random suffix to the user-agent.
             agent_identifier: Optional override for the user-agent string.
+            timeout: Request timeout in seconds. Defaults to 30s. Pass None to disable.
 
         """
         super().__init__(add_random_user_id, agent_identifier)
@@ -1290,13 +1280,12 @@ class GrowattApi(_GrowattApiBase):
         self.session = httpx.Client(
             headers={"User-Agent": self.agent_identifier},
             follow_redirects=True,
-            timeout=None,  # noqa: S113
-            event_hooks={"response": [_raise_for_status]},
+            timeout=timeout,
         )
 
-    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Any = None, text: bool = False) -> Any:
+    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], _T] | None = None, text: bool = False) -> Any:
         """Make an HTTP request and return the JSON response (or text if text=True)."""
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if params is not None:
             kwargs["params"] = params
         if data is not None:
@@ -1305,6 +1294,7 @@ class GrowattApi(_GrowattApiBase):
             kwargs["follow_redirects"] = follow_redirects
         try:
             response = self.session.request(method, url, **kwargs)
+            response.raise_for_status()
         except httpx.TimeoutException as exc:
             msg = f"Request to {url} timed out"
             raise GrowattApiTimeoutError(msg) from exc
@@ -1333,6 +1323,27 @@ class GrowattApi(_GrowattApiBase):
         self.close()
 
     # Methods that need direct session access or chain async calls
+
+    def plant_list(self, user_id: str) -> dict[str, Any]:
+        """
+        Get a list of plants connected to this account.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
+
+        Raises:
+            GrowattApiError: If the request to the server fails.
+
+        """
+        return self._request(
+            "GET", self.get_url("PlantListAPI.do"),
+            params={"userId": user_id},
+            follow_redirects=False,
+            extract=lambda r: r.get("back", []),
+        )
 
     def login(self, username: str, password: str, is_password_hashed: bool = False) -> dict[str, Any]:
         """
@@ -1403,6 +1414,7 @@ class GrowattApi(_GrowattApiBase):
             "userName": username,
             "password": password
         })
+        response.raise_for_status()
 
         data = response.json()["back"]
         if data["success"]:
@@ -1468,6 +1480,7 @@ class GrowattApi(_GrowattApiBase):
 
         response = self.session.post(self.get_url(
             "newTwoPlantAPI.do?op=updatePlant"), files=form_settings)
+        response.raise_for_status()
 
         return response.json()
 

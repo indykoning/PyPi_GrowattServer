@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     from typing import Self
 
 import httpx
 
-from .base_api import _GrowattApiBase, hash_password
+from .base_api import DEFAULT_TIMEOUT, _GrowattApiBase, hash_password
 from .exceptions import (
     GrowattApiConnectionError,
     GrowattApiError,
@@ -17,9 +18,7 @@ from .exceptions import (
     GrowattApiTimeoutError,
 )
 
-
-async def _async_raise_for_status(response):
-    response.raise_for_status()
+_T = TypeVar("_T")
 
 
 class AsyncGrowattApi(_GrowattApiBase):
@@ -31,7 +30,7 @@ class AsyncGrowattApi(_GrowattApiBase):
     base method, both of which yield coroutines when ``_request`` is async.
     """
 
-    def __init__(self, add_random_user_id: bool = False, agent_identifier: str | None = None, session: httpx.AsyncClient | None = None) -> None:
+    def __init__(self, add_random_user_id: bool = False, agent_identifier: str | None = None, session: httpx.AsyncClient | None = None, timeout: float | None = DEFAULT_TIMEOUT) -> None:
         """
         Initialize the Growatt API client.
 
@@ -39,6 +38,7 @@ class AsyncGrowattApi(_GrowattApiBase):
             add_random_user_id: Append a short random suffix to the user-agent.
             agent_identifier: Optional override for the user-agent string.
             session: Optional httpx.AsyncClient to reuse.
+            timeout: Request timeout in seconds. Defaults to 30s. Pass None to disable.
 
         """
         super().__init__(add_random_user_id, agent_identifier)
@@ -50,14 +50,13 @@ class AsyncGrowattApi(_GrowattApiBase):
             self.session = httpx.AsyncClient(
                 headers={"User-Agent": self.agent_identifier},
                 follow_redirects=True,
-                timeout=None,  # noqa: S113
-                event_hooks={"response": [_async_raise_for_status]},
+                timeout=timeout,
             )
             self._owns_session = True
 
-    async def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Any = None, text: bool = False) -> Any:
+    async def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], _T] | None = None, text: bool = False) -> Any:
         """Make an async HTTP request and return the JSON response (or text if text=True)."""
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if params is not None:
             kwargs["params"] = params
         if data is not None:
@@ -66,6 +65,7 @@ class AsyncGrowattApi(_GrowattApiBase):
             kwargs["follow_redirects"] = follow_redirects
         try:
             response = await self.session.request(method, url, **kwargs)
+            response.raise_for_status()
         except httpx.TimeoutException as exc:
             msg = f"Request to {url} timed out"
             raise GrowattApiTimeoutError(msg) from exc
@@ -95,6 +95,27 @@ class AsyncGrowattApi(_GrowattApiBase):
         await self.aclose()
 
     # Methods that need direct session access or chain async calls
+
+    async def plant_list(self, user_id: str) -> dict[str, Any]:
+        """
+        Get a list of plants connected to this account.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
+
+        Raises:
+            GrowattApiError: If the request to the server fails.
+
+        """
+        return await self._request(
+            "GET", self.get_url("PlantListAPI.do"),
+            params={"userId": user_id},
+            follow_redirects=False,
+            extract=lambda r: r.get("back", []),
+        )
 
     async def login(self, username: str, password: str, is_password_hashed: bool = False) -> dict[str, Any]:
         """
@@ -165,6 +186,7 @@ class AsyncGrowattApi(_GrowattApiBase):
             "userName": username,
             "password": password
         })
+        response.raise_for_status()
 
         data = response.json()["back"]
         if data["success"]:
@@ -230,6 +252,6 @@ class AsyncGrowattApi(_GrowattApiBase):
 
         response = await self.session.post(self.get_url(
             "newTwoPlantAPI.do?op=updatePlant"), files=form_settings)
+        response.raise_for_status()
 
         return response.json()
-

@@ -8,14 +8,9 @@ from datetime import UTC, date, datetime, time
 from enum import Enum
 from typing import Any
 
-import httpx
-
 from growattServer import GrowattApi
+from growattServer.base_api import DEFAULT_TIMEOUT
 from growattServer.exceptions import (
-    GrowattApiConnectionError,
-    GrowattApiError,
-    GrowattApiStatusError,
-    GrowattApiTimeoutError,
     GrowattV1ApiError,
 )
 
@@ -50,6 +45,11 @@ class _OpenApiV1Base:
 
     _min_class = Min
     _sph_class = Sph
+    api_url: str
+
+    def v1_request(self, method: str, endpoint: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, operation_name: str = "API operation") -> Any:
+        """Make a V1 API request. Implemented by subclasses."""
+        raise NotImplementedError
 
     def _create_user_agent(self) -> str:
         python_version = platform.python_version()
@@ -59,7 +59,7 @@ class _OpenApiV1Base:
 
         return f"Python/{python_version} ({system} {release}; {machine})"
 
-    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> dict[str, Any]:
+    def process_response(self, response: dict[str, Any], operation_name: str = "API operation") -> Any:
         """
         Process API response and handle errors.
 
@@ -294,9 +294,9 @@ class _OpenApiV1Base:
             operation_name="getting plant energy history",
         )
 
-    def device_list(self, plant_id: int) -> dict[str, Any]:
+    def device_list(self, plant_id: int | str) -> dict[str, Any]:
         """
-        Get devices associated with plant.
+        Get devices associated with plant via V1 API.
 
         Note:
             returned "device_type" mappings:
@@ -855,33 +855,31 @@ class OpenApiV1(_OpenApiV1Base, GrowattApi):
     the public V1 API described here: https://www.showdoc.com.cn/262556420217021/0.
     """
 
-    def __init__(self, token: str) -> None:
+    def __init__(self, token: str, timeout: float | None = DEFAULT_TIMEOUT) -> None:
         """
         Initialize the Growatt API client with V1 API support.
 
         Args:
             token (str): API token for authentication (required for V1 API access).
+            timeout: Request timeout in seconds. Defaults to 30s. Pass None to disable.
 
         """
-        super().__init__(agent_identifier=self._create_user_agent())
+        super().__init__(agent_identifier=self._create_user_agent(), timeout=timeout)
         self.api_url = f"{self.server_url}v1/"
         self.session.headers.update({"token": token})
 
+    def plant_list(self) -> dict[str, Any]:  # type: ignore[override]
+        """Get a list of all plants with detailed information (V1 API)."""
+        return _OpenApiV1Base.plant_list(self)
+
+    def device_list(self, plant_id: int | str) -> dict[str, Any]:  # type: ignore[override]
+        """Get devices associated with plant via V1 API."""
+        return _OpenApiV1Base.device_list(self, plant_id)
+
     def v1_request(self, method: str, endpoint: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, operation_name: str = "API operation") -> dict[str, Any]:
         """Make a V1 API request and process the response."""
-        url = self.get_url(endpoint)
-        try:
-            response = self.session.request(method, url, params=params, data=data)
-        except httpx.TimeoutException as exc:
-            msg = f"Request to {url} timed out"
-            raise GrowattApiTimeoutError(msg) from exc
-        except httpx.ConnectError as exc:
-            msg = f"Failed to connect to {url}"
-            raise GrowattApiConnectionError(msg) from exc
-        except httpx.HTTPStatusError as exc:
-            msg = f"HTTP {exc.response.status_code} error for {url}"
-            raise GrowattApiStatusError(msg, exc.response.status_code) from exc
-        except httpx.HTTPError as exc:
-            msg = f"HTTP error during request to {url}: {exc}"
-            raise GrowattApiError(msg) from exc
-        return self.process_response(response.json(), operation_name)
+        return self._request(
+            method, self.get_url(endpoint),
+            params=params, data=data,
+            extract=lambda r: self.process_response(r, operation_name),
+        )
