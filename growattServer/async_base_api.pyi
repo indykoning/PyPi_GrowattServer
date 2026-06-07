@@ -1,10 +1,6 @@
-"""Type stubs for async Growatt API client."""
-
-from __future__ import annotations
-
 import datetime
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 import httpx
 
@@ -25,7 +21,7 @@ class AsyncGrowattApi:
     async def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], _T] | None = None, text: bool = False) -> Any: ...
 
     async def aclose(self) -> None: ...
-    async def __aenter__(self) -> AsyncGrowattApi: ...
+    async def __aenter__(self) -> Self: ...
     async def __aexit__(self, *args: object) -> None: ...
 
     # Methods from _GrowattApiBase re-declared as async

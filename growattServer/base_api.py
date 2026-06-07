@@ -10,11 +10,11 @@ import json
 import re
 import secrets
 import warnings
-from collections.abc import Callable
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Self
 
 import httpx

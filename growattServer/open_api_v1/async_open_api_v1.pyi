@@ -1,12 +1,6 @@
-"""Type stubs for async OpenApi V1 client."""
-
-from __future__ import annotations
-
 import datetime
 from datetime import date, time
-from typing import Any
-
-import httpx
+from typing import Any, Self
 
 from growattServer.async_base_api import AsyncGrowattApi
 from growattServer.base_api import Timespan
@@ -14,7 +8,6 @@ from growattServer.open_api_v1.devices import ParameterValue
 from growattServer.open_api_v1.devices.abstract_device import AbstractDevice
 from growattServer.open_api_v1.devices.async_min import AsyncMin
 from growattServer.open_api_v1.devices.async_sph import AsyncSph
-
 
 class AsyncOpenApiV1(AsyncGrowattApi):
     _min_class: type[AsyncMin]
@@ -96,7 +89,7 @@ class AsyncOpenApiV1(AsyncGrowattApi):
 
     # Context manager (from AsyncGrowattApi)
     async def aclose(self) -> None: ...
-    async def __aenter__(self) -> AsyncOpenApiV1: ...
+    async def __aenter__(self) -> Self: ...
     async def __aexit__(self, *args: object) -> None: ...
     async def login(self, username: str, password: str, is_password_hashed: bool = False) -> dict[str, Any]: ...
     async def update_plant_settings(self, plant_id: str, changed_settings: dict[str, Any], current_settings: dict[str, Any] | None = None) -> dict[str, Any]: ...
