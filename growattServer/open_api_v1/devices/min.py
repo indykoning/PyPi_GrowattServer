@@ -25,19 +25,16 @@ class Min(AbstractDevice):
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129816412127075
 
         """
-        response = self.api.session.get(
-            self.api.get_url("device/tlx/tlx_data_info"),
+        return self.api.v1_request(
+            "GET", "device/tlx/tlx_data_info",
             params={"device_sn": self.device_sn},
-        )
-
-        return self.api.process_response(
-            response.json(), "getting MIN inverter details"
+            operation_name="getting MIN inverter details",
         )
 
     def energy(self) -> dict[str, Any]:
@@ -52,21 +49,16 @@ class Min(AbstractDevice):
                 10001 - System error
                 10002 - Min does not exist
                 10003 - Device SN error
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129822090975531
 
         """
-        response = self.api.session.post(
-            url=self.api.get_url("device/tlx/tlx_last_data"),
-            data={
-                "tlx_sn": self.device_sn,
-            },
-        )
-
-        return self.api.process_response(
-            response.json(), "getting MIN inverter energy data"
+        return self.api.v1_request(
+            "POST", "device/tlx/tlx_last_data",
+            data={"tlx_sn": self.device_sn},
+            operation_name="getting MIN inverter energy data",
         )
 
     def energy_history(
@@ -95,7 +87,7 @@ class Min(AbstractDevice):
                 10004 - Start date interval has exceeded seven days
                 10005 - Min does not exist
                 10011 - Permission is not satisfied
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129764475556048
@@ -111,8 +103,8 @@ class Min(AbstractDevice):
         if end_date - start_date > timedelta(days=7):
             raise GrowattParameterError("date interval must not exceed 7 days")
 
-        response = self.api.session.post(
-            url=self.api.get_url("device/tlx/tlx_data"),
+        return self.api.v1_request(
+            "POST", "device/tlx/tlx_data",
             data={
                 "tlx_sn": self.device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -121,10 +113,7 @@ class Min(AbstractDevice):
                 "page": page,
                 "perpage": limit,
             },
-        )
-
-        return self.api.process_response(
-            response.json(), "getting MIN inverter energy history"
+            operation_name="getting MIN inverter energy history",
         )
 
     def settings(self) -> dict[str, Any]:
@@ -136,19 +125,16 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattV1ApiError: If the API returns an error response.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/8696815667375182
 
         """
-        response = self.api.session.get(
-            self.api.get_url("device/tlx/tlx_set_info"),
+        return self.api.v1_request(
+            "GET", "device/tlx/tlx_set_info",
             params={"device_sn": self.device_sn},
-        )
-
-        return self.api.process_response(
-            response.json(), "getting MIN inverter settings"
+            operation_name="getting MIN inverter settings",
         )
 
     def read_parameter(
@@ -177,7 +163,7 @@ class Min(AbstractDevice):
                 10007 - The collector version does not support the reading function
                 10008 - The collector connects to the server error, please restart and try again
                 10009 - The read setting parameter type does not exist
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129828239577315
@@ -197,18 +183,15 @@ class Min(AbstractDevice):
             if end_address is None:
                 end_address = start_address
 
-        response = self.api.session.post(
-            self.api.get_url("readMinParam"),
+        return self.api.v1_request(
+            "POST", "readMinParam",
             data={
                 "device_sn": self.device_sn,
                 "paramId": parameter_id,
                 "startAddr": start_address,
                 "endAddr": end_address,
             },
-        )
-
-        return self.api.process_response(
-            response.json(), f"reading parameter {parameter_id}"
+            operation_name=f"reading parameter {parameter_id}",
         )
 
     def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
@@ -238,7 +221,7 @@ class Min(AbstractDevice):
                 10009 - The date and time format is wrong
                 10012 - Min does not exist
                 10013 - The end time cannot be less than the start time
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129826876191828
@@ -272,11 +255,10 @@ class Min(AbstractDevice):
         for i in range(1, max_min_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
-        # Send the request
-        response = self.api.session.post(self.api.get_url("tlxSet"), data=request_data)
-
-        return self.api.process_response(
-            response.json(), f"writing parameter {parameter_id}"
+        return self.api.v1_request(
+            "POST", "tlxSet",
+            data=request_data,
+            operation_name=f"writing parameter {parameter_id}",
         )
 
     def write_time_segment(
@@ -309,7 +291,7 @@ class Min(AbstractDevice):
                 10009 - The date and time format is wrong
                 10012 - Min does not exist
                 10013 - The end time cannot be less than the start time
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129826876191828
@@ -342,11 +324,10 @@ class Min(AbstractDevice):
         for i in range(7, max_min_params + 1):
             all_params[f"param{i}"] = ""
 
-        # Send the request
-        response = self.api.session.post(self.api.get_url("tlxSet"), data=all_params)
-
-        return self.api.process_response(
-            response.json(), f"writing time segment {segment_id}"
+        return self.api.v1_request(
+            "POST", "tlxSet",
+            data=all_params,
+            operation_name=f"writing time segment {segment_id}",
         )
 
     def read_time_segments(self, settings_data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -384,32 +365,28 @@ class Min(AbstractDevice):
 
         Raises:
             GrowattV1ApiError: If the API request fails
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
-        # Process the settings data
         if settings_data is None:
-            # Fetch settings if not provided
             settings_data = self.settings()
+        return self._parse_time_segments(settings_data)
 
-        # Define mode names
+    def _parse_time_segments(self, settings_data) -> list[dict[str, Any]]:
+        """Parse time segment data from settings into structured format."""
         mode_names = {0: "Load First", 1: "Battery First", 2: "Grid First"}
 
         segments = []
 
-        # Process each time segment
         for i in range(1, 10):  # Segments 1-9
-            # Get raw time values
             start_time_raw = settings_data.get(f"forcedTimeStart{i}", "0:0")
             end_time_raw = settings_data.get(f"forcedTimeStop{i}", "0:0")
 
-            # Handle 'null' string values
             if start_time_raw == "null" or not start_time_raw:
                 start_time_raw = "0:0"
             if end_time_raw == "null" or not end_time_raw:
                 end_time_raw = "0:0"
 
-            # Format times with leading zeros (HH:MM)
             try:
                 start_parts = start_time_raw.split(":")
                 start_hour = int(start_parts[0])
@@ -426,7 +403,6 @@ class Min(AbstractDevice):
             except (ValueError, IndexError):
                 end_time = "00:00"
 
-            # Get the mode value safely
             mode_raw = settings_data.get(f"time{i}Mode")
             if mode_raw == "null" or mode_raw is None:
                 batt_mode = None
@@ -436,7 +412,6 @@ class Min(AbstractDevice):
                 except (ValueError, TypeError):
                     batt_mode = None
 
-            # Get the enabled status safely
             enabled_raw = settings_data.get(f"forcedStopSwitch{i}", 0)
             if enabled_raw == "null" or enabled_raw is None:
                 enabled = False

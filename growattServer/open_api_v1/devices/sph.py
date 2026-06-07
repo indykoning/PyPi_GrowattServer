@@ -25,19 +25,16 @@ class Sph(AbstractDevice):
         Raises:
             GrowattV1ApiError: If the API returns an error response. Endpoint-specific error codes:
                 10001 - System error
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129763571291058
 
         """
-        response = self.api.session.get(
-            self.api.get_url("device/mix/mix_data_info"),
+        return self.api.v1_request(
+            "GET", "device/mix/mix_data_info",
             params={"device_sn": self.device_sn},
-        )
-
-        return self.api.process_response(
-            response.json(), "getting SPH inverter details"
+            operation_name="getting SPH inverter details",
         )
 
     def energy(self) -> dict[str, Any]:
@@ -52,21 +49,16 @@ class Sph(AbstractDevice):
                 10001 - System error
                 10002 - Mix does not exist
                 10003 - Device SN error
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129764475556048
 
         """
-        response = self.api.session.post(
-            url=self.api.get_url("device/mix/mix_last_data"),
-            data={
-                "mix_sn": self.device_sn,
-            },
-        )
-
-        return self.api.process_response(
-            response.json(), "getting SPH inverter energy data"
+        return self.api.v1_request(
+            "POST", "device/mix/mix_last_data",
+            data={"mix_sn": self.device_sn},
+            operation_name="getting SPH inverter energy data",
         )
 
     def energy_history(
@@ -94,7 +86,7 @@ class Sph(AbstractDevice):
                 10003 - Date format error
                 10004 - Date interval exceeds seven days
                 10005 - Mix does not exist
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129765461123058
@@ -110,8 +102,8 @@ class Sph(AbstractDevice):
         if end_date - start_date > timedelta(days=7):
             raise GrowattParameterError("date interval must not exceed 7 days")
 
-        response = self.api.session.post(
-            url=self.api.get_url("device/mix/mix_data"),
+        return self.api.v1_request(
+            "POST", "device/mix/mix_data",
             data={
                 "mix_sn": self.device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
@@ -120,10 +112,7 @@ class Sph(AbstractDevice):
                 "page": page,
                 "perpage": limit,
             },
-        )
-
-        return self.api.process_response(
-            response.json(), "getting SPH inverter energy history"
+            operation_name="getting SPH inverter energy history",
         )
 
     def read_parameter(self, parameter_id: str | None = None, start_address: int | None = None, end_address: int | None = None) -> dict[str, Any]:
@@ -150,7 +139,7 @@ class Sph(AbstractDevice):
                 10007 - The collector version does not support the reading function
                 10008 - The collector connects to the server error, please restart and try again
                 10009 - The read setting parameter type does not exist
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129766954561259
@@ -173,18 +162,15 @@ class Sph(AbstractDevice):
             # address range
             parameter_id = "set_any_reg"
 
-        response = self.api.session.post(
-            self.api.get_url("readMixParam"),
+        return self.api.v1_request(
+            "POST", "readMixParam",
             data={
                 "device_sn": self.device_sn,
                 "paramId": parameter_id,
                 "startAddr": start_address,
                 "endAddr": end_address,
             },
-        )
-
-        return self.api.process_response(
-            response.json(), f"reading parameter {parameter_id}"
+            operation_name=f"reading parameter {parameter_id}",
         )
 
     def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
@@ -214,7 +200,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -248,10 +234,10 @@ class Sph(AbstractDevice):
         for i in range(1, max_sph_params + 1):
             request_data[f"param{i}"] = str(parameters[i])
 
-        response = self.api.session.post(self.api.get_url("mixSet"), data=request_data)
-
-        return self.api.process_response(
-            response.json(), f"writing parameter {parameter_id}"
+        return self.api.v1_request(
+            "POST", "mixSet",
+            data=request_data,
+            operation_name=f"writing parameter {parameter_id}",
         )
 
     def write_ac_charge_times(
@@ -302,7 +288,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -337,10 +323,10 @@ class Sph(AbstractDevice):
             request_data[f"param{base + 3}"] = str(period["end_time"].minute)
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
-        response = self.api.session.post(self.api.get_url("mixSet"), data=request_data)
-
-        return self.api.process_response(
-            response.json(), "writing AC charge time periods"
+        return self.api.v1_request(
+            "POST", "mixSet",
+            data=request_data,
+            operation_name="writing AC charge time periods",
         )
 
     def write_ac_discharge_times(self, discharge_power: int, discharge_stop_soc: int, periods: list[dict[str, Any]]) -> dict[str, Any]:
@@ -387,7 +373,7 @@ class Sph(AbstractDevice):
                 10009 - Date and time format is wrong
                 10012 - Hybrid storage integrated machine does not exist
                 10013 - End time cannot be less than start time
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         References:
             https://www.showdoc.com.cn/262556420217021/6129761750718760
@@ -421,10 +407,10 @@ class Sph(AbstractDevice):
             request_data[f"param{base + 3}"] = str(period["end_time"].minute)
             request_data[f"param{base + 4}"] = "1" if period["enabled"] else "0"
 
-        response = self.api.session.post(self.api.get_url("mixSet"), data=request_data)
-
-        return self.api.process_response(
-            response.json(), "writing AC discharge time periods"
+        return self.api.v1_request(
+            "POST", "mixSet",
+            data=request_data,
+            operation_name="writing AC discharge time periods",
         )
 
     def _parse_time_periods(self, settings_data: dict[str, Any], time_type: str) -> list[dict[str, Any]]:
@@ -536,18 +522,19 @@ class Sph(AbstractDevice):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:
             settings_data = self.detail()
+        return self._parse_ac_charge_settings(settings_data)
 
-        # Extract global charge settings
+    def _parse_ac_charge_settings(self, settings_data):
+        """Parse AC charge settings from detail data."""
         charge_power = settings_data.get("chargePowerCommand", 0)
         charge_stop_soc = settings_data.get("wchargeSOCLowLimit", 100)
         mains_enabled_raw = settings_data.get("acChargeEnable", 0)
 
-        # Handle null/empty values
         if charge_power == "null" or charge_power is None or charge_power == "":
             charge_power = 0
         if (
@@ -610,17 +597,18 @@ class Sph(AbstractDevice):
         Raises:
             GrowattParameterError: If neither device_sn nor settings_data is provided.
             GrowattV1ApiError: If the API request fails.
-            requests.exceptions.RequestException: If there is an issue with the HTTP request.
+            GrowattApiError: If there is an issue with the HTTP request.
 
         """
         if settings_data is None:
             settings_data = self.detail()
+        return self._parse_ac_discharge_settings(settings_data)
 
-        # Extract global discharge settings
+    def _parse_ac_discharge_settings(self, settings_data):
+        """Parse AC discharge settings from detail data."""
         discharge_power = settings_data.get("disChargePowerCommand", 0)
         discharge_stop_soc = settings_data.get("wdisChargeSOCLowLimit", 10)
 
-        # Handle null/empty values
         if (
             discharge_power == "null"
             or discharge_power is None

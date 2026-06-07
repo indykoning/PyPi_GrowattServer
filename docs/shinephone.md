@@ -7,7 +7,7 @@ At the time of writing this "Legacy API" is still the most used method.
 
 ## Getting started
 
-Using username/password basic authentication
+### Sync
 
 ```python
 import growattServer
@@ -16,6 +16,21 @@ api = growattServer.GrowattApi()
 login_response = api.login(<username>, <password>)
 # Get a list of growatt plants.
 print(api.plant_list(login_response['user']['id']))
+```
+
+### Async
+
+```python
+import asyncio
+import growattServer
+
+async def main():
+    async with growattServer.AsyncGrowattApi() as api:
+        login_response = await api.login(<username>, <password>)
+        # Get a list of growatt plants.
+        print(await api.plant_list(login_response['user']['id']))
+
+asyncio.run(main())
 ```
 
 ## Methods and Variables

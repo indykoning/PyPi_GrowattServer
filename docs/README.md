@@ -16,9 +16,28 @@ Please refer to the docs for [ShinePhone/legacy](./shinephone.md) for it's usage
 This follows Growatt's OpenAPI V1.
 Please refer to the docs for [OpenAPI V1](./openapiv1.md) for it's usage and available methods.
 
-## Note
+### Breaking Change: `requests` -> `httpx`
 
-This is based on the endpoints used on the mobile app and could be changed without notice.
+This version replaces the `requests` library with `httpx` for both sync and async HTTP.
+If your code catches `requests.exceptions.RequestException`, update it to catch
+`growattServer.GrowattApiError` instead. See the [exceptions module](../growattServer/exceptions.py)
+for details on exception handling.
+
+### Sync/Async Support
+
+The library supports both synchronous and asynchronous usage. Every API class has an async
+counterpart — use whichever fits your application:
+
+| Sync | Async |
+|:-----|:------|
+| `GrowattApi` | `AsyncGrowattApi` |
+| `OpenApiV1` | `AsyncOpenApiV1` |
+
+The async classes accept an optional `session` parameter (an `httpx.AsyncClient`) so you can
+share a session across your application (useful in frameworks like Home Assistant).
+
+For details on how the sync/async class hierarchy works internally, see
+[Architecture: Sync/Async Design](./architecture.md).
 
 ## Examples
 
