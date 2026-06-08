@@ -178,7 +178,7 @@ class GrowattApi:
             })
         return data
 
-    def plant_list(self, user_id: str) -> list[dict[str, Any]]:
+    def plant_list(self, user_id: str) -> dict[str, Any]:
         """
         Get a list of plants connected to this account.
 
@@ -186,7 +186,7 @@ class GrowattApi:
             user_id (str): The ID of the user.
 
         Returns:
-            list: A list of plants connected to the account.
+            dict: A dictionary containing 'data' (list of plants) and 'totalData' keys.
 
         Raises:
             Exception: If the request to the server fails.
@@ -870,7 +870,7 @@ class GrowattApi:
             "This function may be deprecated in the future because naming is not correct, use device_list instead", DeprecationWarning, stacklevel=2)
         return self.device_list(plant_id)
 
-    def __get_all_devices(self, plant_id: str) -> dict[str, Any]:
+    def __get_all_devices(self, plant_id: str) -> list[dict[str, Any]]:
         """Get basic plant information with device list."""
         params: dict[str, str | int] = {
             "op": "getAllDeviceList",
@@ -879,7 +879,7 @@ class GrowattApi:
         }
         response = self.session.get(self.get_url("newTwoPlantAPI.do"), params=params)
 
-        return response.json().get("deviceList", {})
+        return response.json().get("deviceList", [])
 
     def device_list(self, plant_id: str) -> list[dict[str, Any]]:
         """Get a list of all devices connected to plant."""
