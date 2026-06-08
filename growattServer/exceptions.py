@@ -83,27 +83,24 @@ class GrowattApiError(*_api_error_bases):  # type: ignore[misc]
 
     During the deprecation period, this also inherits from
     ``requests.exceptions.RequestException`` (if ``requests`` is installed)
-    for backwards compatibility.  A deprecation warning is emitted once to
-    alert consumers to migrate to catching ``GrowattApiError`` directly.
+    for backwards compatibility.
     """
 
-    _deprecation_warned = False
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        """Initialize and emit a one-time deprecation warning if requests is installed."""
-        super().__init__(*args, **kwargs)
-        if _has_requests and not GrowattApiError._deprecation_warned:
-            GrowattApiError._deprecation_warned = True
-            warnings.warn(
-                "growattServer now raises GrowattApiError instead of "
-                "requests.RequestException for HTTP/network errors. "
-                "GrowattApiError currently inherits from RequestException "
-                "for backwards compatibility, but this will be removed in a "
-                "future major release. Please update your exception handlers "
-                "to catch growattServer.GrowattApiError instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+# Emit the deprecation warning once at import time so it doesn't fire
+# during exception handling (which would be confusing for consumers who
+# already catch GrowattApiError correctly).
+if _has_requests:
+    warnings.warn(
+        "growattServer now raises GrowattApiError instead of "
+        "requests.RequestException for HTTP/network errors. "
+        "GrowattApiError currently inherits from RequestException "
+        "for backwards compatibility, but this will be removed in a "
+        "future major release. Please update your exception handlers "
+        "to catch growattServer.GrowattApiError instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
 
 class GrowattApiConnectionError(GrowattApiError):

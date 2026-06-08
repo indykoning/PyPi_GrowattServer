@@ -1,0 +1,7 @@
+# Stubtest allowlist for growattServer
+#
+# The coroutine-passthrough pattern means some methods are regular `def`
+# at runtime (inherited from the shared base class) but declared as
+# `async def` in the .pyi stubs. If stubtest flags these, add them here.
+#
+# Currently empty — stubtest passes without any allowlist entries.

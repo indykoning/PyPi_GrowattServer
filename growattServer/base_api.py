@@ -83,7 +83,7 @@ class _GrowattApiBase:
             random_number = "".join(str(secrets.randbelow(10)) for _ in range(5))
             self.agent_identifier += " - " + random_number
 
-    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], Any] | None = None, text: bool = False) -> Any:
+    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, files: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], Any] | None = None, text: bool = False) -> Any:
         """Make an HTTP request. Implemented by subclasses."""
         raise NotImplementedError
 

@@ -29,5 +29,10 @@ setuptools.setup(
     ],
     extras_require={
         "compat": ["requests"],
+        "dev": [
+            "pytest>=8.0",
+            "pytest-asyncio>=0.24",
+            "mypy",
+        ],
     },
 )
