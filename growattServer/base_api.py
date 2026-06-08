@@ -1283,13 +1283,15 @@ class GrowattApi(_GrowattApiBase):
             timeout=timeout,
         )
 
-    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], _T] | None = None, text: bool = False) -> Any:
+    def _request(self, method: str, url: str, *, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, files: dict[str, Any] | None = None, follow_redirects: bool | None = None, extract: Callable[[Any], _T] | None = None, text: bool = False) -> Any:
         """Make an HTTP request and return the JSON response (or text if text=True)."""
         kwargs: dict[str, Any] = {}
         if params is not None:
             kwargs["params"] = params
         if data is not None:
             kwargs["data"] = data
+        if files is not None:
+            kwargs["files"] = files
         if follow_redirects is not None:
             kwargs["follow_redirects"] = follow_redirects
         try:
