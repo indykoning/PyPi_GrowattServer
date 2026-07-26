@@ -119,12 +119,12 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant list")
 
-    def plant_details(self, plant_id: int) -> dict[str, Any]:
+    def plant_details(self, plant_id: str) -> dict[str, Any]:
         """
         Get basic information about a power station.
 
         Args:
-            plant_id (int): Power Station ID
+            plant_id (str): Power Station ID
 
         Returns:
             dict: A dictionary containing the plant details.
@@ -147,12 +147,12 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant details")
 
-    def plant_energy_overview(self, plant_id: int) -> dict[str, Any]:
+    def plant_energy_overview(self, plant_id: str) -> dict[str, Any]:
         """
         Get an overview of a plant's energy data.
 
         Args:
-            plant_id (int): Power Station ID
+            plant_id (str): Power Station ID
 
         Returns:
             dict: A dictionary containing the plant energy overview.
@@ -175,7 +175,7 @@ class OpenApiV1(GrowattApi):
         return self.process_response(response.json(), "getting plant energy overview")
 
     def plant_power_overview(
-        self, plant_id: int, day: str | date | None = None
+        self, plant_id: str, day: str | date | None = None
     ) -> dict:
         """
         Obtain power data of a certain power station.
@@ -183,7 +183,7 @@ class OpenApiV1(GrowattApi):
         Get the frequency once every 5 minutes
 
         Args:
-            plant_id (int): Power Station ID
+            plant_id (str): Power Station ID
             day (date): Date - defaults to today in the local system timezone
 
         Returns:
@@ -224,7 +224,7 @@ class OpenApiV1(GrowattApi):
 
     def plant_energy_history(
         self,
-        plant_id: int,
+        plant_id: str,
         start_date: date | None = None,
         end_date: date | None = None,
         time_unit: str = "day",
@@ -235,7 +235,7 @@ class OpenApiV1(GrowattApi):
         Retrieve plant energy data for multiple days/months/years.
 
         Args:
-            plant_id (int): Power Station ID
+            plant_id (str): Power Station ID
             start_date (date, optional): Start Date - defaults to today in the local system timezone
             end_date (date, optional): End Date - defaults to today in the local system timezone
             time_unit (str, optional): Time unit ('day', 'month', 'year') - defaults to 'day'
@@ -308,7 +308,7 @@ class OpenApiV1(GrowattApi):
 
         return self.process_response(response.json(), "getting plant energy history")
 
-    def device_list(self, plant_id: int) -> dict[str, Any]:  # type: ignore[override]
+    def device_list(self, plant_id: str) -> dict[str, Any]:  # type: ignore[override]
         """
         Get devices associated with plant.
 
@@ -326,7 +326,7 @@ class OpenApiV1(GrowattApi):
             10: pbd
 
         Args:
-            plant_id (int): Power Station ID
+            plant_id (str): Power Station ID
 
         Returns:
             DeviceList
