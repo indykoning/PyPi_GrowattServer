@@ -63,6 +63,6 @@ class GrowattV1ApiError(GrowattError):
             error_msg: Error message returned by the API.
 
         """
-        super().__init__(message)
+        super().__init__(f"{message}: [{error_code}] {error_msg}")
         self.error_code = error_code
         self.error_msg = error_msg
