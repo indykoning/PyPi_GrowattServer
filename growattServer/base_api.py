@@ -198,7 +198,7 @@ class GrowattApi:
             allow_redirects=False
         )
 
-        return response.json().get("back", [])
+        return response.json().get("back", {})
 
     def plant_detail(self, plant_id: str, timespan: Timespan, date: datetime.datetime | None = None) -> dict[str, Any]:
         """
