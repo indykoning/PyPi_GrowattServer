@@ -15,13 +15,18 @@ from typing import Any
 
 import requests
 
-from .exceptions import GrowattError
+from .exceptions import GrowattError, GrowattRateLimitError
 
 name = "growattServer"
 
 BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
+
+# Growatt reports a rate-limited login in the response body, not as an HTTP
+# status: HTTP 200 with `success: false` and `msg: "507"`. See
+# GrowattRateLimitError for the reports behind this.
+LOGIN_RATE_LIMITED_CODE = "507"
 
 
 def hash_password(password: str) -> str:
@@ -171,6 +176,8 @@ class GrowattApi:
         })
 
         data = response.json()["back"]
+        if not data.get("success") and str(data.get("msg", "")) == LOGIN_RATE_LIMITED_CODE:
+            raise GrowattRateLimitError(error_code=LOGIN_RATE_LIMITED_CODE)
         if data["success"]:
             data.update({
                 "userId": data["user"]["id"],
