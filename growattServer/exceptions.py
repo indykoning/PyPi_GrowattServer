@@ -66,3 +66,46 @@ class GrowattV1ApiError(GrowattError):
         super().__init__(f"{message}: [{error_code}] {error_msg}")
         self.error_code = error_code
         self.error_msg = error_msg
+
+
+class GrowattRateLimitError(GrowattError):
+    """
+    Raised when Growatt refuses a login because the account is rate limited.
+
+    Growatt signals this **in the response body**, not as an HTTP status: the
+    request succeeds with HTTP 200 and the payload carries ``success: false``
+    with ``msg: "507"``. That is the shape behind the
+    ``ConfigEntryError: Growatt login failed: 507`` tracebacks in
+    home-assistant/core#176831 and home-assistant/core#174789.
+
+    A 507 has been observed to precede an approximately 24 hour lockout rather
+    than a short cooldown, so this library never retries on its own: retrying
+    immediately is what deepens the lockout. Callers get a distinct exception
+    type so they can back off for hours instead of treating it like bad
+    credentials or a malformed response.
+
+    Follows the :class:`GrowattV1ApiError` shape so consumers can read the code
+    off the exception rather than parsing a message.
+    """
+
+    def __init__(self, error_code: str, error_msg: str | None = None) -> None:
+        """
+        Initialize the GrowattRateLimitError.
+
+        Args:
+            error_code: The application-level code from the response body,
+                e.g. ``"507"``.
+            error_msg: Optional human-readable detail, when the body carries one.
+
+        """
+        message = f"Growatt refused the login as rate limited: [{error_code}]"
+        if error_msg:
+            message += f" {error_msg}"
+        message += (
+            ". A 507 has been observed to precede an approximately 24 hour "
+            "account lockout rather than a short cooldown -- do not retry "
+            "immediately."
+        )
+        super().__init__(message)
+        self.error_code = error_code
+        self.error_msg = error_msg
