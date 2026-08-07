@@ -52,13 +52,24 @@ class GrowattApi:
     server_url = "https://openapi.growatt.com/"
     agent_identifier = "Dalvik/2.1.0 (Linux; U; Android 12; https://github.com/indykoning/PyPi_GrowattServer)"
 
-    def __init__(self, add_random_user_id: bool = False, agent_identifier: str | None = None) -> None:
+    def __init__(
+        self,
+        add_random_user_id: bool = False,
+        agent_identifier: str | None = None,
+        session: requests.Session | None = None,
+    ) -> None:
         """
         Initialize the Growatt API client.
 
         Args:
             add_random_user_id: Append a short random suffix to the user-agent.
             agent_identifier: Optional override for the user-agent string.
+            session: An existing :class:`requests.Session` to use instead of
+                creating a fresh one. Passing one lets a consumer share a
+                single session across API instances and restore persisted
+                cookies at startup, so a login is not needed on every call --
+                which is what drives accounts into the 507 lockout. The library
+                stores nothing itself: persistence stays the caller's business.
 
         """
         if agent_identifier is not None:
@@ -69,14 +80,19 @@ class GrowattApi:
             random_number = "".join(str(secrets.randbelow(10)) for _ in range(5))
             self.agent_identifier += " - " + random_number
 
-        self.session = requests.Session()
+        self.session = session if session is not None else requests.Session()
 
         def _raise_for_status(response, *args: object, **kwargs: object) -> None:
             _ = args
             _ = kwargs
             response.raise_for_status()
 
-        self.session.hooks = {"response": [_raise_for_status]}
+        # Append rather than assign: a caller-supplied session may already carry
+        # hooks of its own, and replacing the dict would silently drop them.
+        hooks = self.session.hooks.setdefault("response", [])
+        if callable(hooks):        # requests allows a bare callable here
+            hooks = [hooks]
+        self.session.hooks["response"] = [*hooks, _raise_for_status]
 
         headers = {"User-Agent": self.agent_identifier}
         self.session.headers.update(headers)
