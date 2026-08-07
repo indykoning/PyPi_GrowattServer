@@ -27,4 +27,7 @@ setuptools.setup(
     install_requires=[
         "requests",
     ],
+    extras_require={
+        "async": ["httpx"],
+    },
 )
