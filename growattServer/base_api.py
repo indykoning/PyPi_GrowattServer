@@ -23,10 +23,41 @@ BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
 
-# Growatt reports a rate-limited login in the response body, not as an HTTP
-# status: HTTP 200 with `success: false` and `msg: "507"`. See
-# GrowattRateLimitError for the reports behind this.
-LOGIN_RATE_LIMITED_CODE = "507"
+# Growatt reports rate limiting in the response body, not as an HTTP status:
+# HTTP 200 with `success: false` and `msg: "507"`. See GrowattRateLimitError
+# for the reports behind this.
+RATE_LIMITED_CODE = "507"
+
+
+def _raise_if_rate_limited(response: requests.Response) -> None:
+    """
+    Raise GrowattRateLimitError when a response body carries Growatt's 507 code.
+
+    Growatt answers HTTP 200 and puts the refusal in the payload, so the body
+    of every response has to be read. Growatt rate limits each endpoint
+    separately, so this lives in the session hook rather than in `login()`:
+    the reports we have are all logins, but a data call can be refused the
+    same way.
+
+    Body shapes vary -- most endpoints wrap their payload in `back`, but
+    `plant_list` returns `back` as a list, and some responses are not JSON at
+    all. Since this runs on every response, anything unexpected falls through
+    untouched instead of raising.
+    """
+    try:
+        data = response.json()
+    except ValueError:
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    back = data.get("back")
+    if isinstance(back, dict):
+        data = back
+
+    if not data.get("success", True) and str(data.get("msg", "")) == RATE_LIMITED_CODE:
+        raise GrowattRateLimitError(error_code=RATE_LIMITED_CODE)
 
 
 def hash_password(password: str) -> str:
@@ -79,6 +110,7 @@ class GrowattApi:
         def _raise_for_status(response, *args: object, **kwargs: object) -> None:
             _ = args
             _ = kwargs
+            _raise_if_rate_limited(response)
             response.raise_for_status()
 
         self.session.hooks = {"response": [_raise_for_status]}
@@ -176,8 +208,6 @@ class GrowattApi:
         })
 
         data = response.json()["back"]
-        if not data.get("success") and str(data.get("msg", "")) == LOGIN_RATE_LIMITED_CODE:
-            raise GrowattRateLimitError(error_code=LOGIN_RATE_LIMITED_CODE)
         if data["success"]:
             data.update({
                 "userId": data["user"]["id"],
