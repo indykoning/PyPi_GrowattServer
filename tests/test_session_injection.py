@@ -54,6 +54,37 @@ def test_existing_hooks_on_the_injected_session_are_kept():
     assert len(api.session.hooks["response"]) == 2
 
 
+def test_sharing_a_session_installs_the_hook_once():
+    """N instances on one session must not stack N copies of the hook."""
+    def _mine(response, *args, **kwargs):
+        pass
+
+    shared = requests.Session()
+    shared.hooks["response"] = [_mine]
+
+    for _ in range(3):
+        GrowattApi(session=shared)
+
+    assert len(shared.hooks["response"]) == 2
+    assert shared.hooks["response"][0] is _mine
+
+
+def test_shared_session_checks_each_response_once():
+    """Each response goes through raise_for_status once, however many instances."""
+    shared = requests.Session()
+    for _ in range(3):
+        GrowattApi(session=shared)
+
+    response = requests.Response()
+    response.status_code = 200
+    calls = []
+    response.raise_for_status = lambda: calls.append(response)
+
+    requests.hooks.dispatch_hook("response", shared.hooks, response)
+
+    assert len(calls) == 1
+
+
 def test_bare_callable_hook_is_normalised():
     """requests permits a single callable instead of a list."""
     def _mine(response, *args, **kwargs):

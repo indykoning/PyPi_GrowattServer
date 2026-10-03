@@ -92,7 +92,13 @@ class GrowattApi:
         hooks = self.session.hooks.setdefault("response", [])
         if callable(hooks):        # requests allows a bare callable here
             hooks = [hooks]
-        self.session.hooks["response"] = [*hooks, _raise_for_status]
+        # Several instances sharing one session must not stack one copy each,
+        # or every response would be checked once per instance.
+        already_installed = any(
+            getattr(hook, "__qualname__", None) == _raise_for_status.__qualname__
+            for hook in hooks
+        )
+        self.session.hooks["response"] = hooks if already_installed else [*hooks, _raise_for_status]
 
         headers = {"User-Agent": self.agent_identifier}
         self.session.headers.update(headers)
