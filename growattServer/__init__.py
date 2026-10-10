@@ -7,6 +7,7 @@ from .base_api import GrowattApi, Timespan, hash_password
 from .exceptions import (
     GrowattError,
     GrowattParameterError,
+    GrowattRateLimitError,
     GrowattV1ApiError,
     GrowattV1ApiErrorCode,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "GrowattApi",
     "GrowattError",
     "GrowattParameterError",
+    "GrowattRateLimitError",
     "GrowattV1ApiError",
     "GrowattV1ApiErrorCode",
     "OpenApiV1",
