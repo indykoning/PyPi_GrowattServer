@@ -104,3 +104,44 @@ def test_user_agent_is_applied_to_the_injected_session():
     api = GrowattApi(session=shared, agent_identifier="my-agent")
 
     assert shared.headers["User-Agent"] == "my-agent"
+
+
+def test_injected_session_keeps_its_user_agent_by_default():
+    """Without agent_identifier, a caller's own User-Agent must survive."""
+    shared = requests.Session()
+    shared.headers["User-Agent"] = "callers-agent"
+
+    GrowattApi(session=shared)
+
+    assert shared.headers["User-Agent"] == "callers-agent"
+
+
+def test_own_session_still_gets_the_library_user_agent():
+    api = GrowattApi()
+
+    assert api.session.headers["User-Agent"] == GrowattApi.agent_identifier
+
+
+def test_random_user_id_is_applied_to_the_injected_session():
+    """Asking for a random suffix is asking for the header to change."""
+    shared = requests.Session()
+    shared.headers["User-Agent"] = "callers-agent"
+
+    GrowattApi(session=shared, add_random_user_id=True)
+
+    assert shared.headers["User-Agent"].startswith(GrowattApi.agent_identifier + " - ")
+
+
+def test_an_unrelated_hook_with_the_same_name_is_not_mistaken_for_ours():
+    """De-duplication is by identity, not by name."""
+    def _raise_for_status(response, *args, **kwargs):
+        pass
+
+    # As if it were a top-level function of the same name in another module.
+    _raise_for_status.__qualname__ = "_raise_for_status"
+    shared = requests.Session()
+    shared.hooks["response"] = [_raise_for_status]
+
+    GrowattApi(session=shared)
+
+    assert len(shared.hooks["response"]) == 2

@@ -24,6 +24,13 @@ BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
 
 
+def _raise_for_status(response: requests.Response, *args: object, **kwargs: object) -> None:
+    """Raise on HTTP errors; installed as a response hook on the session."""
+    _ = args
+    _ = kwargs
+    response.raise_for_status()
+
+
 def hash_password(password: str) -> str:
     """
     Return a modified MD5-like hex digest with 'c' substitutions.
@@ -69,7 +76,14 @@ class GrowattApi:
                 single session across API instances and restore persisted
                 cookies at startup, so a login is not needed on every call --
                 which is what drives accounts into the 507 lockout. The library
-                stores nothing itself: persistence stays the caller's business.
+                stores nothing itself: persistence stays the caller's business,
+                and so is skipping ``login()`` while the restored cookies are
+                still valid. The session gets a response hook that raises on
+                HTTP errors, for every request made through it. The 507
+                lockout itself is not an HTTP error: it arrives as HTTP 200
+                with ``msg: "507"`` in the body, so the hook does not catch it.
+                The User-Agent of a supplied session is only changed when
+                ``agent_identifier`` or ``add_random_user_id`` is given.
 
         """
         if agent_identifier is not None:
@@ -82,26 +96,22 @@ class GrowattApi:
 
         self.session = session if session is not None else requests.Session()
 
-        def _raise_for_status(response, *args: object, **kwargs: object) -> None:
-            _ = args
-            _ = kwargs
-            response.raise_for_status()
-
         # Append rather than assign: a caller-supplied session may already carry
         # hooks of its own, and replacing the dict would silently drop them.
         hooks = self.session.hooks.setdefault("response", [])
         if callable(hooks):        # requests allows a bare callable here
             hooks = [hooks]
         # Several instances sharing one session must not stack one copy each,
-        # or every response would be checked once per instance.
-        already_installed = any(
-            getattr(hook, "__qualname__", None) == _raise_for_status.__qualname__
-            for hook in hooks
-        )
+        # or every response would be checked once per instance. Compared by
+        # identity, so an unrelated hook that happens to share the name is kept.
+        already_installed = any(hook is _raise_for_status for hook in hooks)
         self.session.hooks["response"] = hooks if already_installed else [*hooks, _raise_for_status]
 
-        headers = {"User-Agent": self.agent_identifier}
-        self.session.headers.update(headers)
+        # A supplied session keeps its own User-Agent unless the caller asked
+        # for one; otherwise several instances on one session would overwrite
+        # each other and the caller's header.
+        if session is None or agent_identifier is not None or add_random_user_id:
+            self.session.headers.update({"User-Agent": self.agent_identifier})
 
     def __get_date_string(self, timespan: Timespan | None = None, date: datetime.datetime | None = None) -> str:
         if timespan is not None and not isinstance(timespan, Timespan):
