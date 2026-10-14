@@ -1,7 +1,10 @@
 """A caller-supplied session lets cookies survive across API instances."""
+import json
+
+import pytest
 import requests
 
-from growattServer import GrowattApi
+from growattServer import GrowattApi, GrowattRateLimitError
 
 
 def test_default_still_creates_its_own_session():
@@ -145,3 +148,17 @@ def test_an_unrelated_hook_with_the_same_name_is_not_mistaken_for_ours():
     GrowattApi(session=shared)
 
     assert len(shared.hooks["response"]) == 2
+
+
+def test_an_injected_session_still_raises_on_the_507_lockout():
+    """The 507 check lives in the hook, so a shared session must carry it too."""
+    shared = requests.Session()
+    GrowattApi(session=shared)
+
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps({"success": False, "msg": "507"}).encode()
+    response.headers["Content-Type"] = "application/json"
+
+    with pytest.raises(GrowattRateLimitError):
+        requests.hooks.dispatch_hook("response", shared.hooks, response)

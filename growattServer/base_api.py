@@ -15,7 +15,7 @@ from typing import Any
 
 import requests
 
-from .exceptions import GrowattError
+from .exceptions import GrowattError, GrowattRateLimitError
 
 name = "growattServer"
 
@@ -23,11 +23,48 @@ BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
 
+# Growatt reports rate limiting in the response body, not as an HTTP status:
+# HTTP 200 with `success: false` and `msg: "507"`. See GrowattRateLimitError
+# for the reports behind this.
+RATE_LIMITED_CODE = "507"
+
+
+def _raise_if_rate_limited(response: requests.Response) -> None:
+    """
+    Raise GrowattRateLimitError when a response body carries Growatt's 507 code.
+
+    Growatt answers HTTP 200 and puts the refusal in the payload, so the body
+    of every response has to be read. Growatt rate limits each endpoint
+    separately, so this lives in the session hook rather than in `login()`:
+    the reports we have are all logins, but a data call can be refused the
+    same way.
+
+    Body shapes vary -- most endpoints wrap their payload in `back`, but
+    `plant_list` returns `back` as a list, and some responses are not JSON at
+    all. Since this runs on every response, anything unexpected falls through
+    untouched instead of raising.
+    """
+    try:
+        data = response.json()
+    except ValueError:
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    back = data.get("back")
+    if isinstance(back, dict):
+        data = back
+
+    if not data.get("success", True) and str(data.get("msg", "")) == RATE_LIMITED_CODE:
+        raise GrowattRateLimitError(error_code=RATE_LIMITED_CODE)
+
 
 def _raise_for_status(response: requests.Response, *args: object, **kwargs: object) -> None:
-    """Raise on HTTP errors; installed as a response hook on the session."""
+    """Raise on Growatt's 507 refusal and on HTTP errors; the session's response hook."""
     _ = args
     _ = kwargs
+    _raise_if_rate_limited(response)
     response.raise_for_status()
 
 
@@ -78,10 +115,10 @@ class GrowattApi:
                 which is what drives accounts into the 507 lockout. The library
                 stores nothing itself: persistence stays the caller's business,
                 and so is skipping ``login()`` while the restored cookies are
-                still valid. The session gets a response hook that raises on
-                HTTP errors, for every request made through it. The 507
-                lockout itself is not an HTTP error: it arrives as HTTP 200
-                with ``msg: "507"`` in the body, so the hook does not catch it.
+                still valid. The session gets a response hook that, for every
+                request made through it, raises on HTTP errors and raises
+                :class:`GrowattRateLimitError` when the body carries the 507
+                lockout (which arrives as HTTP 200).
                 The User-Agent of a supplied session is only changed when
                 ``agent_identifier`` or ``add_random_user_id`` is given.
 
