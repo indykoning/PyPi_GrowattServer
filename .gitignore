@@ -27,5 +27,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Virtual environments
+.venv/
+
 # Symlink
 examples/growattServer
