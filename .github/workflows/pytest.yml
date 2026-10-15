@@ -11,5 +11,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: pip install pytest
       - run: ln -s ../growattServer tests/growattServer 
       - run: pytest tests --doctest-modules --junitxml=junit/test-results.xml
