@@ -57,7 +57,7 @@ def _raise_if_rate_limited(response: requests.Response) -> None:
         data = back
 
     if not data.get("success", True) and str(data.get("msg", "")) == RATE_LIMITED_CODE:
-        # raise GrowattRateLimitError(error_code=RATE_LIMITED_CODE)
+        raise GrowattRateLimitError(error_code=RATE_LIMITED_CODE)
 
 
 def hash_password(password: str) -> str:
