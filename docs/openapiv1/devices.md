@@ -4,11 +4,11 @@ Devices offer a generic way to interact with your device using the V1 API withou
 
 ```python
 import growattServer
-from growattServer.open_api_v1.devices import Sph, Min
+from growattServer.open_api_v1.devices import Inverter, Min, Sph
 
 api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
 
-device = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(api, 'YOUR_DEVICE_SERIAL_NUMBER')
+device = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(...) / Inverter(...) for a classic inverter
 device.detail()
 device.energy()
 device.energy_history()

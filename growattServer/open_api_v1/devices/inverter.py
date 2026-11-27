@@ -1,22 +1,23 @@
-"""Inverterdevice file."""
-from datetime import UTC, datetime, timedelta
+"""Classic inverter device file."""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from growattServer.exceptions import GrowattParameterError
 
-from .abstract_device import AbstractDevice
+from .abstract_device import AbstractDevice, ParameterValue
 
 
 class Inverter(AbstractDevice):
-    """Inverter device type."""
+    """Classic inverter device type (e.g. TL3-S)."""
 
     DEVICE_TYPE_ID = 1
 
-    def detail(self) -> dict:
+    def detail(self) -> dict[str, Any]:
         """
         Get detailed data for an inverter.
-
-        Args:
-            device_sn (str): The serial number of the inverter.
 
         Returns:
             dict: A dictionary containing the inverter details.
@@ -32,19 +33,14 @@ class Inverter(AbstractDevice):
         """
         response = self.api.session.get(
             self.api.get_url("device/inverter/inv_data_info"),
-            params={
-                "device_sn": self.device_sn
-            }
+            params={"device_sn": self.device_sn},
         )
 
         return self.api.process_response(response.json(), "getting inverter details")
 
-    def energy(self) -> dict:
+    def energy(self) -> dict[str, Any]:
         """
-        Get energy data for a inverter.
-
-        Args:
-            device_sn (str): The serial number of the inverter.
+        Get the latest data for an inverter (power, energy, per-string values, status).
 
         Returns:
             dict: A dictionary containing the inverter energy data.
@@ -61,21 +57,20 @@ class Inverter(AbstractDevice):
         """
         response = self.api.session.get(
             url=self.api.get_url("device/inverter/last_new_data"),
-            data={
-                "device_sn": self.device_sn,
-            },
+            params={"device_sn": self.device_sn},
         )
 
         return self.api.process_response(response.json(), "getting inverter energy data")
 
-    def energy_history(self, start_date=None, end_date=None, timezone=None, page=None, limit=None) -> dict:
+    def energy_history(
+        self, start_date: date | None = None, end_date: date | None = None, timezone: str | None = None, page: int | None = None, limit: int | None = None
+    ) -> dict[str, Any]:
         """
-        Get inverter data history.
+        Get inverter data history (5-minute records, at most 100 per page).
 
         Args:
-            device_sn (str): The ID of the inverter.
-            start_date (date, optional): Start date. Defaults to today.
-            end_date (date, optional): End date. Defaults to today.
+            start_date (date, optional): Start date. Defaults to today in the local system timezone.
+            end_date (date, optional): End date. Defaults to today in the local system timezone.
             timezone (str, optional): Timezone ID.
             page (int, optional): Page number.
             limit (int, optional): Results per page.
@@ -96,12 +91,10 @@ class Inverter(AbstractDevice):
             https://www.showdoc.com.cn/262556420217021/6118823163304569
 
         """
-        if start_date is None and end_date is None:
-            start_date = datetime.now(tz=UTC).astimezone().date()
-            end_date = datetime.now(tz=UTC).astimezone().date()
-        elif start_date is None:
-            start_date = end_date
-        elif end_date is None:
+        today = datetime.now(tz=UTC).astimezone().date()
+        if start_date is None:
+            start_date = end_date if end_date is not None else today
+        if end_date is None:
             end_date = start_date
 
         # check interval validity
@@ -110,19 +103,21 @@ class Inverter(AbstractDevice):
 
         response = self.api.session.get(
             url=self.api.get_url("device/inverter/data"),
-            data={
+            params={
                 "device_sn": self.device_sn,
                 "start_date": start_date.strftime("%Y-%m-%d"),
                 "end_date": end_date.strftime("%Y-%m-%d"),
                 "timezone_id": timezone,
                 "page": page,
                 "perpage": limit,
-            }
+            },
         )
 
         return self.api.process_response(response.json(), "getting inverter energy history")
 
-    def read_parameter(self, parameter_id, start_address=None, end_address=None) -> dict:
+    def read_parameter(
+        self, parameter_id: str, start_address: int | None = None, end_address: int | None = None
+    ) -> dict[str, Any]:
         """
         Read setting from inverter.
 
@@ -178,12 +173,11 @@ class Inverter(AbstractDevice):
 
         return self.api.process_response(response.json(), f"reading parameter {parameter_id}")
 
-    def write_parameter(self, parameter_id, parameter_values=None) -> dict:
+    def write_parameter(self, parameter_id: str, parameter_values: ParameterValue | None = None) -> dict[str, Any]:
         """
         Set parameters on a inverter.
 
         Args:
-            device_sn (str): Serial number of the inverter
             parameter_id (str): Setting type to be configured
             parameter_values: Parameter values to be sent to the system.
                 Can be a single string (for param1 only),

@@ -39,11 +39,11 @@ Devices offer a generic way to interact with your device using the V1 API withou
 
 ```python
 import growattServer
-from growattServer.open_api_v1.devices import Sph, Min
+from growattServer.open_api_v1.devices import Inverter, Min, Sph
 
 api = growattServer.OpenApiV1(token="YOUR_API_TOKEN")
 
-my_inverter = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(api, 'YOUR_DEVICE_SERIAL_NUMBER')
+my_inverter = Sph(api, 'YOUR_DEVICE_SERIAL_NUMBER') # or Min(...) / Inverter(...)
 my_inverter.detail()
 my_inverter.energy()
 my_inverter.energy_history()
@@ -62,6 +62,18 @@ my_inverter.write_parameter()
 For more details see: [OpenApiV1 Devices](./openapiv1/devices.md)
 
 The remaining methods below all actually use these device methods.
+
+#### Classic Inverter Methods
+
+Methods for classic inverters (type 1), e.g. the TL3-S three-phase string inverters.
+
+| Method | Arguments | Description |
+|:---|:---|:---|
+| `api.inverter_detail(device_sn)` | device_sn: String | Get detailed data for a classic inverter (model, firmware, nominal power, ...). |
+| `api.inverter_energy(device_sn)` | device_sn: String | Get the latest data for a classic inverter: power and energy values, per-string voltage/current/power, temperatures, `status` and `faultType`. Growatt allows one call per 5 minutes per device; faster calls fail with error 10012 (`error_frequently_access`). |
+| `api.inverter_energy_history(device_sn, start_date=None, end_date=None, timezone=None, page=None, limit=None)` | device_sn: String, start_date: Date, end_date: Date, timezone: String, page: Int, limit: Int | Get the 5-minute history of a classic inverter (7-day max range, at most 100 records per page). |
+| `api.inverter_read_parameter(device_sn, parameter_id, start_address=None, end_address=None)` | device_sn: String, parameter_id: String, start_address: Int, end_address: Int | Read a specific setting for a classic inverter. |
+| `api.inverter_write_parameter(device_sn, parameter_id, parameter_values)` | device_sn: String, parameter_id: String, parameter_values: Dict/Array | Set parameters on a classic inverter. |
 
 #### MIN Methods
 
